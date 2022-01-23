@@ -1,0 +1,1 @@
+Create a link to this folder from your SourceMod scripting folder like `csgo-ds/csgo/addons/sourcemod/scripting` (where `csgo-ds` is the folder containing the dedicated server install. Then run `./deploy.sh link` from the `scripting` folder.
