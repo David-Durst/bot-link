@@ -85,7 +85,7 @@ public void OnPluginStart()
 }
 
 
-public Action:smBotDebug() {
+public Action:smBotDebug(client, args) {
 	if (!debugStatus) {
 		debugStatus = true;
 		SetConVarInt(cvarInfAmmo, 1, true, true);
@@ -104,7 +104,7 @@ public void OnClientConnected(int client) {
 	File clientsFile = OpenFile("/home/steam/bot_exporter/clients.csv", "w", false, "");
 	// https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
 	for (int i = 1; i < MaxClients; i++) {
-		if (isClientConnected(i)) {
+		if (IsClientConnected(i)) {
 			char playerName[128];
 			GetClientName(client, playerName, 128);
 			WriteFileLine(clientsFile, "%i, %s", i, playerName);
