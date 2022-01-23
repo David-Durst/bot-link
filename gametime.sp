@@ -16,9 +16,9 @@ public OnGameFrame()
     for(int i = 1; i < MaxClients; i++) 
     {
         if(IsClientConnected(i) && IsClientInGame(i))
-	{
-	    ShowHudText(i, 1, "Tick: %i", cur_tick);
-	}
+    {
+        ShowHudText(i, 1, "Tick: %i", cur_tick);
+    }
     }
 }
 
@@ -38,13 +38,13 @@ public Action:WallsTimer(Handle:timer)
         if(IsClientConnected(i) && IsClientInGame(i))
         {
             if(g_walls_status) 
-	    {
+        {
                 ShowHudText(i, 2, "Please enable walls\nr_drawothermodels 2\nr_drawparticles 0");
-	    }
-	    else
-	    {
+        }
+        else
+        {
                 ShowHudText(i, 2, "Please disable walls\nr_drawothermodels 1\nr_drawparticles 1");
-	    }
+        }
         }
     }
     return Plugin_Handled;
@@ -74,9 +74,9 @@ public Action Command_EnableWalls(int client, int args)
     {
         if(IsClientConnected(i) && IsClientInGame(i) && !IsFakeClient(i))
 
-	{
-	    SendConVarValue(i, r_drawOtherModels, "2");
-	}
+    {
+        SendConVarValue(i, r_drawOtherModels, "2");
+    }
     }
     return Plugin_Handled;
 }
@@ -86,9 +86,9 @@ public Action Command_DisableWalls(int client, int args)
     for(int i = 1; i < MaxClients; i++) 
     {
         if(IsClientConnected(i) && IsClientInGame(i))
-	{
+    {
             SetClientInfo(i, "r_drawOtherModels", "1");
-	}
+    }
     }
     return Plugin_Handled;
 }
@@ -102,27 +102,27 @@ public void OnPluginStart()
 
 public Action testmessage(int client, int args)
 {
-	char arg1[64];
-	char arg2[64];
-	GetCmdArg(1, arg1, sizeof(arg1));
-	GetCmdArg(2, arg2, sizeof(arg2));
-	int ent = CreateEntityByName("game_text");
-	DispatchKeyValue(ent, "channel", "2");
-	DispatchKeyValue(ent, "color", "255 255 255");
-	DispatchKeyValue(ent, "color2", "0 0 0");
-	DispatchKeyValue(ent, "effect", "0");
-	DispatchKeyValue(ent, "fadein", "1.5");
-	DispatchKeyValue(ent, "fadeout", "0.5");
-	DispatchKeyValue(ent, "fxtime", "0.25"); 		
-	DispatchKeyValue(ent, "holdtime", "5.0");
-	DispatchKeyValue(ent, "message", "this is a test message\nThis is a new line test");
-	DispatchKeyValue(ent, "spawnflags", "0"); 	
-	DispatchKeyValue(ent, "x", arg1);
-	DispatchKeyValue(ent, "y", arg2); 		
-	DispatchSpawn(ent);
-	SetVariantString("!activator");
-	AcceptEntityInput(ent,"display",client);
-	return Plugin_Handled;
+    char arg1[64];
+    char arg2[64];
+    GetCmdArg(1, arg1, sizeof(arg1));
+    GetCmdArg(2, arg2, sizeof(arg2));
+    int ent = CreateEntityByName("game_text");
+    DispatchKeyValue(ent, "channel", "2");
+    DispatchKeyValue(ent, "color", "255 255 255");
+    DispatchKeyValue(ent, "color2", "0 0 0");
+    DispatchKeyValue(ent, "effect", "0");
+    DispatchKeyValue(ent, "fadein", "1.5");
+    DispatchKeyValue(ent, "fadeout", "0.5");
+    DispatchKeyValue(ent, "fxtime", "0.25"); 		
+    DispatchKeyValue(ent, "holdtime", "5.0");
+    DispatchKeyValue(ent, "message", "this is a test message\nThis is a new line test");
+    DispatchKeyValue(ent, "spawnflags", "0"); 	
+    DispatchKeyValue(ent, "x", arg1);
+    DispatchKeyValue(ent, "y", arg2); 		
+    DispatchSpawn(ent);
+    SetVariantString("!activator");
+    AcceptEntityInput(ent,"display",client);
+    return Plugin_Handled;
 }
 
 */
@@ -153,18 +153,18 @@ public OnGameFrame()
     for(int i = 1; i < MaxClients; i++) 
     {
         if(IsClientConnected(i) && IsClientInGame(i) && !IsFakeClient(i))
-	{
-	    ShowHudText(i, 1, "Tick: %i", last_tick);
-	}
+    {
+        ShowHudText(i, 1, "Tick: %i", last_tick);
+    }
     }
 
     SetHudTextParams(0.2, 0.2, 0.05, 0, 0, 0, 255, 0, 0.0, 0.0, 0.0);
     for(int i = 1; i < MaxClients; i++) 
     {
         if(IsClientConnected(i) && IsClientInGame(i) && !IsFakeClient(i))
-	{
-	    ShowHudText(i, 1, "Tick: %i", cur_tick);
-	}
+    {
+        ShowHudText(i, 1, "Tick: %i", cur_tick);
+    }
     }
     last_tick = cur_tick;
 }
