@@ -15,4 +15,8 @@ get_script_dir () {
 get_script_dir
 
 rm ../plugins/$1.smx
-source ${script_dir}/reminder.sh $1
+if [ -f ${script_dir}/rcon.json ] && [  -x "$(command -v csgo-rcon)" ]; then
+    csgo-rcon -c ${script_dir}/rcon.json "sm_rcon sm plugins unload $1"
+else
+    ${script_dir}/reminder.sh $1
+fi
