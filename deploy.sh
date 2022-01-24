@@ -16,5 +16,9 @@ get_script_dir
 mkdir -p compiled/bot-link
 if ./compile.sh bot-link/$1.sp; then
 	cp compiled/bot-link/$1.smx ../plugins/
-	${script_dir}/reminder.sh $1
+    if [ -f ${script_dir}/rcon.json ] && [  -x "$(command -v csgo-rcon)" ]; then
+        csgo-rcon -c ${script_dir}/rcon.json "sm_rcon sm plugins unload $1; sm_rcon sm plugins load $1"
+    else
+        ${script_dir}/reminder.sh $1
+    fi
 fi
