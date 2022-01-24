@@ -7,6 +7,7 @@
 #define MAX_INPUT_LENGTH 1000
 #define MAX_INPUT_FIELDS 20
 #define MAX_PATH_LENGTH 256
+#define MAX_ONE_DIRECTION_SPEED 450.0
 
 public Plugin myinfo =
 {
@@ -19,17 +20,17 @@ public Plugin myinfo =
 
 // input commands to read
 char inputBuffer[MAX_INPUT_LENGTH];
-char inputExplodedBuffer[MAX_INPUT_FIELDS][MAX_INPUT_LENGTH]
-int inButtons[MAXPLAYERS+1];
-enum movementInputs {
+char inputExplodedBuffer[MAX_INPUT_FIELDS][MAX_INPUT_LENGTH];
+int inputButtons[MAXPLAYERS+1];
+enum MovementInputs: {
     Forward,
     Backward,
     Left,
     Right,
     NUM_MOVEMENT_INPUTS
-}
-bool inMovement[MAXPLAYERS+1][NUM_MOVEMENT_INPUTS];
-float inAngleDeltas[MAXPLAYERS+1][3];
+};
+bool inputMovement[MAXPLAYERS+1][NUM_MOVEMENT_INPUTS];
+float inputAngleDeltas[MAXPLAYERS+1][3];
 
 // GetClientEyePosition - this will store where looking
 // check GetClientAbsOrigin vs  GetEntPropVector(client, Prop_Send, "m_vecOrigin", fPos); 
@@ -40,29 +41,20 @@ float clientFootPos[MAXPLAYERS+1][3];
 int clientBoolState[MAXPLAYERS+1];
 
 // recoil punch adjustment variables
-ConVar weaponRecoilScale, viewRecoilTracking, weaponRecoilPunchExtra;
+ConVar weaponRecoilScale, viewRecoilTracking;
 float lastRecoilAngleAdjustment[MAXPLAYERS+1][3];
 
-// how fast you can move in any direction
-float maxSpeed;
-
 // files 
-static char folder[] = "/home/steam/bot_exporter/";
+static char rootFolder[] = "/home/steam/bot_exporter/";
 static char clientFilePath[] = "/home/steam/bot_exporter/clients.csv";
-bool openedClientsFile = false;
-static char stateFilePrefix[] = "/home/steam/bot_exporter/state_";
-File stateFile;
-static char movementInputPrefix[] = "/home/steam/bot_exporter/input_";
-File movementFile;
-// tracking the number of the file
-bool firstServerFrame = true;
-int maxIndex = 10;
-int currentStateFileIndex = 0;
-int currentInputFileIndex = 0;
-// tracking frame within each file
-int maxFramesBeforeRotation = 1000;
-int curStateFrame = 0;
-int curInputFrame = 0;
+static char tmpClientFilePath[] = "/home/steam/bot_exporter/clients.csv.tmp.write";
+static char stateFilePath[] = "/home/steam/bot_exporter/state.csv";
+static char tmpStateFilePath[] = "/home/steam/bot_exporter/state.csv.tmp.write";
+File tmpStateFile;
+static char inputFilePath[] = "/home/steam/bot_exporter/input.csv";
+static char tmpInputFilePath[] = "/home/steam/bot_exporter/input.csv.tmp.read";
+File tmpInputFile;
+int currentFrame;
 
 // debugging variables
 ConVar cvarInfAmmo, cvarBombTime;
@@ -71,7 +63,6 @@ float maxDiff[2];
  
 public void OnPluginStart()
 {
-    maxSpeed = 450.0;	
     RegConsoleCmd("sm_botDebug", smBotDebug, "- make bomb time 10 minutes and give infinite ammo");
 
     new ConVar:cvarBotStop = FindConVar("bot_stop");
@@ -83,7 +74,6 @@ public void OnPluginStart()
 
     weaponRecoilScale = FindConVar("weapon_recoil_scale");
     viewRecoilTracking = FindConVar("view_recoil_tracking");
-    weaponRecoilPunchExtra = FindConVar("weapon_recoil_view_punch_extra");
 
 
     maxDiff[0] = 0.0;
@@ -95,7 +85,7 @@ public void OnPluginStart()
         lastRecoilAngleAdjustment[i][2] = 0.0;
     }
 
-    CreateDirectory("/home/steam/bot_exporter", 777);
+    CreateDirectory(rootFolder, 777);
 
     PrintToServer("loaded bot_export 1.1 - actually handling files");
 }
@@ -118,81 +108,71 @@ public Action:smBotDebug(client, args) {
 // update client list when a new client connects
 public void OnClientConnected(int client) {
     // rewrite the entire file every time a player connects to get fresh state
-    File clientsFile = OpenFile(clientFilePath, "w", false, "");
+    File tmpClientsFile = OpenFile(tmpClientFilePath, "w", false, "");
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
     for (int i = 1; i < MaxClients; i++) {
         if (IsClientInGame(i)) {
             char playerName[128];
             GetClientName(client, playerName, 128);
-            clientsFile.WriteLine("%i, %s", i, playerName);
+            tmpClientsFile.WriteLine("%i, %s", i, playerName);
         }
     }
 
-    clientsFile.close();
+    tmpClientsFile.Close();
+    RenameFile(clientFilePath, tmpClientFilePath);
 }
-
 
 // write state and get new commands each frame
 public OnGameFrame() {
-    // write state
-    if (firstServerFrame || curStateFrame >= maxFramesBeforeRotation) {
-        curStateFrame = 0;
-        currentStateFileIndex = (currentStateFileIndex + 1) % maxIndex;
-        char stateIndexString[10];
-        IntToString(currentStateFileIndex, stateIndexString, 10);
-        if (!firstServerFrame) {
-            stateFile.close();
-        }
-        char inputFilePath[MAX_PATH_LENGTH];
-        Format(inputFilePath, MAX_PATH_LENGTH, "%s%s", inputFilePrefix, inputIndexString);
-        stateFile = OpenFile(stateFilePath, "w", false, "");
-        stateFile.WriteLine("State Frame,Player Index,Eye Pos X,Eye Pos Y,Eye Pos Z,"
-            ... "Eye Angle X,Eye Angle Y,Foot Pos X,Foot Pos Y,Foot Pos Z,Is Alive");
-    }
+    // write state - update temp file, then atomically overwrite last state
+    tmpStateFile = OpenFile(tmpStateFilePath, "w", false, "");
+    tmpStateFile.WriteLine("State Frame,Player Index,Eye Pos X,Eye Pos Y,Eye Pos Z,"
+        ... "Eye Angle X,Eye Angle Y,Foot Pos X,Foot Pos Y,Foot Pos Z,Is Alive");
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
-    for (int i = 1; i < MaxClients; i++) {
-        if (IsClientInGame(i)) {
-            GetClientEyePosition(client, clientEyePos[i]);
-            GetClientAbsAngles(client, clientEyeAngle[i]);
-            GetClientAbsOrigin(client, clientFootPos[i]);
+    for (int client = 1; client < MaxClients; client++) {
+        if (IsClientInGame(client)) {
+            GetClientEyePosition(client, clientEyePos[client]);
+            GetClientAbsAngles(client, clientEyeAngle[client]);
+            GetClientAbsOrigin(client, clientFootPos[client]);
             if (IsPlayerAlive(client)) {
                 clientBoolState[client] |= 1;
             }
             else {
                 clientBoolState[client] &= ~1;
             }
-            stateFile.WriteLine("%i, %i, %f, %f, %f, %f, %f, %f, %f, %f, %i,", 
-                curStateFrame, i, clientEyePos[i][0], clientEyePos[i][1], clientEyePos[i][2],
-                clientEyeAngle[i][0], clientEyeAngle[i][1],
-                clientFootPos[i][0], clientFootPos[i][1], clientFootPos[i][2],
+            tmpStateFile.WriteLine("%i, %i, %f, %f, %f, %f, %f, %f, %f, %f, %i,", 
+                currentFrame, client, clientEyePos[client][0], clientEyePos[client][1], clientEyePos[client][2],
+                clientEyeAngle[client][0], clientEyeAngle[client][1],
+                clientFootPos[client][0], clientFootPos[client][1], clientFootPos[client][2],
                 clientBoolState[client]);
         }
     }
+    tmpStateFile.Close();
+    RenameFile(stateFilePath, tmpStateFilePath);
 
-    // read state
-    if (firstServerFrame || curInputFrame >= maxFramesBeforeRotation) {
-        curInputFrame = 0;
-        currentInputFileIndex = (currentInputFileIndex + 1) % maxIndex;
-        char inputIndexString[10];
-        IntToString(currentInputFileIndex, inputIndexString, 10);
-        if (!firstServerFrame) {
-            inputFile.close();
-        }
-        char inputFilePath[MAX_PATH_LENGTH];
-        Format(inputFilePath, MAX_PATH_LENGTH, "%s%s", inputFilePrefix, inputIndexString);
-        inputFile = OpenFile(inputFilePath, "r", false, "");
-        inputFile.ReadLine(inputBuffer, MAX_INPUT_LENGTH);
+    // read state - move file to tmp location so not overwritten, then read it
+    RenameFile(tmpInputFilePath, inputFilePath);
+    tmpInputFile = OpenFile(tmpInputFilePath, "r", false, "");
+    tmpInputFile.ReadLine(inputBuffer, MAX_INPUT_LENGTH);
+
+    while(!tmpInputFile.EndOfFile()) {
+        tmpInputFile.ReadLine(inputBuffer, MAX_INPUT_LENGTH);
+        ExplodeString(inputBuffer, ",", inputExplodedBuffer, MAX_INPUT_FIELDS, MAX_INPUT_LENGTH);
+        int client = StringToInt(inputExplodedBuffer[0]);
+
+        inputButtons[client] = StringToInt(inputExplodedBuffer[1]);
+        inputMovement[client][Forward] = inputButtons[client] & IN_FORWARD > 0;
+        inputMovement[client][Backward] = inputButtons[client] & IN_BACK > 0;
+        inputMovement[client][Left] = inputButtons[client] & IN_LEFT > 0;
+        inputMovement[client][Right] = inputButtons[client] & IN_RIGHT > 0;
+        inputAngleDeltas[client][0] = StringToFloat(inputExplodedBuffer[2]);
+        inputAngleDeltas[client][1] = StringToFloat(inputExplodedBuffer[3]);
     }
 
-    inputFile.ReadLine(inputBuffer, MAX_INPUT_LENGTH);
-    ExplodeString(inputBuffer, ",", inputExplodedBuffer, MAX_INPUT_FIELDS, MAX_INPUT_LENGTH);
-    
-
+    tmpInputFile.Close();
     currentFrame++;
-    // read input
-    firstServerFrame = false;
 }
 
 
@@ -318,34 +298,8 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
         */
         //SubtractVectors(finalView, mViewPunchAngle, finalView);
         if (iButtons & IN_SPEED) {
-            /*
-            ScaleVector(mAimPunchAngle, GetConVarFloat(weaponRecoilScale));
-            ScaleVector(mAimPunchAngle, GetConVarFloat(viewRecoilTracking));
-            ScaleVector(mViewPunchAngle, GetConVarFloat(weaponRecoilPunchExtra));
-            AddVectors(mViewPunchAngle, mAimPunchAngle, recoilAngleAdjustment);
-            SubtractVectors(finalView, recoilAngleAdjustment, finalView);
-            AddVectors(finalView, lastRecoilAngleAdjustment[client], finalView);
-            lastRecoilAngleAdjustment[client] = recoilAngleAdjustment;
-            TeleportEntity(client, NULL_VECTOR, finalView,NULL_VECTOR);
-            PrintToServer("walking");
-            */
             DisablePunch(client);
         }
-        
-        if (iButtons & IN_ATTACK) {
-
-        }
-
-/*
-        if (GetVectorDistance(fAngles, lastEyeAngles[client]) > 0) {
-            lastEyeAngles[client] = fAngles;
-            PrintToServer("%s fAngle changed from (%f, %f, %f) to (%f, %f, %f)", 
-                playerName, fAngles[0], fAngles[1], fAngles[2], 
-                lastEyeAngles[client][0], lastEyeAngles[client][1], lastEyeAngles[client][2]);
-            PrintToServer("iMouse (%f, %f)", 
-                iMouse[0], iMouse[1]);
-        }
-        */
     }
     
     return Plugin_Changed;
