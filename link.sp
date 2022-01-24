@@ -112,33 +112,6 @@ public Action:smBotDebug(client, args) {
     return Plugin_Handled;
 }
 
-// update client list when a new client connects
-public void OnClientPutInServer(int client) {
-    if (!DirExists(rootFolder)) {
-        PrintCantFindFolder();
-        return;
-    }
-
-    // rewrite the entire file every time a player connects to get fresh state
-    File tmpClientsFile = OpenFile(tmpClientFilePath, "w", false, "");
-    if (tmpClientsFile == null) {
-        PrintToServer("opening tmpClientsFile returned null");
-        return;
-    }
-
-    // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
-    for (int i = 1; i < MaxClients; i++) {
-        if (IsValidClient(i)) {
-            char playerName[128];
-            GetClientName(i, playerName, 128);
-            tmpClientsFile.WriteLine("%i, %s", i, playerName);
-        }
-    }
-
-    tmpClientsFile.Close();
-    RenameFile(clientFilePath, tmpClientFilePath);
-}
-
 // write state and get new commands each frame
 public OnGameFrame() {
     if (!DirExists(rootFolder)) {
@@ -146,13 +119,17 @@ public OnGameFrame() {
         return;
     }
 
+    // update client list - should do this only when client connects, but that
+    // event (OnClientPutInServer) doesnt seem to fire consistently
+    WriteClients();
+
     // write state - update temp file, then atomically overwrite last state
     tmpStateFile = OpenFile(tmpStateFilePath, "w", false, "");
     if (tmpStateFile == null) {
         PrintToServer("opening tmpStateFile returned null");
         return;
     }
-    tmpStateFile.WriteLine("State Frame,Player Index,Bot,Eye Pos X,Eye Pos Y,Eye Pos Z,"
+    tmpStateFile.WriteLine("State Frame,Player Index,Eye Pos X,Eye Pos Y,Eye Pos Z,"
         ... "Eye Angle X,Eye Angle Y,Foot Pos X,Foot Pos Y,Foot Pos Z,Is Alive");
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
@@ -167,12 +144,8 @@ public OnGameFrame() {
             else {
                 clientOtherState[client] &= ~1;
             }
-            int clientFake = 0;
-            if (IsFakeClient(client)) {
-                clientFake = 1;
-            }
-            tmpStateFile.WriteLine("%i, %i, %i, %f, %f, %f, %f, %f, %f, %f, %f, %i,", 
-                currentFrame, client, clientFake,
+            tmpStateFile.WriteLine("%i, %i, %f, %f, %f, %f, %f, %f, %f, %f, %i,", 
+                currentFrame, client,
                 clientEyePos[client][0], clientEyePos[client][1], clientEyePos[client][2],
                 clientEyeAngle[client][0], clientEyeAngle[client][1],
                 clientFootPos[client][0], clientFootPos[client][1], clientFootPos[client][2],
@@ -210,6 +183,38 @@ public OnGameFrame() {
         tmpInputFile.Close();
     }
     currentFrame++;
+}
+
+stock void WriteClients() {
+    if (!DirExists(rootFolder)) {
+        PrintCantFindFolder();
+        return;
+    }
+
+    // rewrite the entire file every time a player connects to get fresh state
+    File tmpClientsFile = OpenFile(tmpClientFilePath, "w", false, "");
+    if (tmpClientsFile == null) {
+        PrintToServer("opening tmpClientsFile returned null");
+        return;
+    }
+
+    tmpClientsFile.WriteLine("Client Id,Name,Bot");
+
+    // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
+    for (int client = 1; client < MaxClients; client++) {
+        if (IsValidClient(client)) {
+            int clientFake = 0;
+            if (IsFakeClient(client)) {
+                clientFake = 1;
+            }
+            char playerName[128];
+            GetClientName(client, playerName, 128);
+            tmpClientsFile.WriteLine("%i, %s, %i", client, playerName, clientFake);
+        }
+    }
+
+    tmpClientsFile.Close();
+    RenameFile(clientFilePath, tmpClientFilePath);
 }
 
 
