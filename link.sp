@@ -38,21 +38,21 @@ float inputAngleDeltas[MAXPLAYERS+1][3];
 float clientEyePos[MAXPLAYERS+1][3];
 float clientEyeAngle[MAXPLAYERS+1][3];
 float clientFootPos[MAXPLAYERS+1][3];
-int clientBoolState[MAXPLAYERS+1];
+int clientOtherState[MAXPLAYERS+1];
 
 // recoil punch adjustment variables
 ConVar weaponRecoilScale, viewRecoilTracking;
 float lastRecoilAngleAdjustment[MAXPLAYERS+1][3];
 
 // files 
-static char rootFolder[] = "/home/steam/bot_exporter/";
-static char clientFilePath[] = "/home/steam/bot_exporter/clients.csv";
-static char tmpClientFilePath[] = "/home/steam/bot_exporter/clients.csv.tmp.write";
-static char stateFilePath[] = "/home/steam/bot_exporter/state.csv";
-static char tmpStateFilePath[] = "/home/steam/bot_exporter/state.csv.tmp.write";
+static char rootFolder[] = "addons/sourcemod/bot-link-data/";
+static char clientFilePath[] = "addons/sourcemod/bot-link-data/clients.csv";
+static char tmpClientFilePath[] = "addons/sourcemod/bot-link-data/clients.csv.tmp.write";
+static char stateFilePath[] = "addons/sourcemod/bot-link-data/state.csv";
+static char tmpStateFilePath[] = "addons/sourcemod/bot-link-data/state.csv.tmp.write";
 File tmpStateFile;
-static char inputFilePath[] = "/home/steam/bot_exporter/input.csv";
-static char tmpInputFilePath[] = "/home/steam/bot_exporter/input.csv.tmp.read";
+static char inputFilePath[] = "addons/sourcemod/bot-link-data/input.csv";
+static char tmpInputFilePath[] = "addons/sourcemod/bot-link-data/input.csv.tmp.read";
 File tmpInputFile;
 int currentFrame;
 
@@ -60,6 +60,7 @@ int currentFrame;
 ConVar cvarInfAmmo, cvarBombTime;
 bool debugStatus;
 float maxDiff[2];
+
  
 public void OnPluginStart()
 {
@@ -85,9 +86,15 @@ public void OnPluginStart()
         lastRecoilAngleAdjustment[i][2] = 0.0;
     }
 
-    CreateDirectory(rootFolder, 777);
+    if (!DirExists(rootFolder)) {
+        PrintCantFindFolder();
+        return;
+    }
+    else {
+        PrintToServer("Can access %s", rootFolder);
+    }
 
-    PrintToServer("loaded bot_export 1.1 - actually handling files");
+    PrintToServer("loaded bot-link 1.0");
 }
 
 
@@ -106,15 +113,24 @@ public Action:smBotDebug(client, args) {
 }
 
 // update client list when a new client connects
-public void OnClientConnected(int client) {
+public void OnClientPutInServer(int client) {
+    if (!DirExists(rootFolder)) {
+        PrintCantFindFolder();
+        return;
+    }
+
     // rewrite the entire file every time a player connects to get fresh state
     File tmpClientsFile = OpenFile(tmpClientFilePath, "w", false, "");
+    if (tmpClientsFile == null) {
+        PrintToServer("opening tmpClientsFile returned null");
+        return;
+    }
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
     for (int i = 1; i < MaxClients; i++) {
-        if (IsClientInGame(i)) {
+        if (IsValidClient(i)) {
             char playerName[128];
-            GetClientName(client, playerName, 128);
+            GetClientName(i, playerName, 128);
             tmpClientsFile.WriteLine("%i, %s", i, playerName);
         }
     }
@@ -125,63 +141,80 @@ public void OnClientConnected(int client) {
 
 // write state and get new commands each frame
 public OnGameFrame() {
+    if (!DirExists(rootFolder)) {
+        PrintToServer("please create %s", rootFolder);
+        return;
+    }
+
     // write state - update temp file, then atomically overwrite last state
     tmpStateFile = OpenFile(tmpStateFilePath, "w", false, "");
-    tmpStateFile.WriteLine("State Frame,Player Index,Eye Pos X,Eye Pos Y,Eye Pos Z,"
+    if (tmpStateFile == null) {
+        PrintToServer("opening tmpStateFile returned null");
+        return;
+    }
+    tmpStateFile.WriteLine("State Frame,Player Index,Bot,Eye Pos X,Eye Pos Y,Eye Pos Z,"
         ... "Eye Angle X,Eye Angle Y,Foot Pos X,Foot Pos Y,Foot Pos Z,Is Alive");
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
     for (int client = 1; client < MaxClients; client++) {
-        if (IsClientInGame(client)) {
+        if (IsValidClient(client)) {
             GetClientEyePosition(client, clientEyePos[client]);
             GetClientAbsAngles(client, clientEyeAngle[client]);
             GetClientAbsOrigin(client, clientFootPos[client]);
             if (IsPlayerAlive(client)) {
-                clientBoolState[client] |= 1;
+                clientOtherState[client] |= 1;
             }
             else {
-                clientBoolState[client] &= ~1;
+                clientOtherState[client] &= ~1;
             }
-            tmpStateFile.WriteLine("%i, %i, %f, %f, %f, %f, %f, %f, %f, %f, %i,", 
-                currentFrame, client, clientEyePos[client][0], clientEyePos[client][1], clientEyePos[client][2],
+            int clientFake = 0;
+            if (IsFakeClient(client)) {
+                clientFake = 1;
+            }
+            tmpStateFile.WriteLine("%i, %i, %i, %f, %f, %f, %f, %f, %f, %f, %f, %i,", 
+                currentFrame, client, clientFake,
+                clientEyePos[client][0], clientEyePos[client][1], clientEyePos[client][2],
                 clientEyeAngle[client][0], clientEyeAngle[client][1],
                 clientFootPos[client][0], clientFootPos[client][1], clientFootPos[client][2],
-                clientBoolState[client]);
+                clientOtherState[client]);
         }
     }
     tmpStateFile.Close();
     RenameFile(stateFilePath, tmpStateFilePath);
 
     // read state - move file to tmp location so not overwritten, then read it
-    RenameFile(tmpInputFilePath, inputFilePath);
-    tmpInputFile = OpenFile(tmpInputFilePath, "r", false, "");
-    tmpInputFile.ReadLine(inputBuffer, MAX_INPUT_LENGTH);
-
-    while(!tmpInputFile.EndOfFile()) {
-        tmpInputFile.ReadLine(inputBuffer, MAX_INPUT_LENGTH);
-        ExplodeString(inputBuffer, ",", inputExplodedBuffer, MAX_INPUT_FIELDS, MAX_INPUT_LENGTH);
-        int client = StringToInt(inputExplodedBuffer[0]);
-
-        inputButtons[client] = StringToInt(inputExplodedBuffer[1]);
-        inputMovement[client][Forward] = inputButtons[client] & IN_FORWARD > 0;
-        inputMovement[client][Backward] = inputButtons[client] & IN_BACK > 0;
-        inputMovement[client][Left] = inputButtons[client] & IN_LEFT > 0;
-        inputMovement[client][Right] = inputButtons[client] & IN_RIGHT > 0;
-        inputAngleDeltas[client][0] = StringToFloat(inputExplodedBuffer[2]);
-        inputAngleDeltas[client][1] = StringToFloat(inputExplodedBuffer[3]);
+    // update to latest input if it exists
+    if (FileExists(inputFilePath)) {
+        RenameFile(tmpInputFilePath, inputFilePath);
     }
 
-    tmpInputFile.Close();
+    // once at least one input, keep using it until a new one is provided
+    if (FileExists(tmpInputFilePath)) {
+        tmpInputFile = OpenFile(tmpInputFilePath, "r", false, "");
+        tmpInputFile.ReadLine(inputBuffer, MAX_INPUT_LENGTH);
+
+        while(!tmpInputFile.EndOfFile()) {
+            tmpInputFile.ReadLine(inputBuffer, MAX_INPUT_LENGTH);
+            ExplodeString(inputBuffer, ",", inputExplodedBuffer, MAX_INPUT_FIELDS, MAX_INPUT_LENGTH);
+            int client = StringToInt(inputExplodedBuffer[0]);
+
+            inputButtons[client] = StringToInt(inputExplodedBuffer[1]);
+            inputMovement[client][Forward] = inputButtons[client] & IN_FORWARD > 0;
+            inputMovement[client][Backward] = inputButtons[client] & IN_BACK > 0;
+            inputMovement[client][Left] = inputButtons[client] & IN_LEFT > 0;
+            inputMovement[client][Right] = inputButtons[client] & IN_RIGHT > 0;
+            inputAngleDeltas[client][0] = StringToFloat(inputExplodedBuffer[2]);
+            inputAngleDeltas[client][1] = StringToFloat(inputExplodedBuffer[3]);
+        }
+
+        tmpInputFile.Close();
+    }
     currentFrame++;
 }
 
 
 public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float fVel[3], float fAngles[3], int & iWeapon, int & iSubtype, int & iCmdNum, int & iTickcount, int & iSeed, int iMouse[2])
 {
-    if (debugStatus) {
-        SetEntProp( client, Prop_Data, "m_ArmorValue", 0, 1 );  
-    }
-
     char playerName[128];
     GetClientName(client, playerName, 128);
     /*
@@ -330,7 +363,10 @@ stock void DisablePunch(int client) {
 
 stock bool IsValidClient(int client)
 {
-    return client > 0 && client <= MaxClients && IsClientConnected(client) && IsClientInGame(client) && !IsClientSourceTV(client);
+    return client > 0 && client <= MaxClients && 
+        IsClientConnected(client) && IsClientInGame(client) && !IsClientSourceTV(client);
 }
 
-
+stock bool PrintCantFindFolder() {
+    PrintToServer("Cant access root folder %s, please create it with permissions 777", rootFolder);
+}

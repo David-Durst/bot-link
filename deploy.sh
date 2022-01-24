@@ -22,3 +22,7 @@ if ./compile.sh bot-link/$1.sp; then
         ${script_dir}/reminder.sh $1
     fi
 fi
+
+data_path=/home/steam/csgo-ds/csgo/addons/sourcemod/scripting
+mkdir -p $data_path
+chmod 777 $data_path
