@@ -8,6 +8,7 @@
 #define MAX_INPUT_FIELDS 20
 #define MAX_PATH_LENGTH 256
 #define MAX_ONE_DIRECTION_SPEED 450.0
+#define MAX_ONE_DIRECTION_ANGLE_DELTA 30.0
 
 public Plugin myinfo =
 {
@@ -19,6 +20,7 @@ public Plugin myinfo =
 };
 
 // input commands to read
+bool inputSet[MAXPLAYERS+1];
 char inputBuffer[MAX_INPUT_LENGTH];
 char inputExplodedBuffer[MAX_INPUT_FIELDS][MAX_INPUT_LENGTH];
 int inputButtons[MAXPLAYERS+1];
@@ -238,6 +240,11 @@ stock void ReadInput() {
         RenameFile(tmpInputFilePath, inputFilePath);
     }
 
+    // disable inputSet for each client, will make true if actually appears in file
+    for (int client = 1; client < MaxClients; client++) {
+        inputSet[client] = false;
+    }
+
     // once at least one input, keep using it until a new one is provided
     if (FileExists(tmpInputFilePath)) {
         tmpInputFile = OpenFile(tmpInputFilePath, "r", false, "");
@@ -248,6 +255,7 @@ stock void ReadInput() {
             ExplodeString(inputBuffer, ",", inputExplodedBuffer, MAX_INPUT_FIELDS, MAX_INPUT_LENGTH);
             int client = StringToInt(inputExplodedBuffer[0]);
 
+            inputSet[client] = true;
             inputButtons[client] = StringToInt(inputExplodedBuffer[1]);
             inputMovement[client][Forward] = inputButtons[client] & IN_FORWARD > 0;
             inputMovement[client][Backward] = inputButtons[client] & IN_BACK > 0;
@@ -259,6 +267,41 @@ stock void ReadInput() {
 
         tmpInputFile.Close();
     }
+}
+
+
+// https://sm.alliedmods.net/api/index.php?fastload=file&id=47&
+public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float fVel[3], float fAngles[3], int & iWeapon, int & iSubtype, int & iCmdNum, int & iTickcount, int & iSeed, int iMouse[2])
+{
+    if (!inputSet[client]) {
+        return Plugin_Continue;
+    }
+
+    iButtons = inputButtons[client];
+
+    fVel[0] = 0.0;
+    fVel[1] = 0.0;
+    fVel[2] = 0.0;
+    // crouching/walking/jump doesnt change fVel
+    // dont know what changes fVel[2]
+    if (inputMovement[client][Forward]) {
+        fVel[0] += MAX_ONE_DIRECTION_SPEED;
+    }
+    if (inputMovement[client][Backward]) {
+        fVel[0] -= MAX_ONE_DIRECTION_SPEED;
+    }
+    if (inputMovement[client][Right]) {
+        fVel[0] += MAX_ONE_DIRECTION_SPEED;
+    }
+    if (inputMovement[client][Left]) {
+        fVel[0] -= MAX_ONE_DIRECTION_SPEED;
+    }
+
+    fAngles = clientEyePos[client];
+    fAngles[0] += inputAngleDeltas[client][0] * MAX_ONE_DIRECTION_ANGLE_DELTA;
+    fAngles[1] += inputAngleDeltas[client][1] * MAX_ONE_DIRECTION_ANGLE_DELTA;
+
+    return Plugin_Changed;
 }
 
 
