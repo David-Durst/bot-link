@@ -32,7 +32,7 @@ enum MovementInputs: {
     NUM_MOVEMENT_INPUTS
 };
 bool inputMovement[MAXPLAYERS+1][NUM_MOVEMENT_INPUTS];
-float inputAngleDeltas[MAXPLAYERS+1][3];
+float inputAngleDeltaPct[MAXPLAYERS+1][3];
 
 // GetClientEyePosition - this will store where looking
 // check GetClientAbsOrigin vs  GetEntPropVector(client, Prop_Send, "m_vecOrigin", fPos); 
@@ -261,8 +261,10 @@ stock void ReadInput() {
             inputMovement[client][Backward] = inputButtons[client] & IN_BACK > 0;
             inputMovement[client][Left] = inputButtons[client] & IN_LEFT > 0;
             inputMovement[client][Right] = inputButtons[client] & IN_RIGHT > 0;
-            inputAngleDeltas[client][0] = StringToFloat(inputExplodedBuffer[2]);
-            inputAngleDeltas[client][1] = StringToFloat(inputExplodedBuffer[3]);
+            inputAngleDeltaPct[client][0] = StringToFloat(inputExplodedBuffer[2]);
+            inputAngleDeltaPct[client][0] = fmax(-1.0, fmin(1.0, inputAngleDeltaPct[client][0]));
+            inputAngleDeltaPct[client][1] = StringToFloat(inputExplodedBuffer[3]);
+            inputAngleDeltaPct[client][1] = fmax(-1.0, fmin(1.0, inputAngleDeltaPct[client][1]));
         }
 
         tmpInputFile.Close();
@@ -298,8 +300,8 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     }
 
     fAngles = clientEyePos[client];
-    fAngles[0] += inputAngleDeltas[client][0] * MAX_ONE_DIRECTION_ANGLE_DELTA;
-    fAngles[1] += inputAngleDeltas[client][1] * MAX_ONE_DIRECTION_ANGLE_DELTA;
+    fAngles[0] += inputAngleDeltaPct[client][0] * MAX_ONE_DIRECTION_ANGLE_DELTA;
+    fAngles[1] += inputAngleDeltaPct[client][1] * MAX_ONE_DIRECTION_ANGLE_DELTA;
 
     return Plugin_Changed;
 }
@@ -314,4 +316,20 @@ stock bool IsValidClient(int client)
 
 stock bool PrintCantFindFolder() {
     PrintToServer("Cant access root folder %s, please create it with permissions 777", rootFolder);
+}
+
+stock int min(int a, int b) {
+    return a < b ? a : b;
+}
+
+stock float fmin(float a, float b) {
+    return a < b ? a : b;
+}
+
+stock int max(int a, int b) {
+    return a > b ? a : b;
+}
+
+stock float fmax(float a, float b) {
+    return a > b ? a : b;
 }
