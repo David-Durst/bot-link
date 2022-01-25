@@ -63,7 +63,7 @@ File tmpInputFile;
 int currentFrame;
 
 // debugging variables
-ConVar cvarInfAmmo, cvarBombTime;
+ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick;
 bool debugStatus;
 float maxDiff[2];
 
@@ -76,6 +76,7 @@ public void OnPluginStart()
     SetConVarInt(cvarBotStop, 1, true, true);
     cvarInfAmmo = FindConVar("sv_infinite_ammo");
     cvarBombTime = FindConVar("mp_c4timer");
+    cvarAutoKick = FindConVar("mp_autokick");
 
     debugStatus = false;
 
@@ -109,11 +110,13 @@ public Action:smBotDebug(client, args) {
         debugStatus = true;
         SetConVarInt(cvarInfAmmo, 1, true, true);
         SetConVarInt(cvarBombTime, 600, true, true);
+        SetConVarInt(cvarAutoKick, 0, true, true);
     }
     else {
         debugStatus = false;
         SetConVarInt(cvarInfAmmo, 0, true, true);
         SetConVarInt(cvarBombTime, 40, true, true);
+        SetConVarInt(cvarAutoKick, 1, true, true);
     }
     return Plugin_Handled;
 }
