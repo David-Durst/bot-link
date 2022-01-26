@@ -60,6 +60,9 @@ static char tmpInputFilePath[] = "addons/sourcemod/bot-link-data/input.csv.tmp.r
 File tmpInputFile;
 int currentFrame;
 
+// general variables
+ConVar cvarBotStop, cvarBotChatter;
+
 // debugging variables
 ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick;
 bool debugStatus;
@@ -70,19 +73,17 @@ public void OnPluginStart()
 {
     RegConsoleCmd("sm_botDebug", smBotDebug, "- make bomb time 10 minutes and give infinite ammo");
 
-    new ConVar:cvarBotStop = FindConVar("bot_stop");
-    SetConVarInt(cvarBotStop, 1, true, true);
-    new ConVar:cvarBotChatter = FindConVar("bot_chatter");
-    SetConVarString(cvarBotChatter, "off", true, true);
+    cvarBotStop = FindConVar("bot_stop");
+    cvarBotChatter = FindConVar("bot_chatter");
     cvarInfAmmo = FindConVar("sv_infinite_ammo");
     cvarBombTime = FindConVar("mp_c4timer");
     cvarAutoKick = FindConVar("mp_autokick");
 
     debugStatus = false;
+    applyConVars();
 
     weaponRecoilScale = FindConVar("weapon_recoil_scale");
     viewRecoilTracking = FindConVar("view_recoil_tracking");
-
 
     maxDiff[0] = 0.0;
     maxDiff[1] = 0.0;
@@ -104,21 +105,29 @@ public void OnPluginStart()
     PrintToServer("loaded bot-link 1.0");
 }
 
-
 public Action:smBotDebug(client, args) {
+    debugStatus = !debugStatus;
+    applyConVars();
+    return Plugin_Handled;
+}
+
+public OnMapStart() {
+    applyConVars();
+}
+
+stock void applyConVars() {
+    SetConVarInt(cvarBotStop, 1, true, true);
+    SetConVarString(cvarBotChatter, "off", true, true);
     if (!debugStatus) {
-        debugStatus = true;
         SetConVarInt(cvarInfAmmo, 1, true, true);
         SetConVarInt(cvarBombTime, 600, true, true);
         SetConVarInt(cvarAutoKick, 0, true, true);
     }
     else {
-        debugStatus = false;
         SetConVarInt(cvarInfAmmo, 0, true, true);
         SetConVarInt(cvarBombTime, 40, true, true);
         SetConVarInt(cvarAutoKick, 1, true, true);
     }
-    return Plugin_Handled;
 }
 
 
