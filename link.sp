@@ -318,7 +318,6 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
 
     TeleportEntity(client, NULL_VECTOR, newAngles, NULL_VECTOR);
     clientEyeAngle[client] = newAngles;
-    //PrintToServer("old fAngles: (%f, %f, %f), new fAngles: (%f, %f, %f)", 
 
     if (printStatus) {
         char clientName[128];
@@ -374,7 +373,6 @@ stock float fabs(float a) {
     return fmax(a, -1.0*a);
 }
 
-stock float floatMod(float num, float denom)
-{
+stock float floatMod(float num, float denom) {
     return num - denom * RoundToFloor(num / denom);
 }
