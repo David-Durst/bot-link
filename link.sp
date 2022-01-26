@@ -52,8 +52,6 @@ float lastRecoilAngleAdjustment[MAXPLAYERS+1][3];
 
 // files 
 static char rootFolder[] = "addons/sourcemod/bot-link-data/";
-static char clientFilePath[] = "addons/sourcemod/bot-link-data/clients.csv";
-static char tmpClientFilePath[] = "addons/sourcemod/bot-link-data/clients.csv.tmp.write";
 static char stateFilePath[] = "addons/sourcemod/bot-link-data/state.csv";
 static char tmpStateFilePath[] = "addons/sourcemod/bot-link-data/state.csv.tmp.write";
 File tmpStateFile;
@@ -131,49 +129,9 @@ public OnGameFrame() {
         return;
     }
 
-    // update client list - should do this only when client connects, but that
-    // event (OnClientPutInServer) doesnt seem to fire consistently
-    WriteClients();
-
-
     WriteState();
-
     ReadInput();
-
     currentFrame++;
-}
-
-
-stock void WriteClients() {
-    if (!DirExists(rootFolder)) {
-        PrintCantFindFolder();
-        return;
-    }
-
-    // rewrite the entire file every time a player connects to get fresh state
-    File tmpClientsFile = OpenFile(tmpClientFilePath, "w", false, "");
-    if (tmpClientsFile == null) {
-        PrintToServer("opening tmpClientsFile returned null");
-        return;
-    }
-
-    tmpClientsFile.WriteLine("Client Id,Name,Bot");
-
-    // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
-    for (int client = 1; client < MaxClients; client++) {
-        if (IsValidClient(client)) {
-            int clientFake = 0;
-            if (IsFakeClient(client)) {
-                clientFake = 1;
-            }
-            char playerName[128];
-            GetClientName(client, playerName, 128);
-            tmpClientsFile.WriteLine("%i,%s,%i", client, playerName, clientFake);
-        }
-    }
-
-    tmpClientsFile.Close();
-    RenameFile(clientFilePath, tmpClientFilePath);
 }
 
 
@@ -185,32 +143,41 @@ stock void WriteState() {
         PrintToServer("opening tmpStateFile returned null");
         return;
     }
-    tmpStateFile.WriteLine("State Frame,Player Index,Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
+    tmpStateFile.WriteLine("State Frame,Client Id,Name,Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
         ... "Eye Angle X,Eye Angle Y,Aimpunch Angle X,Aimpunch Angle Y,"
-        ... "Eye With Recoil Angle X,Eye With Recoil Angle Y,Is Alive");
+        ... "Eye With Recoil Angle X,Eye With Recoil Angle Y,Is Alive,Is Bot");
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
     for (int client = 1; client < MaxClients; client++) {
         if (IsValidClient(client)) {
+            char clientName[128];
+            GetClientName(client, clientName, 128);
+
             // this gets position result from getpos
             GetClientEyePosition(client, clientEyePos[client]);
             GetViewAngleWithRecoil(client);
             // this gets position result from getpos_exact
             GetClientAbsOrigin(client, clientFootPos[client]);
+
             if (IsPlayerAlive(client)) {
                 clientOtherState[client] |= 1;
             }
             else {
                 clientOtherState[client] &= ~1;
             }
-            tmpStateFile.WriteLine("%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i",
-                currentFrame, client,
+            int clientFake = 0;
+            if (IsFakeClient(client)) {
+                clientFake = 1;
+            }
+
+            tmpStateFile.WriteLine("%i,%i,%s,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i",
+                currentFrame, client, clientName,
                 clientEyePos[client][0], clientEyePos[client][1], 
                 clientEyePos[client][2], clientFootPos[client][2],
                 clientEyeAngle[client][0], clientEyeAngle[client][1],
                 mAimPunchAngle[client][0], mAimPunchAngle[client][1],
                 clientEyeAngleWithRecoil[client][0], clientEyeAngleWithRecoil[client][1],
-                clientOtherState[client]);
+                clientOtherState[client], clientFake);
         }
     }
     tmpStateFile.Close();
