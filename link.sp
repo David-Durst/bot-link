@@ -166,7 +166,7 @@ stock void WriteClients() {
             }
             char playerName[128];
             GetClientName(client, playerName, 128);
-            tmpClientsFile.WriteLine("%i, %s, %i", client, playerName, clientFake);
+            tmpClientsFile.WriteLine("%i,%s,%i", client, playerName, clientFake);
         }
     }
 
@@ -201,7 +201,7 @@ stock void WriteState() {
             else {
                 clientOtherState[client] &= ~1;
             }
-            tmpStateFile.WriteLine("%i, %i, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %i", 
+            tmpStateFile.WriteLine("%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i",
                 currentFrame, client,
                 clientEyePos[client][0], clientEyePos[client][1], 
                 clientEyePos[client][2], clientFootPos[client][2],
