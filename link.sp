@@ -74,6 +74,8 @@ public void OnPluginStart()
 
     new ConVar:cvarBotStop = FindConVar("bot_stop");
     SetConVarInt(cvarBotStop, 1, true, true);
+    new ConVar:cvarBotChatter = FindConVar("bot_chatter");
+    SetConVarString(cvarBotChatter, "off", true, true);
     cvarInfAmmo = FindConVar("sv_infinite_ammo");
     cvarBombTime = FindConVar("mp_c4timer");
     cvarAutoKick = FindConVar("mp_autokick");
