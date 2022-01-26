@@ -21,6 +21,7 @@ public Plugin myinfo =
 
 // input commands to read
 bool inputSet[MAXPLAYERS+1];
+bool inputSetLastFrame[MAXPLAYERS+1];
 char inputBuffer[MAX_INPUT_LENGTH];
 char inputExplodedBuffer[MAX_INPUT_FIELDS][MAX_INPUT_LENGTH];
 int inputButtons[MAXPLAYERS+1];
@@ -66,12 +67,14 @@ ConVar cvarBotStop, cvarBotChatter;
 // debugging variables
 ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick;
 bool debugStatus;
+bool printStatus;
 float maxDiff[2];
 
  
 public void OnPluginStart()
 {
     RegConsoleCmd("sm_botDebug", smBotDebug, "- make bomb time 10 minutes and give infinite ammo");
+    RegConsoleCmd("sm_printLink", smPrintLink, "- print debugging values from bot-link");
 
     cvarBotStop = FindConVar("bot_stop");
     cvarBotChatter = FindConVar("bot_chatter");
@@ -80,6 +83,7 @@ public void OnPluginStart()
     cvarAutoKick = FindConVar("mp_autokick");
 
     debugStatus = false;
+    printStatus = false;
     applyConVars();
 
     weaponRecoilScale = FindConVar("weapon_recoil_scale");
@@ -92,6 +96,7 @@ public void OnPluginStart()
         lastRecoilAngleAdjustment[i][0] = 0.0;
         lastRecoilAngleAdjustment[i][1] = 0.0;
         lastRecoilAngleAdjustment[i][2] = 0.0;
+        inputSetLastFrame[i] = false;
     }
 
     if (!DirExists(rootFolder)) {
@@ -103,6 +108,11 @@ public void OnPluginStart()
     }
 
     PrintToServer("loaded bot-link 1.0");
+}
+
+public Action:smPrintLink(client, args) {
+    printStatus = !printStatus;
+    return Plugin_Handled;
 }
 
 public Action:smBotDebug(client, args) {
@@ -199,7 +209,11 @@ stock void GetViewAngleWithRecoil(int client) {
     // which is weird as legal pitch range is -90-90 yaw
     // tried GetClientAbsAngles and those werent as useful, might be with abs value for getpos_exact
     // confirmed that both GetClientAbsAngles and GetClientEyeAngles dont adjust for recoil
-    GetClientEyeAngles(client, clientEyeAngle[client]);
+
+    // since bots drift, if under my control, dont actually update EyeAngles
+    if (!inputSet[client]) {
+        GetClientEyeAngles(client, clientEyeAngle[client]);
+    }
 
     // get recoil state from engine, m_aimPunchAngleVel not important
     GetEntPropVector(client, Prop_Send, "m_aimPunchAngle", mAimPunchAngle[client]);
@@ -257,6 +271,7 @@ stock void ReadInput() {
 public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float fVel[3], float fAngles[3], int & iWeapon, int & iSubtype, int & iCmdNum, int & iTickcount, int & iSeed, int iMouse[2])
 {
     if (!inputSet[client]) {
+        inputSetLastFrame[client] = false;
         return Plugin_Continue;
     }
 
@@ -274,21 +289,57 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
         fVel[0] -= MAX_ONE_DIRECTION_SPEED;
     }
     if (inputMovement[client][Right]) {
-        fVel[0] += MAX_ONE_DIRECTION_SPEED;
+        fVel[1] += MAX_ONE_DIRECTION_SPEED;
     }
     if (inputMovement[client][Left]) {
-        fVel[0] -= MAX_ONE_DIRECTION_SPEED;
+        fVel[1] -= MAX_ONE_DIRECTION_SPEED;
     }
 
-    fAngles = clientEyePos[client];
-    fAngles[0] += inputAngleDeltaPct[client][0] * MAX_ONE_DIRECTION_ANGLE_DELTA;
-    if (fAngles[0] > 179.95 || fAngles[0] < -179.95) {
-        fAngles[0] *= -1;
+    float newAngles[3];
+    float oldAngles[3];
+    if (inputSetLastFrame[client]) {
+        newAngles = clientEyeAngle[client];
     }
-    fAngles[1] += inputAngleDeltaPct[client][1] * MAX_ONE_DIRECTION_ANGLE_DELTA;
-    fAngles[1] = fmax(-89.0, fmin(89.0, fAngles[1]));
+    else {
+        newAngles = fAngles;
+    }
+    oldAngles = newAngles;
+
+    newAngles[0] += inputAngleDeltaPct[client][0] * MAX_ONE_DIRECTION_ANGLE_DELTA;
+    newAngles[0] = fmax(-89.0, fmin(89.0, newAngles[0]));
+
+    newAngles[1] += inputAngleDeltaPct[client][1] * MAX_ONE_DIRECTION_ANGLE_DELTA;
+    if (newAngles[1] > 180.0) {
+        newAngles[1] = -360.0 + newAngles[1];
+    }
+    else if (newAngles[1] < -180.0) {
+        newAngles[1] = 360.0 + newAngles[1];
+    }
+
+    TeleportEntity(client, NULL_VECTOR, newAngles, NULL_VECTOR);
+    clientEyeAngle[client] = newAngles;
+    //PrintToServer("old fAngles: (%f, %f, %f), new fAngles: (%f, %f, %f)", 
+
+    if (printStatus) {
+        char clientName[128];
+        GetClientName(client, clientName, 128);
+        PrintToServer("new inputs for %i: %s", client, clientName);
+        PrintToServer("old fAngles: (%f, %f, %f), new fAngles: (%f, %f, %f)",
+            oldAngles[0], oldAngles[1], oldAngles[2],
+            newAngles[0], newAngles[1], newAngles[2]);
+        PrintToServer("delta fAngles: (%f, %f, %f)",
+            compareAnglesMod360(oldAngles[0], newAngles[0]),
+            compareAnglesMod360(oldAngles[1], newAngles[1]),
+            compareAnglesMod360(oldAngles[2], newAngles[2]));
+    }
+
+    inputSetLastFrame[client] = true;
 
     return Plugin_Changed;
+}
+
+stock float compareAnglesMod360(float angle0, float angle1) {
+    return fabs(floatMod((angle0 + 180.0 - (angle1 + 180.0)), 360.0));
 }
 
 
@@ -317,4 +368,13 @@ stock int max(int a, int b) {
 
 stock float fmax(float a, float b) {
     return a > b ? a : b;
+}
+
+stock float fabs(float a) {
+    return fmax(a, -1.0*a);
+}
+
+stock float floatMod(float num, float denom)
+{
+    return num - denom * RoundToFloor(num / denom);
 }
