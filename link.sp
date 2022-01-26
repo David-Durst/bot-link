@@ -282,7 +282,11 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
 
     fAngles = clientEyePos[client];
     fAngles[0] += inputAngleDeltaPct[client][0] * MAX_ONE_DIRECTION_ANGLE_DELTA;
+    if (fAngles[0] > 179.95 || fAngles[0] < -179.95) {
+        fAngles[0] *= -1;
+    }
     fAngles[1] += inputAngleDeltaPct[client][1] * MAX_ONE_DIRECTION_ANGLE_DELTA;
+    fAngles[1] = fmax(-89.0, fmin(89.0, fAngles[1]));
 
     return Plugin_Changed;
 }
