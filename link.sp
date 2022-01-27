@@ -4,6 +4,7 @@
 #include <sdkhooks>
 #include <sdktools>
 #include <cstrike>
+#include "bot-link/weapon_status.sp"
 #include "bot-link/grenade_status.sp"
 #define MAX_INPUT_LENGTH 1000
 #define MAX_INPUT_FIELDS 20
@@ -46,18 +47,6 @@ float clientFootPos[MAXPLAYERS+1][3];
 float mAimPunchAngle[MAXPLAYERS+1][3];
 float mViewAdjustedAimPunchAngle[MAXPLAYERS+1][3];
 float mViewPunchAngle[MAXPLAYERS+1][3];
-
-// Weapon slots.
-enum WeaponsSlot:
-{
-    Slot_Invalid        = -1,   /** Invalid weapon (slot). */
-    Slot_Primary        = 0,    /** Primary weapon slot. */
-    Slot_Secondary      = 1,    /** Secondary weapon slot. */
-    Slot_Melee          = 2,    /** Melee (knife) weapon slot. */
-    Slot_Projectile     = 3,    /** Projectile (grenades, flashbangs, etc) weapon slot. */
-    Slot_Explosive      = 4,    /** Explosive (c4) weapon slot. */
-};
-
 int clientOtherState[MAXPLAYERS+1];
 
 // recoil punch adjustment variables
@@ -98,7 +87,7 @@ public void OnPluginStart()
     debugStatus = false;
     printStatus = false;
     applyConVars();
-    InitOffsets();
+    InitGrenadeOffsets();
 
     weaponRecoilScale = FindConVar("weapon_recoil_scale");
     viewRecoilTracking = FindConVar("view_recoil_tracking");
@@ -137,7 +126,7 @@ public Action:smBotDebug(client, args) {
 
 public OnMapStart() {
     applyConVars();
-    InitOffsets();
+    InitGrenadeOffsets();
 }
 
 stock void applyConVars() {
@@ -178,6 +167,8 @@ stock void WriteState() {
         return;
     }
     tmpStateFile.WriteLine("State Frame,Client Id,Name,"
+        ... "Rifle Id,Rifle Clip Ammo,Rifle Reserve Ammo,Rifle Total Ammo,"
+        ... "Pistol Id,Pistol Clip Ammo,Pistol Reserve Ammo,"
         ... "Team,Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,"
         ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
         ... "Eye Angle X,Eye Angle Y,Aimpunch Angle X,Aimpunch Angle Y,"
@@ -207,6 +198,21 @@ stock void WriteState() {
                 clientFake = 1;
             }
 
+            int rifleId = GetRifleEntityId(client);
+            int rifleClipAmmo = -1, rifleReserveAmmo = -1, rifleTotalAmmo;
+            if (rifleId != -1) {
+                rifleClipAmmo = GetWeaponClipAmmo(rifleId);
+                rifleReserveAmmo = GetWeaponReserveAmmo(rifleId);
+                rifleTotalAmmo = GetWeaponTotalAmmo(client, rifleId);
+            }
+
+            int pistolId = GetPistolEntityId(client);
+            int pistolClipAmmo = -1, pistolReserveAmmo = -1;
+            if (pistolId != -1) {
+                pistolClipAmmo = GetWeaponClipAmmo(pistolId);
+                pistolReserveAmmo = GetWeaponReserveAmmo(pistolId);
+            }
+
             tmpStateFile.WriteLine("%i,%i,%s,%i,"
                                     ... "%i,%i,"
                                     ... "%i,%i,"
@@ -218,6 +224,8 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%i,%i",
                 currentFrame, client, clientName, clientTeam,
+                rifleId, rifleClipAmmo, rifleReserveAmmo, rifleTotalAmmo,
+                pistolId, pistolClipAmmo, pistolReserveAmmo,
                 GetGrenade(client, Flash), GetGrenade(client, Molotov), 
                 GetGrenade(client, Smoke), GetGrenade(client, HE), 
                 GetGrenade(client, Decoy), GetGrenade(client, Incendiary), 

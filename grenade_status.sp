@@ -8,7 +8,7 @@ char g_saGrenadeWeaponNames[][] = {
     "weapon_incgrenade"
 };
 
-enum Grenades: {
+enum grenades: {
     Flash,
     Molotov,
     Smoke,
@@ -20,7 +20,7 @@ enum Grenades: {
 
 int g_iaGrenadeOffsets[sizeof(g_saGrenadeWeaponNames)];
 
-stock void InitOffsets() {
+stock void InitGrenadeOffsets() {
     if (!g_iaGrenadeOffsets[0]) {
         for (int i=0; i<sizeof(g_saGrenadeWeaponNames); i++) {
             int entindex = CreateEntityByName(g_saGrenadeWeaponNames[i]);
@@ -31,7 +31,7 @@ stock void InitOffsets() {
     }
 }
 
-stock int GetGrenade(int client, Grenades grenadeIndex) {
+stock int GetGrenade(int client, grenades grenadeIndex) {
     return GetEntProp(client, Prop_Send, "m_iAmmo", _, g_iaGrenadeOffsets[grenadeIndex]);
 }
 
