@@ -4,6 +4,7 @@
 #include <sdkhooks>
 #include <sdktools>
 #include <cstrike>
+#include "bot-link/grenade_status.sp"
 #define MAX_INPUT_LENGTH 1000
 #define MAX_INPUT_FIELDS 20
 #define MAX_PATH_LENGTH 256
@@ -45,6 +46,18 @@ float clientFootPos[MAXPLAYERS+1][3];
 float mAimPunchAngle[MAXPLAYERS+1][3];
 float mViewAdjustedAimPunchAngle[MAXPLAYERS+1][3];
 float mViewPunchAngle[MAXPLAYERS+1][3];
+
+// Weapon slots.
+enum WeaponsSlot:
+{
+    Slot_Invalid        = -1,   /** Invalid weapon (slot). */
+    Slot_Primary        = 0,    /** Primary weapon slot. */
+    Slot_Secondary      = 1,    /** Secondary weapon slot. */
+    Slot_Melee          = 2,    /** Melee (knife) weapon slot. */
+    Slot_Projectile     = 3,    /** Projectile (grenades, flashbangs, etc) weapon slot. */
+    Slot_Explosive      = 4,    /** Explosive (c4) weapon slot. */
+};
+
 int clientOtherState[MAXPLAYERS+1];
 
 // recoil punch adjustment variables
@@ -85,6 +98,7 @@ public void OnPluginStart()
     debugStatus = false;
     printStatus = false;
     applyConVars();
+    InitOffsets();
 
     weaponRecoilScale = FindConVar("weapon_recoil_scale");
     viewRecoilTracking = FindConVar("view_recoil_tracking");
@@ -123,6 +137,7 @@ public Action:smBotDebug(client, args) {
 
 public OnMapStart() {
     applyConVars();
+    InitOffsets();
 }
 
 stock void applyConVars() {
@@ -162,7 +177,9 @@ stock void WriteState() {
         PrintToServer("opening tmpStateFile returned null");
         return;
     }
-    tmpStateFile.WriteLine("State Frame,Client Id,Name,Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
+    tmpStateFile.WriteLine("State Frame,Client Id,Name,"
+        ... "Team,Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,"
+        ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
         ... "Eye Angle X,Eye Angle Y,Aimpunch Angle X,Aimpunch Angle Y,"
         ... "Eye With Recoil Angle X,Eye With Recoil Angle Y,Is Alive,Is Bot");
 
@@ -171,6 +188,7 @@ stock void WriteState() {
         if (IsValidClient(client)) {
             char clientName[128];
             GetClientName(client, clientName, 128);
+            int clientTeam = GetClientTeam(client);
 
             // this gets position result from getpos
             GetClientEyePosition(client, clientEyePos[client]);
@@ -189,8 +207,20 @@ stock void WriteState() {
                 clientFake = 1;
             }
 
-            tmpStateFile.WriteLine("%i,%i,%s,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i",
-                currentFrame, client, clientName,
+            tmpStateFile.WriteLine("%i,%i,%s,%i,"
+                                    ... "%i,%i,"
+                                    ... "%i,%i,"
+                                    ... "%i,%i,"
+                                    ... "%f,%f,"
+                                    ... "%f,%f,"
+                                    ... "%f,%f,"
+                                    ... "%f,%f,"
+                                    ... "%f,%f,"
+                                    ... "%i,%i",
+                currentFrame, client, clientName, clientTeam,
+                GetGrenade(client, Flash), GetGrenade(client, Molotov), 
+                GetGrenade(client, Smoke), GetGrenade(client, HE), 
+                GetGrenade(client, Decoy), GetGrenade(client, Incendiary), 
                 clientEyePos[client][0], clientEyePos[client][1], 
                 clientEyePos[client][2], clientFootPos[client][2],
                 clientEyeAngle[client][0], clientEyeAngle[client][1],
@@ -340,7 +370,6 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
 stock float compareAnglesMod360(float angle0, float angle1) {
     return fabs(floatMod((angle0 + 180.0 - (angle1 + 180.0)), 360.0));
 }
-
 
 stock bool IsValidClient(int client)
 {
