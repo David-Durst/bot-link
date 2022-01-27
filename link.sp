@@ -168,7 +168,7 @@ stock void WriteState() {
     tmpStateFile.WriteLine("State Frame,Client Id,Name,Team,"
         ... "Rifle Id,Rifle Clip Ammo,Rifle Reserve Ammo,"
         ... "Pistol Id,Pistol Clip Ammo,Pistol Reserve Ammo,"
-        ... "Team,Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,"
+        ... "Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,"
         ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
         ... "Eye Angle X,Eye Angle Y,Aimpunch Angle X,Aimpunch Angle Y,"
         ... "Eye With Recoil Angle X,Eye With Recoil Angle Y,Is Alive,Is Bot");
