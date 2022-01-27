@@ -32,6 +32,6 @@ stock void InitOffsets() {
 }
 
 stock int GetGrenade(int client, Grenades grenadeIndex) {
-    return GetEntProp(client, Prop_Send, "m_iAmmo", _, g_iaGrenadeOffsets[grenadeIndex]) != 0;
+    return GetEntProp(client, Prop_Send, "m_iAmmo", _, g_iaGrenadeOffsets[grenadeIndex]);
 }
 
