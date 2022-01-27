@@ -14,9 +14,9 @@
 
 public Plugin myinfo =
 {
-    name = "Durst Bot Exporter",
+    name = "Durst Bot Link",
     author = "David Durst",
-    description = "Export bot state so another program can make decisions",
+    description = "Link the CSGO server to another program running bot AI",
     version = "1.0",
     url = "https://davidbdurst.com/"
 };
@@ -131,7 +131,7 @@ public OnMapStart() {
 stock void applyConVars() {
     SetConVarInt(cvarBotStop, 1, true, true);
     SetConVarString(cvarBotChatter, "off", true, true);
-    if (!debugStatus) {
+    if (debugStatus) {
         SetConVarInt(cvarInfAmmo, 1, true, true);
         SetConVarInt(cvarBombTime, 600, true, true);
         SetConVarInt(cvarAutoKick, 0, true, true);
