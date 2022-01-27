@@ -87,7 +87,6 @@ public void OnPluginStart()
     debugStatus = false;
     printStatus = false;
     applyConVars();
-    InitGrenadeOffsets();
 
     weaponRecoilScale = FindConVar("weapon_recoil_scale");
     viewRecoilTracking = FindConVar("view_recoil_tracking");
