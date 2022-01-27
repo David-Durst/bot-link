@@ -167,7 +167,7 @@ stock void WriteState() {
         return;
     }
     tmpStateFile.WriteLine("State Frame,Client Id,Name,"
-        ... "Rifle Id,Rifle Clip Ammo,Rifle Reserve Ammo,Rifle Total Ammo,"
+        ... "Rifle Id,Rifle Clip Ammo,Rifle Reserve Ammo,"
         ... "Pistol Id,Pistol Clip Ammo,Pistol Reserve Ammo,"
         ... "Team,Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,"
         ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
@@ -198,22 +198,25 @@ stock void WriteState() {
                 clientFake = 1;
             }
 
-            int rifleId = GetRifleEntityId(client);
-            int rifleClipAmmo = -1, rifleReserveAmmo = -1, rifleTotalAmmo;
+            int rifleId = GetRifleEntityId(client), rifleWeaponId = -1;
+            int rifleClipAmmo = -1, rifleReserveAmmo = -1;
             if (rifleId != -1) {
+                //rifleWeaponId = GetWeaponIdFromEntityId(rifleId);
                 rifleClipAmmo = GetWeaponClipAmmo(rifleId);
                 rifleReserveAmmo = GetWeaponReserveAmmo(rifleId);
-                rifleTotalAmmo = GetWeaponTotalAmmo(client, rifleId);
             }
 
-            int pistolId = GetPistolEntityId(client);
+            int pistolId = GetPistolEntityId(client), pistolWeaponId = -1;
             int pistolClipAmmo = -1, pistolReserveAmmo = -1;
             if (pistolId != -1) {
+                //pistolWeaponId = GetWeaponIdFromEntityId(pistolId);
                 pistolClipAmmo = GetWeaponClipAmmo(pistolId);
                 pistolReserveAmmo = GetWeaponReserveAmmo(pistolId);
             }
 
             tmpStateFile.WriteLine("%i,%i,%s,%i,"
+                                    ... "%i,%i,%i,"
+                                    ... "%i,%i,%i,"
                                     ... "%i,%i,"
                                     ... "%i,%i,"
                                     ... "%i,%i,"
@@ -224,8 +227,8 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%i,%i",
                 currentFrame, client, clientName, clientTeam,
-                rifleId, rifleClipAmmo, rifleReserveAmmo, rifleTotalAmmo,
-                pistolId, pistolClipAmmo, pistolReserveAmmo,
+                rifleWeaponId, rifleClipAmmo, rifleReserveAmmo,
+                pistolWeaponId, pistolClipAmmo, pistolReserveAmmo,
                 GetGrenade(client, Flash), GetGrenade(client, Molotov), 
                 GetGrenade(client, Smoke), GetGrenade(client, HE), 
                 GetGrenade(client, Decoy), GetGrenade(client, Incendiary), 
