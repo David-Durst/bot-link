@@ -165,7 +165,7 @@ stock void WriteState() {
         PrintToServer("opening tmpStateFile returned null");
         return;
     }
-    tmpStateFile.WriteLine("State Frame,Client Id,Name,"
+    tmpStateFile.WriteLine("State Frame,Client Id,Name,Team,"
         ... "Rifle Id,Rifle Clip Ammo,Rifle Reserve Ammo,"
         ... "Pistol Id,Pistol Clip Ammo,Pistol Reserve Ammo,"
         ... "Team,Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,"
@@ -200,7 +200,7 @@ stock void WriteState() {
             int rifleId = GetRifleEntityId(client), rifleWeaponId = -1;
             int rifleClipAmmo = -1, rifleReserveAmmo = -1;
             if (rifleId != -1) {
-                //rifleWeaponId = GetWeaponIdFromEntityId(rifleId);
+                rifleWeaponId = GetWeaponIdFromEntityId(rifleId);
                 rifleClipAmmo = GetWeaponClipAmmo(rifleId);
                 rifleReserveAmmo = GetWeaponReserveAmmo(rifleId);
             }
@@ -208,7 +208,7 @@ stock void WriteState() {
             int pistolId = GetPistolEntityId(client), pistolWeaponId = -1;
             int pistolClipAmmo = -1, pistolReserveAmmo = -1;
             if (pistolId != -1) {
-                //pistolWeaponId = GetWeaponIdFromEntityId(pistolId);
+                pistolWeaponId = GetWeaponIdFromEntityId(pistolId);
                 pistolClipAmmo = GetWeaponClipAmmo(pistolId);
                 pistolReserveAmmo = GetWeaponReserveAmmo(pistolId);
             }

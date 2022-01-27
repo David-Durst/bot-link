@@ -20,7 +20,7 @@ stock int GetC4EntityId(int client) {
 }
 
 stock int GetWeaponIdFromEntityId(int entity) {
-    return GetEntProp(entity, Prop_Send, "m_weapon");
+    return GetEntProp(entity, Prop_Send, "m_iItemDefinitionIndex");
 }
 
 stock int GetWeaponClipAmmo(int entity) {
