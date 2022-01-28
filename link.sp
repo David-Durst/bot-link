@@ -378,8 +378,8 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     }
 
     // disable changing angles until next movement
-    inputAngleDeltaPct[client][0] = 0.0;
-    inputAngleDeltaPct[client][1] = 0.0;
+    //inputAngleDeltaPct[client][0] = 0.0;
+    //inputAngleDeltaPct[client][1] = 0.0;
 
     inputSetLastFrame[client] = true;
 
