@@ -377,6 +377,10 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
             compareAnglesMod360(newAngles[2], oldAngles[2]));
     }
 
+    // disable changing angles until next movement
+    inputAngleDeltaPct[client][0] = 0.0;
+    inputAngleDeltaPct[client][1] = 0.0;
+
     inputSetLastFrame[client] = true;
 
     return Plugin_Changed;
