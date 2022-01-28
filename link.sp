@@ -67,7 +67,7 @@ int currentFrame;
 ConVar cvarBotStop, cvarBotChatter;
 
 // debugging variables
-ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick;
+ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick, cvarRadarShowall;
 bool debugStatus;
 bool printStatus;
 float maxDiff[2];
@@ -83,6 +83,7 @@ public void OnPluginStart()
     cvarInfAmmo = FindConVar("sv_infinite_ammo");
     cvarBombTime = FindConVar("mp_c4timer");
     cvarAutoKick = FindConVar("mp_autokick");
+    cvarRadarShowall = FindConVar("mp_radar_showall");
 
     debugStatus = false;
     printStatus = false;
@@ -135,11 +136,13 @@ stock void applyConVars() {
         SetConVarInt(cvarInfAmmo, 1, true, true);
         SetConVarInt(cvarBombTime, 600, true, true);
         SetConVarInt(cvarAutoKick, 0, true, true);
+        SetConVarInt(cvarRadarShowall, 1, true, true);
     }
     else {
         SetConVarInt(cvarInfAmmo, 0, true, true);
         SetConVarInt(cvarBombTime, 40, true, true);
         SetConVarInt(cvarAutoKick, 1, true, true);
+        SetConVarInt(cvarRadarShowall, 0, true, true);
     }
 }
 
@@ -170,8 +173,8 @@ stock void WriteState() {
         ... "Pistol Id,Pistol Clip Ammo,Pistol Reserve Ammo,"
         ... "Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,"
         ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
-        ... "Eye Angle X,Eye Angle Y,Aimpunch Angle X,Aimpunch Angle Y,"
-        ... "Eye With Recoil Angle X,Eye With Recoil Angle Y,Is Alive,Is Bot");
+        ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,"
+        ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot");
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
     for (int client = 1; client < MaxClients; client++) {
