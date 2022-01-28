@@ -10,7 +10,8 @@
 #define MAX_INPUT_FIELDS 20
 #define MAX_PATH_LENGTH 256
 #define MAX_ONE_DIRECTION_SPEED 450.0
-#define MAX_ONE_DIRECTION_ANGLE_DELTA 30.0
+#define MAX_ONE_DIRECTION_ANGLE_VEL 15.0
+#define DEBUG_INVALID_DIFF -20000.0
 
 public Plugin myinfo =
 {
@@ -70,13 +71,16 @@ ConVar cvarBotStop, cvarBotChatter;
 ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick, cvarRadarShowall;
 bool debugStatus;
 bool printStatus;
-float maxDiff[2];
+bool recordMaxs;
+int clientToRecord;
+float lastAngles[2], lastAngleVel[2], maxAngleVel[2], maxAngleAccel[2];
 
  
 public void OnPluginStart()
 {
     RegConsoleCmd("sm_botDebug", smBotDebug, "- make bomb time 10 minutes and give infinite ammo");
     RegConsoleCmd("sm_printLink", smPrintLink, "- print debugging values from bot-link");
+    RegConsoleCmd("sm_recordMaxs", smRecordMaxs, "- record max angular values for debugging");
 
     cvarBotStop = FindConVar("bot_stop");
     cvarBotChatter = FindConVar("bot_chatter");
@@ -87,13 +91,11 @@ public void OnPluginStart()
 
     debugStatus = false;
     printStatus = false;
+    recordMaxs = false;
     applyConVars();
 
     weaponRecoilScale = FindConVar("weapon_recoil_scale");
     viewRecoilTracking = FindConVar("view_recoil_tracking");
-
-    maxDiff[0] = 0.0;
-    maxDiff[1] = 0.0;
 
     for (int i = 0; i < MAXPLAYERS+1; i++) {
         lastRecoilAngleAdjustment[i][0] = 0.0;
@@ -115,6 +117,20 @@ public void OnPluginStart()
 
 public Action:smPrintLink(client, args) {
     printStatus = !printStatus;
+    return Plugin_Handled;
+}
+
+public Action:smRecordMaxs(client, args) {
+    lastAngles[0] = DEBUG_INVALID_DIFF; 
+    lastAngles[1] = DEBUG_INVALID_DIFF; 
+    lastAngleVel[0] = DEBUG_INVALID_DIFF; 
+    lastAngleVel[1] = DEBUG_INVALID_DIFF; 
+    maxAngleVel[0] = DEBUG_INVALID_DIFF;
+    maxAngleVel[1] = DEBUG_INVALID_DIFF;
+    maxAngleAccel[0] = DEBUG_INVALID_DIFF;
+    maxAngleAccel[1] = DEBUG_INVALID_DIFF;
+    recordMaxs = !recordMaxs;
+    clientToRecord = client;
     return Plugin_Handled;
 }
 
@@ -312,6 +328,9 @@ stock void ReadInput() {
 // https://sm.alliedmods.net/api/index.php?fastload=file&id=47&
 public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float fVel[3], float fAngles[3], int & iWeapon, int & iSubtype, int & iCmdNum, int & iTickcount, int & iSeed, int iMouse[2])
 {
+    if (recordMaxs && client == clientToRecord) {
+        printHumanAngleStats(fAngles);
+    }
     if (!inputSet[client]) {
         inputSetLastFrame[client] = false;
         return Plugin_Continue;
@@ -347,16 +366,11 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     }
     oldAngles = newAngles;
 
-    newAngles[0] += inputAngleDeltaPct[client][0] * MAX_ONE_DIRECTION_ANGLE_DELTA;
+    newAngles[0] += inputAngleDeltaPct[client][0] * MAX_ONE_DIRECTION_ANGLE_VEL;
     newAngles[0] = fmax(-89.0, fmin(89.0, newAngles[0]));
 
-    newAngles[1] += inputAngleDeltaPct[client][1] * MAX_ONE_DIRECTION_ANGLE_DELTA;
-    if (newAngles[1] > 180.0) {
-        newAngles[1] = -360.0 + newAngles[1];
-    }
-    else if (newAngles[1] < -180.0) {
-        newAngles[1] = 360.0 + newAngles[1];
-    }
+    newAngles[1] += inputAngleDeltaPct[client][1] * MAX_ONE_DIRECTION_ANGLE_VEL;
+    newAngles[1] = makeNeg180To180(newAngles[1]);
 
     TeleportEntity(client, NULL_VECTOR, newAngles, NULL_VECTOR);
     //fAngles = newAngles;
@@ -374,9 +388,9 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
             inputAngleDeltaPct[client][0],
             inputAngleDeltaPct[client][1]);
         PrintToServer("delta Angles: (%f, %f, %f)",
-            compareAnglesMod360(newAngles[0], oldAngles[0]),
-            compareAnglesMod360(newAngles[1], oldAngles[1]),
-            compareAnglesMod360(newAngles[2], oldAngles[2]));
+            makeNeg180To180(newAngles[0] - oldAngles[0]),
+            makeNeg180To180(newAngles[1] - oldAngles[1]),
+            makeNeg180To180(newAngles[2] - oldAngles[2]));
     }
 
     // disable changing angles until next movement
@@ -388,8 +402,46 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     return Plugin_Changed;
 }
 
-stock float compareAnglesMod360(float angle0, float angle1) {
-    return fabs(floatMod((angle0 + 180.0 - (angle1 + 180.0)), 360.0));
+stock void printHumanAngleStats(float fAngles[3]) {
+    if (lastAngles[0] != DEBUG_INVALID_DIFF) {
+        float curAngleVel[2];
+        curAngleVel[0] = makeNeg180To180(fAngles[0] - lastAngles[0]);
+        curAngleVel[1] = makeNeg180To180(fAngles[1] - lastAngles[1]);
+
+        // assuming DEBUG_INVALID_DIFF is smaller than any possible angular velocity
+        // set max angle velocity once have any velocity
+        maxAngleVel[0] = fmax(maxAngleVel[0], curAngleVel[0]);
+        maxAngleVel[1] = fmax(maxAngleVel[1], curAngleVel[1]);
+
+        // set max angle accleration once have two velocities
+        if (lastAngleVel[0] != DEBUG_INVALID_DIFF) {
+            float curAngleAccel[2];
+            curAngleAccel[0] = curAngleVel[0] - lastAngleVel[0];
+            curAngleAccel[1] = curAngleVel[1] - lastAngleVel[1];
+            maxAngleAccel[0] = fmax(maxAngleAccel[0], curAngleAccel[0]);
+            maxAngleAccel[1] = fmax(maxAngleAccel[1], curAngleAccel[1]);
+
+            // only print once all values are filled in
+            PrintToServer("curAngleVel: (%f, %f), curAngleAccel: (%f, %f)", 
+                curAngleVel[0], curAngleVel[1],
+                curAngleAccel[0], curAngleAccel[1]);
+            PrintToServer("maxAngleVel: (%f, %f), maxAngleAccel: (%f, %f)", 
+                maxAngleVel[0], maxAngleVel[1],
+                maxAngleAccel[0], maxAngleAccel[1]);
+        }
+
+        lastAngleVel = curAngleVel;
+    }
+    lastAngles[0] = fAngles[0];
+    lastAngles[1] = fAngles[1];
+}
+
+stock float makeNeg180To180(float angle) {
+    angle = floatMod(angle, 360.0);
+    if (angle > 180.0) {
+        angle -= 360.0;
+    }
+    return angle;
 }
 
 stock bool IsValidClient(int client)
@@ -423,6 +475,7 @@ stock float fabs(float a) {
     return fmax(a, -1.0*a);
 }
 
+// this always mods to positive
 stock float floatMod(float num, float denom) {
     return num - denom * RoundToFloor(num / denom);
 }
