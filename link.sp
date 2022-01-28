@@ -359,6 +359,8 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     }
 
     TeleportEntity(client, NULL_VECTOR, newAngles, NULL_VECTOR);
+    //fAngles = newAngles;
+    //SetEntPropVector(client, Prop_Data, "m_angEyeAngles", newAngles);
     clientEyeAngle[client] = newAngles;
 
     if (printStatus) {
