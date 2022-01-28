@@ -272,19 +272,17 @@ stock void GetViewAngleWithRecoil(int client) {
 
 
 stock void ReadInput() {
-    // read state - move file to tmp location so not overwritten, then read it
-    // update to latest input if it exists
-    if (FileExists(inputFilePath)) {
-        RenameFile(tmpInputFilePath, inputFilePath);
-    }
-
     // disable inputSet for each client, will make true if actually appears in file
     for (int client = 1; client < MaxClients; client++) {
         inputSet[client] = false;
     }
 
-    // once at least one input, keep using it until a new one is provided
-    if (FileExists(tmpInputFilePath)) {
+    //  move file to tmp location so not overwritten, then read it
+    // update to latest input if it exists
+    // only use new inputs, give controller a chance to resopnd
+    if (FileExists(inputFilePath)) {
+        RenameFile(tmpInputFilePath, inputFilePath);
+
         tmpInputFile = OpenFile(tmpInputFilePath, "r", false, "");
         tmpInputFile.ReadLine(inputBuffer, MAX_INPUT_LENGTH);
 
@@ -366,13 +364,16 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
         char clientName[128];
         GetClientName(client, clientName, 128);
         PrintToServer("new inputs for %i: %s", client, clientName);
-        PrintToServer("old fAngles: (%f, %f, %f), new fAngles: (%f, %f, %f)",
+        PrintToServer("old Angles: (%f, %f, %f), new fAngles: (%f, %f, %f)",
             oldAngles[0], oldAngles[1], oldAngles[2],
             newAngles[0], newAngles[1], newAngles[2]);
-        PrintToServer("delta fAngles: (%f, %f, %f)",
-            compareAnglesMod360(oldAngles[0], newAngles[0]),
-            compareAnglesMod360(oldAngles[1], newAngles[1]),
-            compareAnglesMod360(oldAngles[2], newAngles[2]));
+        PrintToServer("delta pct Angles: (%f, %f)",
+            inputAngleDeltaPct[client][0],
+            inputAngleDeltaPct[client][1]);
+        PrintToServer("delta Angles: (%f, %f, %f)",
+            compareAnglesMod360(newAngles[0], oldAngles[0]),
+            compareAnglesMod360(newAngles[1], oldAngles[1]),
+            compareAnglesMod360(newAngles[2], oldAngles[2]));
     }
 
     inputSetLastFrame[client] = true;
