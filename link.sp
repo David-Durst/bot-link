@@ -272,15 +272,16 @@ stock void GetViewAngleWithRecoil(int client) {
 
 
 stock void ReadInput() {
-    // disable inputSet for each client, will make true if actually appears in file
-    for (int client = 1; client < MaxClients; client++) {
-        inputSet[client] = false;
-    }
-
-    //  move file to tmp location so not overwritten, then read it
+    // move file to tmp location so not overwritten, then read it
     // update to latest input if it exists
     // only use new inputs, give controller a chance to resopnd
     if (FileExists(inputFilePath)) {
+        // on each new input file, recheck which inputs are valid
+        // this prevents flipping back to bot control on in between frames where no input
+        for (int client = 1; client < MaxClients; client++) {
+            inputSet[client] = false;
+        }
+
         RenameFile(tmpInputFilePath, inputFilePath);
 
         tmpInputFile = OpenFile(tmpInputFilePath, "r", false, "");
