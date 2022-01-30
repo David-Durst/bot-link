@@ -1,0 +1,114 @@
+#pragma semicolon 1
+
+#include <sourcemod>
+#include <sdkhooks>
+#include <sdktools>
+#include <cstrike>
+//#include <dhooks>
+
+public Plugin myinfo =
+{
+    name = "Durst Recoil Disabler",
+    author = "David Durst",
+    description = "Disable either visual or actual recoil by setting the cursor on the server. Remeber to set cl_predict 0.",
+    version = "1.0",
+    url = "https://davidbdurst.com/"
+};
+
+float lastEyeAngles[MAXPLAYERS+1][3];
+float lastRecoilAngleAdjustment[MAXPLAYERS+1][3];
+ConVar weaponRecoilScale, viewRecoilTracking;
+ 
+public void OnPluginStart()
+{
+    new ConVar:cvarBotStop = FindConVar("bot_stop");
+    SetConVarInt(cvarBotStop, 1, true, true);
+    new ConVar:cvarNoSpread = FindConVar("weapon_accuracy_nospread");
+    SetConVarInt(cvarNoSpread, 0, true, true);
+    new ConVar:cvarInfAmmo = FindConVar("sv_infinite_ammo");
+    SetConVarInt(cvarInfAmmo, 1, true, true);
+    new ConVar:cvarBombTime = FindConVar("mp_c4timer");
+    SetConVarInt(cvarBombTime, 600, true, true);
+    weaponRecoilScale = FindConVar("weapon_recoil_scale");
+    viewRecoilTracking = FindConVar("view_recoil_tracking");
+    PrintToServer("loaded recoil disabler 1.0");
+    for (int i = 0; i < MAXPLAYERS+1; i++) {
+        lastEyeAngles[i][0] = 0.0;
+        lastEyeAngles[i][1] = 0.0;
+        lastEyeAngles[i][2] = 0.0;
+        lastRecoilAngleAdjustment[i][0] = 0.0;
+        lastRecoilAngleAdjustment[i][1] = 0.0;
+        lastRecoilAngleAdjustment[i][2] = 0.0;
+    }
+}
+
+// https://sm.alliedmods.net/api/index.php?fastload=file&id=47&
+public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float fVel[3], float fAngles[3], int & iWeapon, int & iSubtype, int & iCmdNum, int & iTickcount, int & iSeed, int iMouse[2])
+{
+    if (IsValidClient(client) && IsFakeClient(client) && IsPlayerAlive(client)) {
+        return Plugin_Continue;
+    }
+
+    SetEntProp( client, Prop_Data, "m_ArmorValue", 0, 1 );  
+    char playerName[128];
+    GetClientName(client, playerName, 128);
+
+    float fViewAngles[3];
+    float zeroVector[3] = {0.0, 0.0, 0.0};
+    float mAimPunchAngle[3], mAimPunchAngleVel[3], mViewPunchAngle[3];
+    GetEntPropVector(client, Prop_Send, "m_aimPunchAngle", mAimPunchAngle);
+    GetEntPropVector(client, Prop_Send, "m_aimPunchAngleVel", mAimPunchAngleVel);
+    GetEntPropVector(client, Prop_Send, "m_viewPunchAngle", mViewPunchAngle);
+    GetClientEyeAngles(client, fViewAngles);
+
+    float scaledPunch[3];
+    scaledPunch = mAimPunchAngle;
+    ScaleVector(scaledPunch, GetConVarFloat(weaponRecoilScale));
+
+    if (GetVectorDistance(mAimPunchAngle, zeroVector) > 0 || 
+        GetVectorDistance(mAimPunchAngleVel, zeroVector) > 0 ||
+        GetVectorDistance(mViewPunchAngle, zeroVector) > 0) {
+        PrintToServer("%s m_aimPunchAngle (%f, %f, %f)", playerName,
+            mAimPunchAngle[0], mAimPunchAngle[1], mAimPunchAngle[2]);
+        PrintToServer("%s m_aimPunchAngleVel (%f, %f, %f)", playerName,
+            mAimPunchAngleVel[0], mAimPunchAngleVel[1], mAimPunchAngleVel[2]);
+        PrintToServer("%s m_viewPunchAngle (%f, %f, %f)", playerName,
+            mViewPunchAngle[0], mViewPunchAngle[1], mViewPunchAngle[2]);
+        PrintToServer("%s scaledPunch (%f, %f, %f)", playerName,
+            scaledPunch[0], scaledPunch[1], scaledPunch[2]);
+    }
+
+    if (iButtons & IN_SPEED) {
+        DisablePunch(client);
+    }
+        
+    return Plugin_Changed;
+}
+
+stock void DisablePunch(int client) {
+    // get punch angles
+    float mAimPunchAngle[3], mAimPunchAngleVel[3], mViewPunchAngle[3];
+    GetEntPropVector(client, Prop_Send, "m_aimPunchAngle", mAimPunchAngle);
+    GetEntPropVector(client, Prop_Send, "m_aimPunchAngleVel", mAimPunchAngleVel);
+    GetEntPropVector(client, Prop_Send, "m_viewPunchAngle", mViewPunchAngle);
+
+    // get original angles
+    float finalView[3];
+    GetClientEyeAngles(client, finalView);
+
+    float recoilAngleAdjustment[3];
+    ScaleVector(mAimPunchAngle, GetConVarFloat(weaponRecoilScale));
+    ScaleVector(mAimPunchAngle, GetConVarFloat(viewRecoilTracking));
+    AddVectors(mViewPunchAngle, mAimPunchAngle, recoilAngleAdjustment);
+    SubtractVectors(finalView, recoilAngleAdjustment, finalView);
+    AddVectors(finalView, lastRecoilAngleAdjustment[client], finalView);
+    lastRecoilAngleAdjustment[client] = recoilAngleAdjustment;
+    TeleportEntity(client, NULL_VECTOR, finalView,NULL_VECTOR);
+}
+
+stock bool IsValidClient(int client)
+{
+    return client > 0 && client <= MaxClients && IsClientConnected(client) && IsClientInGame(client) && !IsClientSourceTV(client);
+}
+
+
