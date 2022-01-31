@@ -148,16 +148,15 @@ public OnMapStart() {
 stock void applyConVars() {
     SetConVarInt(cvarBotStop, 1, true, true);
     SetConVarString(cvarBotChatter, "off", true, true);
+    SetConVarInt(cvarAutoKick, 0, true, true);
     if (debugStatus) {
         SetConVarInt(cvarInfAmmo, 1, true, true);
         SetConVarInt(cvarBombTime, 600, true, true);
-        SetConVarInt(cvarAutoKick, 0, true, true);
         SetConVarInt(cvarRadarShowall, 1, true, true);
     }
     else {
         SetConVarInt(cvarInfAmmo, 0, true, true);
         SetConVarInt(cvarBombTime, 40, true, true);
-        SetConVarInt(cvarAutoKick, 1, true, true);
         SetConVarInt(cvarRadarShowall, 0, true, true);
     }
 }
@@ -184,7 +183,7 @@ stock void WriteState() {
         PrintToServer("opening tmpStateFile returned null");
         return;
     }
-    tmpStateFile.WriteLine("State Frame,Client Id,Name,Team,"
+    tmpStateFile.WriteLine("State Frame,Client Id,Name,Team,Active Weapon Id,"
         ... "Rifle Id,Rifle Clip Ammo,Rifle Reserve Ammo,"
         ... "Pistol Id,Pistol Clip Ammo,Pistol Reserve Ammo,"
         ... "Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,"
@@ -216,6 +215,12 @@ stock void WriteState() {
                 clientFake = 1;
             }
 
+            int activeWeaponEntityId = GetActiveWeaponEntityId(client);
+            int activeWeaponId = -1;
+            if (activeWeaponEntityId != -1) {
+                activeWeaponId = GetWeaponIdFromEntityId(activeWeaponEntityId);
+            }
+
             int rifleId = GetRifleEntityId(client), rifleWeaponId = -1;
             int rifleClipAmmo = -1, rifleReserveAmmo = -1;
             if (rifleId != -1) {
@@ -232,7 +237,7 @@ stock void WriteState() {
                 pistolReserveAmmo = GetWeaponReserveAmmo(pistolId);
             }
 
-            tmpStateFile.WriteLine("%i,%i,%s,%i,"
+            tmpStateFile.WriteLine("%i,%i,%s,%i,%i,%i,"
                                     ... "%i,%i,%i,"
                                     ... "%i,%i,%i,"
                                     ... "%i,%i,"
@@ -244,7 +249,7 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%f,%f,"
                                     ... "%i,%i",
-                currentFrame, client, clientName, clientTeam,
+                currentFrame, client, clientName, clientTeam, activeWeaponId, rifleId,
                 rifleWeaponId, rifleClipAmmo, rifleReserveAmmo,
                 pistolWeaponId, pistolClipAmmo, pistolReserveAmmo,
                 GetGrenade(client, Flash), GetGrenade(client, Molotov), 

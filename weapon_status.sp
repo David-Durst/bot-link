@@ -7,6 +7,10 @@ enum weaponSlots: {
     NUM_WEAPON_SLOTS
 };
 
+stock int GetActiveWeaponEntityId(int client) {
+    return GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+}
+
 stock int GetRifleEntityId(int client) {
     return GetPlayerWeaponSlot(client, SLOT_RIFLE);
 }
