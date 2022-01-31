@@ -321,7 +321,7 @@ stock void WriteC4() {
         PrintToServer("opening tmpC4File returned null");
         return;
     }
-    tmpC4File.WriteLine("Is Planted,"
+    tmpC4File.WriteLine("Is Planted,Is Dropped,"
         ... "Pos X,Pos Y,Pos Z");
 
     int c4Ent = -1;
