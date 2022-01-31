@@ -6,6 +6,7 @@
 #include <cstrike>
 #include "bot-link/weapon_status.sp"
 #include "bot-link/grenade_status.sp"
+#include "bot-link/visibility.sp"
 #define MAX_INPUT_LENGTH 1000
 #define MAX_INPUT_FIELDS 20
 #define MAX_PATH_LENGTH 256
@@ -170,6 +171,7 @@ public OnGameFrame() {
     }
 
     WriteState();
+    WriteVisibility();
     ReadInput();
     currentFrame++;
 }
