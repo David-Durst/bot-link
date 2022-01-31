@@ -9,16 +9,13 @@ stock void WriteVisibility() {
         return;
     }
 
-    tmpVisibilityFile.WriteLine("Source Player,Target Player,Visible");
+    tmpVisibilityFile.WriteLine("Source Player,Target Player");
 
     for (int source = 1; source < MaxClients; source++) {
-        for (int target = 1; target < MaxClients; target++) {
-            if (IsValidClient(source) && IsValidClient(target)) {
-                int result = 0;
-                if (SourceCanSeeTarget(source, target)) {
-                    result = 1;
-                }
-                tmpVisibilityFile.WriteLine("%i,%i,%i", source, target,result);
+        for (int target = source + 1; target < MaxClients; target++) {
+            if (source != target && IsValidClient(source) && IsValidClient(target) && 
+                    SourceCanSeeTarget(source, target)) {
+                tmpVisibilityFile.WriteLine("%i,%i", source,target);
             }
         }
     }
