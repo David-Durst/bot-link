@@ -18,20 +18,29 @@ public Plugin myinfo =
 float lastEyeAngles[MAXPLAYERS+1][3];
 float lastRecoilAngleAdjustment[MAXPLAYERS+1][3];
 ConVar weaponRecoilScale, viewRecoilTracking;
+
+// general variables
+ConVar cvarBotStop, cvarBotChatter;
+
+// debugging variables
+ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick, cvarRadarShowall;
+bool printStatus;
  
-public void OnPluginStart()
-{
-    new ConVar:cvarBotStop = FindConVar("bot_stop");
-    SetConVarInt(cvarBotStop, 1, true, true);
-    new ConVar:cvarNoSpread = FindConVar("weapon_accuracy_nospread");
-    SetConVarInt(cvarNoSpread, 0, true, true);
-    new ConVar:cvarInfAmmo = FindConVar("sv_infinite_ammo");
-    SetConVarInt(cvarInfAmmo, 1, true, true);
-    new ConVar:cvarBombTime = FindConVar("mp_c4timer");
-    SetConVarInt(cvarBombTime, 600, true, true);
+public void OnPluginStart() {
+    RegConsoleCmd("sm_printRecoil", smPrintRecoil, "- print debugging values from recoil disabler");
+
+    cvarBotStop = FindConVar("bot_stop");
+    cvarBotChatter = FindConVar("bot_chatter");
+    cvarInfAmmo = FindConVar("sv_infinite_ammo");
+    cvarBombTime = FindConVar("mp_c4timer");
+    cvarAutoKick = FindConVar("mp_autokick");
+    cvarRadarShowall = FindConVar("mp_radar_showall");
+
+    printStatus = false;
+
     weaponRecoilScale = FindConVar("weapon_recoil_scale");
     viewRecoilTracking = FindConVar("view_recoil_tracking");
-    PrintToServer("loaded recoil disabler 1.0");
+
     for (int i = 0; i < MAXPLAYERS+1; i++) {
         lastEyeAngles[i][0] = 0.0;
         lastEyeAngles[i][1] = 0.0;
@@ -40,6 +49,22 @@ public void OnPluginStart()
         lastRecoilAngleAdjustment[i][1] = 0.0;
         lastRecoilAngleAdjustment[i][2] = 0.0;
     }
+
+    PrintToServer("loaded recoil disabler 1.0");
+}
+
+public Action:smPrintRecoil(client, args) {
+    printStatus = !printStatus;
+    return Plugin_Handled;
+}
+
+public OnMapStart() {
+    SetConVarInt(cvarBotStop, 1, true, true);
+    SetConVarString(cvarBotChatter, "off", true, true);
+    SetConVarInt(cvarInfAmmo, 1, true, true);
+    SetConVarInt(cvarBombTime, 600, true, true);
+    SetConVarInt(cvarAutoKick, 0, true, true);
+    SetConVarInt(cvarRadarShowall, 1, true, true);
 }
 
 // https://sm.alliedmods.net/api/index.php?fastload=file&id=47&
@@ -65,9 +90,10 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     scaledPunch = mAimPunchAngle;
     ScaleVector(scaledPunch, GetConVarFloat(weaponRecoilScale));
 
-    if (GetVectorDistance(mAimPunchAngle, zeroVector) > 0 || 
+    if (printStatus && (
+        GetVectorDistance(mAimPunchAngle, zeroVector) > 0 || 
         GetVectorDistance(mAimPunchAngleVel, zeroVector) > 0 ||
-        GetVectorDistance(mViewPunchAngle, zeroVector) > 0) {
+        GetVectorDistance(mViewPunchAngle, zeroVector) > 0)) {
         PrintToServer("%s m_aimPunchAngle (%f, %f, %f)", playerName,
             mAimPunchAngle[0], mAimPunchAngle[1], mAimPunchAngle[2]);
         PrintToServer("%s m_aimPunchAngleVel (%f, %f, %f)", playerName,
