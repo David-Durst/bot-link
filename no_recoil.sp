@@ -17,26 +17,34 @@ public Plugin myinfo =
 
 float lastEyeAngles[MAXPLAYERS+1][3];
 float lastRecoilAngleAdjustment[MAXPLAYERS+1][3];
-ConVar weaponRecoilScale, viewRecoilTracking;
+
+// feature variables
+ConVar weaponRecoilScale, viewRecoilTracking, cvarNoSpread;
+bool noSpread;
 
 // general variables
 ConVar cvarBotStop, cvarBotChatter;
 
 // debugging variables
 ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick, cvarRadarShowall;
-bool printStatus;
+bool printStatus, disableVisualRecoil;
  
 public void OnPluginStart() {
     RegConsoleCmd("sm_printRecoil", smPrintRecoil, "- print debugging values from recoil disabler");
+    RegConsoleCmd("sm_recoilType", smToggleRecoilType, "- toggle disabling visual or actual recoil");
+    RegConsoleCmd("sm_toggleSpread", smToggleSpread, "- toggle spread on or off");
 
     cvarBotStop = FindConVar("bot_stop");
     cvarBotChatter = FindConVar("bot_chatter");
+    cvarNoSpread = FindConVar("weapon_accuracy_nospread");
     cvarInfAmmo = FindConVar("sv_infinite_ammo");
     cvarBombTime = FindConVar("mp_c4timer");
     cvarAutoKick = FindConVar("mp_autokick");
     cvarRadarShowall = FindConVar("mp_radar_showall");
 
+    noSpread = false;
     printStatus = false;
+    disableVisualRecoil = true;
 
     weaponRecoilScale = FindConVar("weapon_recoil_scale");
     viewRecoilTracking = FindConVar("view_recoil_tracking");
@@ -53,8 +61,25 @@ public void OnPluginStart() {
     PrintToServer("loaded recoil disabler 1.0");
 }
 
+public Action:smToggleSpread(client, args) {
+    if (noSpread) {
+        noSpread = false;
+        SetConVarInt(cvarNoSpread, 0, true, true);
+    }
+    else {
+        noSpread = true;
+        SetConVarInt(cvarNoSpread, 1, true, true);
+    }
+    return Plugin_Handled;
+}
+
 public Action:smPrintRecoil(client, args) {
     printStatus = !printStatus;
+    return Plugin_Handled;
+}
+
+public Action:smToggleRecoilType(client, args) {
+    disableVisualRecoil = !disableVisualRecoil;
     return Plugin_Handled;
 }
 
@@ -123,9 +148,15 @@ stock void DisablePunch(int client) {
     GetClientEyeAngles(client, finalView);
 
     float recoilAngleAdjustment[3];
-    ScaleVector(mAimPunchAngle, GetConVarFloat(weaponRecoilScale));
-    ScaleVector(mAimPunchAngle, GetConVarFloat(viewRecoilTracking));
-    AddVectors(mViewPunchAngle, mAimPunchAngle, recoilAngleAdjustment);
+    if (disableVisualRecoil) {
+        ScaleVector(mAimPunchAngle, GetConVarFloat(weaponRecoilScale));
+        ScaleVector(mAimPunchAngle, GetConVarFloat(viewRecoilTracking));
+        AddVectors(mViewPunchAngle, mAimPunchAngle, recoilAngleAdjustment);
+    }
+    else {
+        ScaleVector(mAimPunchAngle, GetConVarFloat(weaponRecoilScale));
+        recoilAngleAdjustment = mAimPunchAngle;
+    }
     SubtractVectors(finalView, recoilAngleAdjustment, finalView);
     AddVectors(finalView, lastRecoilAngleAdjustment[client], finalView);
     lastRecoilAngleAdjustment[client] = recoilAngleAdjustment;
