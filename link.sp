@@ -325,16 +325,22 @@ stock void WriteC4() {
         ... "Pos X,Pos Y,Pos Z");
 
     int c4Ent = -1;
-    c4Ent = FindEntityByClassname(c4Ent, "weapon_c4"); 
-    int isPlanted = c4Ent == -1 ? 1 : 0;
+    c4Ent = FindEntityByClassname(c4Ent, "planted_c4"); 
+    int isPlanted = c4Ent == -1 ? 0 : 1;
     if (c4Ent == -1) {
-        c4Ent = FindEntityByClassname(c4Ent, "planted_c4"); 
+        c4Ent = FindEntityByClassname(c4Ent, "weapon_c4"); 
     }
-    GetEntPropVector(c4Ent, Prop_Send, "m_vecOrigin", c4Position);
 
+    if (c4Ent != -1) {
+        float zeroVector[3] = {0.0, 0.0, 0.0};
+        GetEntPropVector(c4Ent, Prop_Send, "m_vecOrigin", c4Position);
+        int isDropped = !isPlanted && GetVectorDistance(zeroVector, c4Position) != 0.0 ? 1 : 0;
+        tmpC4File.WriteLine("%i,%i,"
+            ... "%f,%f,%f",
+            isPlanted, isDropped, 
+            c4Position[0], c4Position[1], c4Position[2]);
+    }
 
-    tmpC4File.WriteLine("%i,%f,%f,%f",
-        isPlanted, c4Position[0], c4Position[1], c4Position[2]);
     tmpC4File.Close();
     tmpC4Open = false;
     RenameFile(c4FilePath, tmpC4FilePath);
