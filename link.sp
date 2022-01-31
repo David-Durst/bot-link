@@ -237,7 +237,7 @@ stock void WriteState() {
                 pistolReserveAmmo = GetWeaponReserveAmmo(pistolId);
             }
 
-            tmpStateFile.WriteLine("%i,%i,%s,%i,%i,%i,"
+            tmpStateFile.WriteLine("%i,%i,%s,%i,%i,"
                                     ... "%i,%i,%i,"
                                     ... "%i,%i,%i,"
                                     ... "%i,%i,"
@@ -249,7 +249,7 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%f,%f,"
                                     ... "%i,%i",
-                currentFrame, client, clientName, clientTeam, activeWeaponId, rifleId,
+                currentFrame, client, clientName, clientTeam, activeWeaponId,
                 rifleWeaponId, rifleClipAmmo, rifleReserveAmmo,
                 pistolWeaponId, pistolClipAmmo, pistolReserveAmmo,
                 GetGrenade(client, Flash), GetGrenade(client, Molotov), 
