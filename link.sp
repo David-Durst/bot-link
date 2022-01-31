@@ -55,14 +55,23 @@ int clientOtherState[MAXPLAYERS+1];
 ConVar weaponRecoilScale, viewRecoilTracking;
 float lastRecoilAngleAdjustment[MAXPLAYERS+1][3];
 
+// C4 values
+float c4Position[3];
+
 // files 
 static char rootFolder[] = "addons/sourcemod/bot-link-data/";
 static char stateFilePath[] = "addons/sourcemod/bot-link-data/state.csv";
 static char tmpStateFilePath[] = "addons/sourcemod/bot-link-data/state.csv.tmp.write";
 File tmpStateFile;
+bool tmpStateOpen = false;
+static char c4FilePath[] = "addons/sourcemod/bot-link-data/c4.csv";
+static char tmpC4FilePath[] = "addons/sourcemod/bot-link-data/c4.csv.tmp.write";
+File tmpC4File;
+bool tmpC4Open = false;
 static char inputFilePath[] = "addons/sourcemod/bot-link-data/input.csv";
 static char tmpInputFilePath[] = "addons/sourcemod/bot-link-data/input.csv.tmp.read";
 File tmpInputFile;
+bool tmpInputOpen = false;
 int currentFrame;
 
 // general variables
@@ -171,6 +180,7 @@ public OnGameFrame() {
     }
 
     WriteState();
+    WriteC4();
     WriteVisibility();
     ReadInput();
     currentFrame++;
@@ -179,8 +189,12 @@ public OnGameFrame() {
 
 stock void WriteState() {
     // write state - update temp file, then atomically overwrite last state
-
+    if (tmpStateOpen) {
+        tmpStateFile.Close();
+        tmpStateOpen = false;
+    }
     tmpStateFile = OpenFile(tmpStateFilePath, "w", false, "");
+    tmpStateOpen = true;
     if (tmpStateFile == null) {
         PrintToServer("opening tmpStateFile returned null");
         return;
@@ -188,7 +202,7 @@ stock void WriteState() {
     tmpStateFile.WriteLine("State Frame,Client Id,Name,Team,Active Weapon Id,"
         ... "Rifle Id,Rifle Clip Ammo,Rifle Reserve Ammo,"
         ... "Pistol Id,Pistol Clip Ammo,Pistol Reserve Ammo,"
-        ... "Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,"
+        ... "Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,Has C4,"
         ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
         ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,"
         ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot");
@@ -239,9 +253,11 @@ stock void WriteState() {
                 pistolReserveAmmo = GetWeaponReserveAmmo(pistolId);
             }
 
+            int hasC4 = GetC4EntityId(client) != -1 ? 1 : 0;
+
             tmpStateFile.WriteLine("%i,%i,%s,%i,%i,"
                                     ... "%i,%i,%i,"
-                                    ... "%i,%i,%i,"
+                                    ... "%i,%i,%i,%i,"
                                     ... "%i,%i,"
                                     ... "%i,%i,"
                                     ... "%i,%i,"
@@ -253,7 +269,7 @@ stock void WriteState() {
                                     ... "%i,%i",
                 currentFrame, client, clientName, clientTeam, activeWeaponId,
                 rifleWeaponId, rifleClipAmmo, rifleReserveAmmo,
-                pistolWeaponId, pistolClipAmmo, pistolReserveAmmo,
+                pistolWeaponId, pistolClipAmmo, pistolReserveAmmo, hasC4,
                 GetGrenade(client, Flash), GetGrenade(client, Molotov), 
                 GetGrenade(client, Smoke), GetGrenade(client, HE), 
                 GetGrenade(client, Decoy), GetGrenade(client, Incendiary), 
@@ -266,6 +282,7 @@ stock void WriteState() {
         }
     }
     tmpStateFile.Close();
+    tmpStateOpen = false;
     RenameFile(stateFilePath, tmpStateFilePath);
 }
 
@@ -293,8 +310,42 @@ stock void GetViewAngleWithRecoil(int client) {
     AddVectors(mViewPunchAngle[client], clientEyeAngleWithRecoil[client], clientEyeAngleWithRecoil[client]);
 }
 
+stock void WriteC4() {
+    if (tmpC4Open) {
+        tmpC4File.Close();
+        tmpC4Open = false;
+    }
+    tmpC4File = OpenFile(tmpC4FilePath, "w", false, "");
+    tmpC4Open = true;
+    if (tmpC4File == null) {
+        PrintToServer("opening tmpC4File returned null");
+        return;
+    }
+    tmpC4File.WriteLine("Is Planted,"
+        ... "Pos X,Pos Y,Pos Z");
+
+    int c4Ent = -1;
+    c4Ent = FindEntityByClassname(c4Ent, "weapon_c4"); 
+    int isPlanted = c4Ent == -1 ? 1 : 0;
+    if (c4Ent == -1) {
+        c4Ent = FindEntityByClassname(c4Ent, "planted_c4"); 
+    }
+    GetEntPropVector(c4Ent, Prop_Send, "m_vecOrigin", c4Position);
+
+
+    tmpC4File.WriteLine("%i,%f,%f,%f",
+        isPlanted, c4Position[0], c4Position[1], c4Position[2]);
+    tmpC4File.Close();
+    tmpC4Open = false;
+    RenameFile(c4FilePath, tmpC4FilePath);
+}
+
 
 stock void ReadInput() {
+    if (tmpInputOpen) {
+        tmpInputFile.Close();
+        tmpInputOpen = false;
+    }
     // move file to tmp location so not overwritten, then read it
     // update to latest input if it exists
     // only use new inputs, give controller a chance to resopnd
@@ -308,6 +359,7 @@ stock void ReadInput() {
         RenameFile(tmpInputFilePath, inputFilePath);
 
         tmpInputFile = OpenFile(tmpInputFilePath, "r", false, "");
+        tmpInputOpen = true;
         tmpInputFile.ReadLine(inputBuffer, MAX_INPUT_LENGTH);
 
         while(!tmpInputFile.EndOfFile()) {
@@ -328,6 +380,7 @@ stock void ReadInput() {
         }
 
         tmpInputFile.Close();
+        tmpInputOpen = false;
     }
 }
 

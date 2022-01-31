@@ -1,9 +1,15 @@
 static char visibilityFilePath[] = "addons/sourcemod/bot-link-data/visibility.csv";
 static char tmpVisibilityFilePath[] = "addons/sourcemod/bot-link-data/visibility.csv.tmp.write";
 File tmpVisibilityFile;
+bool tmpVisibilityOpen = false;
 
 stock void WriteVisibility() {
+    if (tmpVisibilityOpen) {
+        tmpVisibilityFile.Close();
+        tmpVisibilityOpen = false;
+    }
     tmpVisibilityFile = OpenFile(tmpVisibilityFilePath, "w", false, "");
+    tmpVisibilityOpen = true;
     if (tmpVisibilityFile == null) {
         PrintToServer("opening tmpVisibilityFile returned null");
         return;
@@ -21,6 +27,7 @@ stock void WriteVisibility() {
     }
 
     tmpVisibilityFile.Close();
+    tmpVisibilityOpen = false;
     RenameFile(visibilityFilePath, tmpVisibilityFilePath);
 }
 
