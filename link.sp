@@ -377,8 +377,8 @@ stock void ReadInput() {
             inputButtons[client] = StringToInt(inputExplodedBuffer[1]);
             inputMovement[client][Forward] = inputButtons[client] & IN_FORWARD > 0;
             inputMovement[client][Backward] = inputButtons[client] & IN_BACK > 0;
-            inputMovement[client][Left] = inputButtons[client] & IN_LEFT > 0;
-            inputMovement[client][Right] = inputButtons[client] & IN_RIGHT > 0;
+            inputMovement[client][Left] = inputButtons[client] & IN_MOVELEFT > 0;
+            inputMovement[client][Right] = inputButtons[client] & IN_MOVERIGHT > 0;
             inputAngleDeltaPct[client][0] = StringToFloat(inputExplodedBuffer[2]);
             inputAngleDeltaPct[client][0] = fmax(-1.0, fmin(1.0, inputAngleDeltaPct[client][0]));
             inputAngleDeltaPct[client][1] = StringToFloat(inputExplodedBuffer[3]);
@@ -395,7 +395,7 @@ stock void ReadInput() {
 public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float fVel[3], float fAngles[3], int & iWeapon, int & iSubtype, int & iCmdNum, int & iTickcount, int & iSeed, int iMouse[2])
 {
     if (recordMaxs && client == clientToRecord) {
-        printHumanAngleStats(fAngles);
+        printHumanAngleStats(fAngles, iButtons);
     }
     if (!inputSet[client]) {
         inputSetLastFrame[client] = false;
@@ -447,6 +447,8 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
         char clientName[128];
         GetClientName(client, clientName, 128);
         PrintToServer("new inputs for %i: %s", client, clientName);
+        PrintToServer("new fVel: (%f, %f, %f)",
+            fVel[0], fVel[1], fVel[2]);
         PrintToServer("old Angles: (%f, %f, %f), new fAngles: (%f, %f, %f)",
             oldAngles[0], oldAngles[1], oldAngles[2],
             newAngles[0], newAngles[1], newAngles[2]);
@@ -468,7 +470,7 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     return Plugin_Changed;
 }
 
-stock void printHumanAngleStats(float fAngles[3]) {
+stock void printHumanAngleStats(float fAngles[3], int iButtons) {
     if (lastAngles[0] != DEBUG_INVALID_DIFF) {
         float curAngleVel[2];
         curAngleVel[0] = makeNeg180To180(fAngles[0] - lastAngles[0]);
@@ -488,6 +490,7 @@ stock void printHumanAngleStats(float fAngles[3]) {
             maxAngleAccel[1] = fmax(maxAngleAccel[1], curAngleAccel[1]);
 
             // only print once all values are filled in
+            PrintToServer("buttons: %i", iButtons);
             PrintToServer("curAngleVel: (%f, %f), curAngleAccel: (%f, %f)", 
                 curAngleVel[0], curAngleVel[1],
                 curAngleAccel[0], curAngleAccel[1]);
