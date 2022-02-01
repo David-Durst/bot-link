@@ -78,7 +78,7 @@ int currentFrame;
 ConVar cvarBotStop, cvarBotChatter;
 
 // debugging variables
-ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick, cvarRadarShowall;
+ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick, cvarRadarShowall, cvarForceCamera;
 bool debugStatus;
 bool printStatus;
 bool recordMaxs;
@@ -98,6 +98,7 @@ public void OnPluginStart()
     cvarBombTime = FindConVar("mp_c4timer");
     cvarAutoKick = FindConVar("mp_autokick");
     cvarRadarShowall = FindConVar("mp_radar_showall");
+    cvarForceCamera = FindConVar("mp_forcecamera");
 
     debugStatus = false;
     printStatus = false;
@@ -163,11 +164,13 @@ stock void applyConVars() {
         SetConVarInt(cvarInfAmmo, 1, true, true);
         SetConVarInt(cvarBombTime, 600, true, true);
         SetConVarInt(cvarRadarShowall, 1, true, true);
+        SetConVarInt(cvarForceCamera, 0, true, true);
     }
     else {
         SetConVarInt(cvarInfAmmo, 0, true, true);
         SetConVarInt(cvarBombTime, 40, true, true);
         SetConVarInt(cvarRadarShowall, 0, true, true);
+        SetConVarInt(cvarForceCamera, 1, true, true);
     }
 }
 
