@@ -75,7 +75,7 @@ bool tmpInputOpen = false;
 int currentFrame;
 
 // general variables
-ConVar cvarBotStop, cvarBotChatter;
+ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers;
 
 // debugging variables
 ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick, cvarRadarShowall, cvarForceCamera;
@@ -94,6 +94,7 @@ public void OnPluginStart()
 
     cvarBotStop = FindConVar("bot_stop");
     cvarBotChatter = FindConVar("bot_chatter");
+    cvarBotSnipers = FindConVar("bot_allow_snipers");
     cvarInfAmmo = FindConVar("sv_infinite_ammo");
     cvarBombTime = FindConVar("mp_c4timer");
     cvarAutoKick = FindConVar("mp_autokick");
@@ -160,6 +161,7 @@ stock void applyConVars() {
     SetConVarInt(cvarBotStop, 1, true, true);
     SetConVarString(cvarBotChatter, "off", true, true);
     SetConVarInt(cvarAutoKick, 0, true, true);
+    SetConVarInt(cvarBotSnipers, 0, true, true);
     if (debugStatus) {
         SetConVarInt(cvarInfAmmo, 1, true, true);
         SetConVarInt(cvarBombTime, 600, true, true);
