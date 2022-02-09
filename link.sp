@@ -60,6 +60,10 @@ float c4Position[3];
 
 // files 
 static char rootFolder[] = "addons/sourcemod/bot-link-data/";
+static char generalFilePath[] = "addons/sourcemod/bot-link-data/general.csv";
+static char tmpGeneralFilePath[] = "addons/sourcemod/bot-link-data/general.csv.tmp.write";
+File tmpGeneralFile;
+bool tmpGeneralOpen = false;
 static char stateFilePath[] = "addons/sourcemod/bot-link-data/state.csv";
 static char tmpStateFilePath[] = "addons/sourcemod/bot-link-data/state.csv.tmp.write";
 File tmpStateFile;
@@ -76,6 +80,7 @@ int currentFrame;
 
 // general variables
 ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers;
+int roundNumber;
 
 // debugging variables
 ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick, cvarRadarShowall, cvarForceCamera;
@@ -92,6 +97,8 @@ public void OnPluginStart()
     RegConsoleCmd("sm_printLink", smPrintLink, "- print debugging values from bot-link");
     RegConsoleCmd("sm_recordMaxs", smRecordMaxs, "- record max angular values for debugging");
 
+    HookEvent("round_start", OnRoundStart, EventHookMode_PostNoCopy);
+
     cvarBotStop = FindConVar("bot_stop");
     cvarBotChatter = FindConVar("bot_chatter");
     cvarBotSnipers = FindConVar("bot_allow_snipers");
@@ -101,6 +108,7 @@ public void OnPluginStart()
     cvarRadarShowall = FindConVar("mp_radar_showall");
     cvarForceCamera = FindConVar("mp_forcecamera");
 
+    roundNumber = 0;
     debugStatus = false;
     printStatus = false;
     recordMaxs = false;
@@ -153,8 +161,14 @@ public Action:smBotDebug(client, args) {
 }
 
 public OnMapStart() {
+    roundNumber = 0;
     applyConVars();
     InitGrenadeOffsets();
+}
+
+public Action OnRoundStart(Event event, const char[] sName, bool bDontBroadcast) {
+    roundNumber++;
+    return Plugin_Continue;
 }
 
 stock void applyConVars() {
@@ -184,11 +198,36 @@ public OnGameFrame() {
         return;
     }
 
+    WriteGeneral();
     WriteState();
     WriteC4();
     WriteVisibility();
     ReadInput();
     currentFrame++;
+}
+
+
+stock void WriteGeneral() {
+    if (tmpGeneralOpen) {
+        tmpGeneralFile.Close();
+        tmpGeneralOpen = false;
+    }
+    tmpGeneralFile = OpenFile(tmpGeneralFilePath, "w", false, "");
+    tmpGeneralOpen = true;
+    if (tmpGeneralFile == null) {
+        PrintToServer("opening tmpGeneralFile returned null");
+        return;
+    }
+    tmpGeneralFile.WriteLine("Map Name,Round Number");
+
+    char mapName[MAX_INPUT_LENGTH];
+    GetCurrentMap(mapName, MAX_INPUT_LENGTH);
+
+    tmpGeneralFile.WriteLine("%s,%i", mapName, roundNumber);
+
+    tmpGeneralFile.Close();
+    tmpGeneralOpen = false;
+    RenameFile(generalFilePath, tmpGeneralFilePath);
 }
 
 
