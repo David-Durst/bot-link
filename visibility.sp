@@ -41,7 +41,7 @@ stock bool SourceCanSeeTarget(int source, int target, float maxDistance = 0.0)
     if (maxDistance == 0.0 || GetVectorDistance(sourcePosition, targetPosition, false) < maxDistance)
     {
         Handle hTrace = TR_TraceRayFilterEx(sourcePosition, targetPosition, 
-            MASK_SOLID_BRUSHONLY, RayType_EndPoint, Base_TraceFilter, source);
+            MASK_SOLID_BRUSHONLY, RayType_EndPoint, Base_TraceFilter, target);
         
         if (TR_DidHit(hTrace) && TR_GetEntityIndex(hTrace) != target)
         {
@@ -58,5 +58,12 @@ stock bool SourceCanSeeTarget(int source, int target, float maxDistance = 0.0)
 
 public bool Base_TraceFilter(int entity, int contentsMask, int data)
 {
-    return entity != data;
+    // return true (can hit) if not any non-target player (aka target player or environment)
+    return entity >= MaxClients || entity == data || !IsValidClient(entity);
+}
+
+static bool IsValidClient(int client)
+{
+    return client > 0 && client <= MaxClients && 
+        IsClientConnected(client) && IsClientInGame(client) && !IsClientSourceTV(client);
 }
