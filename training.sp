@@ -16,7 +16,7 @@ public Plugin myinfo =
 };
 
 int roundNumber;
-float roundTimeSeconds = 10.0;
+float roundTimeSeconds = 20.0;
 ConVar cvarBotStop, cvarBotChatter, cvarInfAmmo;
  
 public void OnPluginStart() {

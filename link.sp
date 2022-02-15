@@ -218,12 +218,12 @@ stock void WriteGeneral() {
         PrintToServer("opening tmpGeneralFile returned null");
         return;
     }
-    tmpGeneralFile.WriteLine("Map Name,Round Number");
+    tmpGeneralFile.WriteLine("Map Name,Round Number,Tick Rate");
 
     char mapName[MAX_INPUT_LENGTH];
     GetCurrentMap(mapName, MAX_INPUT_LENGTH);
 
-    tmpGeneralFile.WriteLine("%s,%i", mapName, roundNumber);
+    tmpGeneralFile.WriteLine("%s,%i,%f", mapName, roundNumber, GetTickInterval());
 
     tmpGeneralFile.Close();
     tmpGeneralOpen = false;
