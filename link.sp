@@ -247,9 +247,11 @@ stock void WriteState() {
         ... "Rifle Id,Rifle Clip Ammo,Rifle Reserve Ammo,"
         ... "Pistol Id,Pistol Clip Ammo,Pistol Reserve Ammo,"
         ... "Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,Has C4,"
-        ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
-        ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,"
-        ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot");
+        ... "Eye Pos X,Opt Eye Pos X,Eye Pos Y,Opt Eye Pos Y,Eye Pos Z,Opt Eye Pos Z,Foot Pos Z,Opt Foot Pos Z,"
+        ... "Eye Angle Pitch,Opt Eye Angle Pitch,Eye Angle Yaw,Opt Eye Angle Yaw,"
+        ... "Aimpunch Angle Pitch,Opt Aimpunch Angle Pitch,Aimpunch Angle Yaw,Opt Aimpunch Angle Yaw,"
+        ... "Eye With Recoil Angle Pitch,Opt Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Opt Eye With Recoil Angle Yaw,"
+        ... "Is Alive,Is Bot");
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
     for (int client = 1; client < MaxClients; client++) {
@@ -305,11 +307,16 @@ stock void WriteState() {
                                     ... "%i,%i,"
                                     ... "%i,%i,"
                                     ... "%i,%i,"
-                                    ... "%f,%f,"
-                                    ... "%f,%f,"
-                                    ... "%f,%f,"
-                                    ... "%f,%f,"
-                                    ... "%f,%f,"
+                                    ... "%f,%i,"
+                                    ... "%f,%i,"
+                                    ... "%f,%i,"
+                                    ... "%f,%i,"
+                                    ... "%f,%i,"
+                                    ... "%f,%i,"
+                                    ... "%f,%i,"
+                                    ... "%f,%i,"
+                                    ... "%f,%i,"
+                                    ... "%f,%i,"
                                     ... "%i,%i",
                 currentFrame, client, clientName, clientTeam, activeWeaponId,
                 rifleWeaponId, rifleClipAmmo, rifleReserveAmmo,
@@ -317,11 +324,16 @@ stock void WriteState() {
                 GetGrenade(client, Flash), GetGrenade(client, Molotov), 
                 GetGrenade(client, Smoke), GetGrenade(client, HE), 
                 GetGrenade(client, Decoy), GetGrenade(client, Incendiary), 
-                clientEyePos[client][0], clientEyePos[client][1], 
-                clientEyePos[client][2], clientFootPos[client][2],
-                clientEyeAngle[client][0], clientEyeAngle[client][1],
-                mAimPunchAngle[client][0], mAimPunchAngle[client][1],
-                clientEyeAngleWithRecoil[client][0], clientEyeAngleWithRecoil[client][1],
+                clientEyePos[client][0], clientEyePos[client][0], 
+                clientEyePos[client][1], clientEyePos[client][1], 
+                clientEyePos[client][2], clientEyePos[client][2],
+                clientFootPos[client][2], clientFootPos[client][2],
+                clientEyeAngle[client][0], clientEyeAngle[client][0],
+                clientEyeAngle[client][1], clientEyeAngle[client][1],
+                mAimPunchAngle[client][0], mAimPunchAngle[client][0],
+                mAimPunchAngle[client][1], mAimPunchAngle[client][1],
+                clientEyeAngleWithRecoil[client][0], clientEyeAngleWithRecoil[client][0],
+                clientEyeAngleWithRecoil[client][1], clientEyeAngleWithRecoil[client][1],
                 clientOtherState[client], clientFake);
         }
     }
@@ -366,7 +378,7 @@ stock void WriteC4() {
         return;
     }
     tmpC4File.WriteLine("Is Planted,Is Dropped,"
-        ... "Pos X,Pos Y,Pos Z");
+        ... "Pos X,Opt Pos X,Pos Y,Opt Pos Y,Pos Z,Opt Pos Z");
 
     int c4Ent = -1;
     c4Ent = FindEntityByClassname(c4Ent, "planted_c4"); 
@@ -380,7 +392,7 @@ stock void WriteC4() {
         GetEntPropVector(c4Ent, Prop_Send, "m_vecOrigin", c4Position);
         int isDropped = !isPlanted && GetVectorDistance(zeroVector, c4Position) != 0.0 ? 1 : 0;
         tmpC4File.WriteLine("%i,%i,"
-            ... "%f,%f,%f",
+            ... "%f,%i,%f,%i,%f,%i",
             isPlanted, isDropped, 
             c4Position[0], c4Position[1], c4Position[2]);
     }
