@@ -13,6 +13,11 @@ get_script_dir () {
      script_dir="$DIR"
 }
 get_script_dir
+csgo_path=$(cat .csgo_path | tr -d "[:space:]")
+data_path=${csgo_path}/addons/sourcemod/scripting
+mkdir -p $data_path
+chmod 777 $data_path
+
 mkdir -p compiled/bot-link
 if ./compile.sh bot-link/$1.sp; then
 	cp compiled/bot-link/$1.smx ../plugins/
@@ -22,7 +27,3 @@ if ./compile.sh bot-link/$1.sp; then
         ${script_dir}/reminder.sh $1
     fi
 fi
-
-data_path=/home/steam/csgo-ds/csgo/addons/sourcemod/scripting
-mkdir -p $data_path
-chmod 777 $data_path
