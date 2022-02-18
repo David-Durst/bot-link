@@ -13,7 +13,7 @@ get_script_dir () {
      script_dir="$DIR"
 }
 get_script_dir
-csgo_path=$(cat .csgo_path | tr -d "[:space:]")
+csgo_path=$(cat ${script_dir}/.csgo_path | tr -d "[:space:]")
 data_path=${csgo_path}/addons/sourcemod/scripting
 mkdir -p $data_path
 chmod 777 $data_path
