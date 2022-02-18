@@ -14,7 +14,7 @@ get_script_dir () {
 }
 get_script_dir
 csgo_path=$(cat ${script_dir}/.csgo_path | tr -d "[:space:]")
-data_path=${csgo_path}/addons/sourcemod/scripting
+data_path=${csgo_path}/addons/sourcemod/bot-link-data
 mkdir -p $data_path
 chmod 777 $data_path
 
