@@ -80,7 +80,7 @@ int currentFrame;
 
 // general variables
 ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers;
-int roundNumber;
+int roundNumber, mapNumber;
 
 // debugging variables
 ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick, cvarRadarShowall, cvarForceCamera;
@@ -108,6 +108,7 @@ public void OnPluginStart()
     cvarRadarShowall = FindConVar("mp_radar_showall");
     cvarForceCamera = FindConVar("mp_forcecamera");
 
+    mapNumber = 0;
     roundNumber = 0;
     debugStatus = false;
     printStatus = false;
@@ -162,6 +163,7 @@ public Action:smBotDebug(client, args) {
 
 public OnMapStart() {
     roundNumber = 0;
+    mapNumber++;
     applyConVars();
     InitGrenadeOffsets();
 }
@@ -218,12 +220,12 @@ stock void WriteGeneral() {
         PrintToServer("opening tmpGeneralFile returned null");
         return;
     }
-    tmpGeneralFile.WriteLine("Map Name,Round Number,Tick Rate");
+    tmpGeneralFile.WriteLine("Map Name,Round Number,Tick Rate,Map Number");
 
     char mapName[MAX_INPUT_LENGTH];
     GetCurrentMap(mapName, MAX_INPUT_LENGTH);
 
-    tmpGeneralFile.WriteLine("%s,%i,%f", mapName, roundNumber, GetTickInterval());
+    tmpGeneralFile.WriteLine("%s,%i,%i,%f", mapName, roundNumber, mapNumber, GetTickInterval());
 
     tmpGeneralFile.Close();
     tmpGeneralOpen = false;
