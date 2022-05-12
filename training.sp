@@ -17,6 +17,7 @@ public Plugin myinfo =
 
 int roundNumber;
 float roundTimeSeconds = 20.0;
+bool limitRoundTime = false;
 ConVar cvarBotStop, cvarBotChatter, cvarInfAmmo;
  
 public void OnPluginStart() {
@@ -46,7 +47,7 @@ public Action OnRoundStart(Event event, const char[] sName, bool bDontBroadcast)
 
 public Action Timer_EndRound(Handle timer, int fireRoundNumber)
 {
-    if (roundNumber == fireRoundNumber) {
+    if (roundNumber == fireRoundNumber && limitRoundTime) {
         CS_TerminateRound(0.0, CSRoundEnd_Draw, false);
     }
 }
