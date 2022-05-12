@@ -447,6 +447,9 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
         inputSetLastFrame[client] = false;
         return Plugin_Continue;
     }
+    if (!IsFakeClient(client)) {
+        return Plugin_Continue;
+    }
 
     iButtons = inputButtons[client];
 
