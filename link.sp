@@ -46,6 +46,8 @@ float clientEyePos[MAXPLAYERS+1][3];
 float clientEyeAngle[MAXPLAYERS+1][3];
 float clientEyeAngleWithRecoil[MAXPLAYERS+1][3];
 float clientFootPos[MAXPLAYERS+1][3];
+float clientFootPosOther[MAXPLAYERS+1][3];
+float clientVelocity[MAXPLAYERS+1][3];
 float mAimPunchAngle[MAXPLAYERS+1][3];
 float mViewAdjustedAimPunchAngle[MAXPLAYERS+1][3];
 float mViewPunchAngle[MAXPLAYERS+1][3];
@@ -94,6 +96,7 @@ float lastAngles[2], lastAngleVel[2], maxAngleVel[2], maxAngleAccel[2];
 public void OnPluginStart()
 {
     RegConsoleCmd("sm_botDebug", smBotDebug, "- make bomb time 10 minutes and give infinite ammo");
+    RegConsoleCmd("sm_draw", smDraw, "- immediately end the current round in a draw");
     RegConsoleCmd("sm_printLink", smPrintLink, "- print debugging values from bot-link");
     RegConsoleCmd("sm_recordMaxs", smRecordMaxs, "- record max angular values for debugging");
 
@@ -158,6 +161,11 @@ public Action:smRecordMaxs(client, args) {
 public Action:smBotDebug(client, args) {
     debugStatus = !debugStatus;
     applyConVars();
+    return Plugin_Handled;
+}
+
+public Action:smDraw(client, args) {
+    CS_TerminateRound(0.0, CSRoundEnd_Draw, false); 
     return Plugin_Handled;
 }
 
@@ -265,6 +273,9 @@ stock void WriteState() {
             GetViewAngleWithRecoil(client);
             // this gets position result from getpos_exact
             GetClientAbsOrigin(client, clientFootPos[client]);
+            GetEntPropVector(client, Prop_Send, "m_vecOrigin", clientFootPosOther[client]); 
+            // this gets velocity
+            GetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", clientVelocity[client]);
 
             if (IsPlayerAlive(client)) {
                 clientOtherState[client] |= 1;
@@ -308,7 +319,8 @@ stock void WriteState() {
                                     ... "%i,%i,"
                                     ... "%i,%i,"
                                     ... "%f,%f,"
-                                    ... "%f,%f,"
+                                    ... "%f,%f,%f,"
+                                    ... "%f,%f,%f,"
                                     ... "%f,%f,"
                                     ... "%f,%f,"
                                     ... "%f,%f,"
@@ -320,7 +332,8 @@ stock void WriteState() {
                 GetGrenade(client, Smoke), GetGrenade(client, HE), 
                 GetGrenade(client, Decoy), GetGrenade(client, Incendiary), 
                 clientEyePos[client][0], clientEyePos[client][1], 
-                clientEyePos[client][2], clientFootPos[client][2],
+                clientEyePos[client][2], clientFootPos[client][2], clientFootPosOther[client][2],
+                clientVelocity[client][0], clientVelocity[client][1], clientVelocity[client][2],
                 clientEyeAngle[client][0], clientEyeAngle[client][1],
                 mAimPunchAngle[client][0], mAimPunchAngle[client][1],
                 clientEyeAngleWithRecoil[client][0], clientEyeAngleWithRecoil[client][1],
