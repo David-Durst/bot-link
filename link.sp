@@ -7,7 +7,6 @@
 #include "bot-link/weapon_status.sp"
 #include "bot-link/grenade_status.sp"
 #include "bot-link/visibility.sp"
-#include "bot-link/bot_debug.sp"
 #define MAX_INPUT_LENGTH 1000
 #define MAX_INPUT_FIELDS 20
 #define MAX_PATH_LENGTH 256
@@ -93,6 +92,8 @@ bool recordMaxs;
 int clientToRecord;
 float lastAngles[2], lastAngleVel[2], maxAngleVel[2], maxAngleAccel[2];
 
+// placed down here so it has access to all variables defined above
+#include "bot-link/bot_debug.sp"
  
 public void OnPluginStart()
 {
