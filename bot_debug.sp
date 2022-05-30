@@ -71,10 +71,7 @@ public Action smTeleport(int client, int args)
     // arg 0 is the command
     GetCmdArg(1, arg, sizeof(arg));
 
-    float noVel[3];
-    noVel[0] = 0.0;
-    noVel[1] = 0.0;
-    noVel[2] = 0.0;
+    float zeroVec[3] = {0.0, 0.0, 0.0};
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
     for (int target = 1; target <= MaxClients; target++) {
@@ -82,7 +79,7 @@ public Action smTeleport(int client, int args)
             char targetName[128];
             GetClientName(target, targetName, 128);
             if (StrEqual(arg, targetName, false)) {
-                TeleportEntity(client, savePos, NULL_VECTOR, noVel);
+                TeleportEntity(target, savePos, zeroVec, zeroVec);
                 return Plugin_Handled;
             }
         }
