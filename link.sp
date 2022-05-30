@@ -7,6 +7,7 @@
 #include "bot-link/weapon_status.sp"
 #include "bot-link/grenade_status.sp"
 #include "bot-link/visibility.sp"
+#include "bot-link/bot_debug.sp"
 #define MAX_INPUT_LENGTH 1000
 #define MAX_INPUT_FIELDS 20
 #define MAX_PATH_LENGTH 256
@@ -99,7 +100,7 @@ public void OnPluginStart()
     RegConsoleCmd("sm_draw", smDraw, "- immediately end the current round in a draw");
     RegConsoleCmd("sm_printLink", smPrintLink, "- print debugging values from bot-link");
     RegConsoleCmd("sm_recordMaxs", smRecordMaxs, "- record max angular values for debugging");
-
+    RegisterDebugFunctions();
     HookEvent("round_start", OnRoundStart, EventHookMode_PostNoCopy);
 
     cvarBotStop = FindConVar("bot_stop");
@@ -262,7 +263,7 @@ stock void WriteState() {
         ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot");
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
-    for (int client = 1; client < MaxClients; client++) {
+    for (int client = 1; client <= MaxClients; client++) {
         if (IsValidClient(client)) {
             char clientName[128];
             GetClientName(client, clientName, 128);
@@ -417,7 +418,7 @@ stock void ReadInput() {
     if (FileExists(inputFilePath)) {
         // on each new input file, recheck which inputs are valid
         // this prevents flipping back to bot control on in between frames where no input
-        for (int client = 1; client < MaxClients; client++) {
+        for (int client = 1; client <= MaxClients; client++) {
             inputSet[client] = false;
         }
 
