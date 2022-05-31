@@ -1,5 +1,6 @@
 static int g_iLaserMaterial, g_iHaloMaterial;
 float savePos[3];
+bool drawLine;
 public void RegisterDebugFunctions() 
 {
     RegConsoleCmd("sm_savePos", smSavePos, "<player name> - save the position of the named player to place a player in");
@@ -10,6 +11,8 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_line", smLine, "- test draw line");
     g_iLaserMaterial = PrecacheModel("materials/sprites/laserbeam.vmt");
     g_iHaloMaterial = PrecacheModel("materials/sprites/halo01.vmt");
+    drawLine = false;
+    CreateTimer(0.1, DrawAllClients, _, TIMER_REPEAT);
 }
 
 public Action smSavePos(int client, int args)
@@ -118,67 +121,69 @@ public Action smSlayAllBut(int client, int args)
 }
 
 public Action smLine(int client, int args) {
-    CreateTimer(0.1, DrawAllClients);
+    drawLine = !drawLine;
     return Plugin_Handled;
 }
 
 // this function is only safe to access global variables because code is single threaded
 public Action DrawAllClients(Handle timer) {
-    for (int target = 1; target <= MaxClients; target++) {
-        if (IsValidClient(target)) {
-            bool moveForward = inputMovement[target][Forward] && !inputMovement[target][Backward];
-            bool moveBackward = !inputMovement[target][Forward] && inputMovement[target][Backward];
-            bool moveLeft = inputMovement[target][Left] && !inputMovement[target][Right];
-            bool moveRight = !inputMovement[target][Left] && inputMovement[target][Right];
+    if (drawLine) {
+        for (int target = 1; target <= MaxClients; target++) {
+            if (IsValidClient(target) && IsPlayerAlive(target)) {
+                bool moveForward = inputMovement[target][Forward] && !inputMovement[target][Backward];
+                bool moveBackward = !inputMovement[target][Forward] && inputMovement[target][Backward];
+                bool moveLeft = inputMovement[target][Left] && !inputMovement[target][Right];
+                bool moveRight = !inputMovement[target][Left] && inputMovement[target][Right];
 
-            // skip if not moving
-            if (!moveForward && !moveBackward && !moveLeft && !moveRight) {
-                continue;
-            }
+                // skip if not moving
+                if (!moveForward && !moveBackward && !moveLeft && !moveRight) {
+                    continue;
+                }
 
 
-            float offsetMoveAngle;
-            if (moveForward) {
-                offsetMoveAngle = 0.0;
-                if (moveLeft) {
-                    offsetMoveAngle -= 45.0;
+                float offsetMoveAngle;
+                if (moveForward) {
+                    offsetMoveAngle = 0.0;
+                    if (moveLeft) {
+                        offsetMoveAngle -= 45.0;
+                    }
+                    else if (moveRight) {
+                        offsetMoveAngle += 45.0;
+                    }
                 }
-                else if (moveRight) {
-                    offsetMoveAngle += 45.0;
+                else if (moveBackward) {
+                    offsetMoveAngle = 180.0;
+                    if (moveLeft) {
+                        offsetMoveAngle += 45.0;
+                    }
+                    else if (moveRight) {
+                        offsetMoveAngle -= 45.0;
+                    }
                 }
-            }
-            else if (moveBackward) {
-                offsetMoveAngle = 180.0;
-                if (moveLeft) {
-                    offsetMoveAngle += 45.0;
+                else {
+                    if (moveLeft) {
+                        offsetMoveAngle = -90.0;
+                    }
+                    else if (moveRight) {
+                        offsetMoveAngle = 90.0;
+                    }
                 }
-                else if (moveRight) {
-                    offsetMoveAngle -= 45.0;
-                }
-            }
-            else {
-                if (moveLeft) {
-                    offsetMoveAngle = -90.0;
-                }
-                else if (moveRight) {
-                    offsetMoveAngle = 90.0;
-                }
-            }
 
-            float origin[3], dest[3];
-            origin = clientEyePos[target];
-            dest = clientEyePos[target];
-            float offset = 50.0;
-            float yawRad = DegToRad(clientEyeAngle[target][1] + offsetMoveAngle);
-            //PrintToConsoleAll("target %d offsetAngle %f yawRad %f", target, offsetMoveAngle, yawRad);
-            dest[0] += offset*Cosine(yawRad);
-            dest[1] += offset*Sine(yawRad);
-                        
-            TE_SendBeam(origin, dest, {255, 0, 0, 255});
-            
+                float origin[3], dest[3];
+                origin = clientEyePos[target];
+                dest = clientEyePos[target];
+                float offset = 50.0;
+                float yawRad = DegToRad(clientEyeAngle[target][1] + offsetMoveAngle);
+                //PrintToConsoleAll("target %d offsetAngle %f yawRad %f", target, offsetMoveAngle, yawRad);
+                dest[0] += offset*Cosine(yawRad);
+                dest[1] += offset*Sine(yawRad);
+                            
+                TE_SendBeam(origin, dest, {255, 0, 0, 255});
+                
+            }
         }
     }
-    CreateTimer(0.1, DrawAllClients);
+    return Plugin_Handled;
 }
 
 void TE_SendBeam(float m_vecMins[3], float m_vecMaxs[3], int color[4], float flDur = 0.1)
