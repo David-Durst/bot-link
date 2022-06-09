@@ -85,7 +85,7 @@ ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers;
 int roundNumber, mapNumber;
 
 // debugging variables
-ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick, cvarRadarShowall, cvarForceCamera;
+ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick, cvarRadarShowall, cvarForceCamera, cvarRoundRestartDelay;
 bool debugStatus;
 bool printStatus;
 bool recordMaxs;
@@ -112,6 +112,7 @@ public void OnPluginStart()
     cvarAutoKick = FindConVar("mp_autokick");
     cvarRadarShowall = FindConVar("mp_radar_showall");
     cvarForceCamera = FindConVar("mp_forcecamera");
+    cvarRoundRestartDelay = FindConVar("mp_round_restart_delay");
 
     mapNumber = 0;
     roundNumber = 0;
@@ -193,12 +194,14 @@ stock void applyConVars() {
         SetConVarInt(cvarBombTime, 600, true, true);
         SetConVarInt(cvarRadarShowall, 1, true, true);
         SetConVarInt(cvarForceCamera, 0, true, true);
+        SetConVarInt(cvarRoundRestartDelay, 600, true, true);
     }
     else {
         SetConVarInt(cvarInfAmmo, 0, true, true);
         SetConVarInt(cvarBombTime, 40, true, true);
         SetConVarInt(cvarRadarShowall, 0, true, true);
         SetConVarInt(cvarForceCamera, 1, true, true);
+        SetConVarInt(cvarRoundRestartDelay, 7, true, true);
     }
 }
 
