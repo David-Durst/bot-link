@@ -13,6 +13,7 @@
 #define MAX_ONE_DIRECTION_SPEED 450.0
 #define MAX_ONE_DIRECTION_ANGLE_VEL 15.0
 #define DEBUG_INVALID_DIFF -20000.0
+#include "bot-link/script_interface.sp"
 
 public Plugin myinfo =
 {
@@ -85,7 +86,7 @@ ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers;
 int roundNumber, mapNumber;
 
 // debugging variables
-ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick, cvarRadarShowall, cvarForceCamera, cvarRoundRestartDelay;
+ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick, cvarRadarShowall, cvarForceCamera, cvarIgnoreRoundWinConditions;
 bool debugStatus;
 bool printStatus;
 bool recordMaxs;
@@ -112,7 +113,7 @@ public void OnPluginStart()
     cvarAutoKick = FindConVar("mp_autokick");
     cvarRadarShowall = FindConVar("mp_radar_showall");
     cvarForceCamera = FindConVar("mp_forcecamera");
-    cvarRoundRestartDelay = FindConVar("mp_round_restart_delay");
+    cvarIgnoreRoundWinConditions = FindConVar("mp_ignore_round_win_conditions");
 
     mapNumber = 0;
     roundNumber = 0;
@@ -194,14 +195,14 @@ stock void applyConVars() {
         SetConVarInt(cvarBombTime, 600, true, true);
         SetConVarInt(cvarRadarShowall, 1, true, true);
         SetConVarInt(cvarForceCamera, 0, true, true);
-        SetConVarInt(cvarRoundRestartDelay, 600, true, true);
+        SetConVarInt(cvarIgnoreRoundWinConditions, 1, true, true);
     }
     else {
         SetConVarInt(cvarInfAmmo, 0, true, true);
         SetConVarInt(cvarBombTime, 40, true, true);
         SetConVarInt(cvarRadarShowall, 0, true, true);
         SetConVarInt(cvarForceCamera, 1, true, true);
-        SetConVarInt(cvarRoundRestartDelay, 7, true, true);
+        SetConVarInt(cvarIgnoreRoundWinConditions, 0, true, true);
     }
 }
 
@@ -218,6 +219,7 @@ public OnGameFrame() {
     WriteC4();
     WriteVisibility();
     ReadInput();
+    ReadExecuteScript();
     currentFrame++;
 }
 
