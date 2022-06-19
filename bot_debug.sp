@@ -1,5 +1,5 @@
 static int g_iLaserMaterial, g_iHaloMaterial;
-float savePos[3];
+float savePos[3], saveAngle[3];
 bool drawLine;
 public void RegisterDebugFunctions() 
 {
@@ -13,6 +13,7 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_rotate", smRotate, "<player name> <yaw> <pitch> - rotate the named player to yaw and pitch values");
     RegConsoleCmd("sm_giveItem", smGiveItem, "<player name> <item name> - give the item to the player");
     RegConsoleCmd("sm_setCurrentItem", smSetCurrentItem, "<player name> <item name> - give the item to the player");
+    //RegConsoleCmd("sm_specPos", specPos, "<player name> <x> <y> <z> - give the item to the player");
     RegConsoleCmd("sm_line", smLine, "- draw line in direction player is trying to move");
     g_iLaserMaterial = PrecacheModel("materials/sprites/laserbeam.vmt");
     g_iHaloMaterial = PrecacheModel("materials/sprites/halo01.vmt");
@@ -48,6 +49,7 @@ public Action smSavePos(int client, int args)
     int targetId = GetClientIdByName(arg);
     if (targetId != -1) {
         GetClientAbsOrigin(targetId, savePos);
+        saveAngle = clientEyeAngle[targetId];
         return Plugin_Handled;
     }
         
@@ -57,22 +59,27 @@ public Action smSavePos(int client, int args)
 
 public Action smSetPos(int client, int args)
 {
-    if (args != 3) {
-        PrintToConsole(client, "smSetPos requires 3 args");
+    if (args != 3 && args != 5) {
+        PrintToConsole(client, "smSetPos requires 3 or 5 args");
         return Plugin_Handled;
     }
 
     char arg[128];
     for (int i = 1; i <= args; i++) {
         GetCmdArg(i, arg, sizeof(arg));
-        savePos[i-1] = StringToFloat(arg);
+        if (i <= 3) {
+            savePos[i-1] = StringToFloat(arg);
+         }
+         else {
+            saveAngle[i-4] = StringToFloat(arg);
+         }
     }
     return Plugin_Handled;
 }
 
 public Action smGetPos(int client, int args)
 {
-    PrintToConsole(client, "savedPos (%f, %f, %f)", savePos[0], savePos[1], savePos[2]);
+    PrintToConsole(client, "savedPos (%f, %f, %f) (%f, %f)", savePos[0], savePos[1], savePos[2], saveAngle[0], saveAngle[1]);
     return Plugin_Handled;
 }
 
@@ -91,7 +98,7 @@ public Action smTeleport(int client, int args)
 
     int targetId = GetClientIdByName(arg);
     if (targetId != -1) {
-        TeleportEntity(targetId, savePos, zeroVec, zeroVec);
+        TeleportEntity(targetId, savePos, saveAngle, zeroVec);
         return Plugin_Handled;
     }
         
