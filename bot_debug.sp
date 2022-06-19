@@ -74,6 +74,12 @@ public Action smSetPos(int client, int args)
             saveAngle[i-4] = StringToFloat(arg);
          }
     }
+
+    // default angle values
+    if (args != 5) {
+        saveAngle[0] = 0.0;
+        saveAngle[1] = 0.0;
+    }
     return Plugin_Handled;
 }
 
