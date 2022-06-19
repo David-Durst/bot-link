@@ -4,13 +4,13 @@ bool drawLine;
 public void RegisterDebugFunctions() 
 {
     RegConsoleCmd("sm_savePos", smSavePos, "<player name> - save the position of the named player to place a player in");
-    RegConsoleCmd("sm_setPos", smSetPos, "<x> <y> <z> <yaw> <pitch> - set a position to place a bot in (yaw/pitch optional)");
+    RegConsoleCmd("sm_setPos", smSetPos, "<x> <y> <z> <pitch> <yaw> - set a position to place a bot in (pitch/yaw optional)");
     RegConsoleCmd("sm_getPos", smGetPos, "- get the current a position to place a bot in");
     RegConsoleCmd("sm_teleport", smTeleport, "<player name> - teleport the named player to the saved pos");
     RegConsoleCmd("sm_slayAllBut", smSlayAllBut, "<player name 0> ... - slay all but the listed players");
     RegConsoleCmd("sm_setArmor", smSetArmor, "<player name> <armor> - set a players armor value");
     RegConsoleCmd("sm_setHealth", smSetHealth, "<player name> <armor> - set a players health value");
-    RegConsoleCmd("sm_rotate", smRotate, "<player name> <yaw> <pitch> - rotate the named player to yaw and pitch values");
+    RegConsoleCmd("sm_rotate", smRotate, "<player name> <pitch> <yaw> - rotate the named player to pitch yaw values");
     RegConsoleCmd("sm_giveItem", smGiveItem, "<player name> <item name> - give the item to the player");
     RegConsoleCmd("sm_setCurrentItem", smSetCurrentItem, "<player name> <item name> - give the item to the player");
     RegConsoleCmd("sm_specPlayerToTarget", smSpecPlayerToTarget, "<player name> <target name> <thirdPerson=f> - make player spectate a target (thirdPerson default false, any value is true)");
@@ -197,11 +197,11 @@ public Action smRotate(int client, int args)
     char nameArg[128], yawArg[128], pitchArg[128];
     // arg 0 is the command
     GetCmdArg(1, nameArg, sizeof(nameArg));
-    GetCmdArg(2, yawArg, sizeof(yawArg));
-    GetCmdArg(3, pitchArg, sizeof(pitchArg));
+    GetCmdArg(2, pitchArg, sizeof(pitchArg));
+    GetCmdArg(3, yawArg, sizeof(yawArg));
     float newAngles[3];
-    newAngles[0] = StringToFloat(yawArg);
-    newAngles[1] = StringToFloat(pitchArg);
+    newAngles[0] = StringToFloat(pitchArg);
+    newAngles[1] = StringToFloat(yawArg);
     newAngles[2] = 0.0;
 
     int targetId = GetClientIdByName(nameArg);
