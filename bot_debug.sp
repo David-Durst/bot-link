@@ -91,7 +91,7 @@ public Action smTeleport(int client, int args)
 
     int targetId = GetClientIdByName(arg);
     if (targetId != -1) {
-        TeleportEntity(target, savePos, zeroVec, zeroVec);
+        TeleportEntity(targetId, savePos, zeroVec, zeroVec);
         return Plugin_Handled;
     }
         
@@ -140,7 +140,7 @@ public Action smSetArmor(int client, int args)
     GetCmdArg(2, armorArg, sizeof(armorArg));
     int armorValue = StringToInt(armorArg);
 
-    int targetId = GetClientIdByName(arg);
+    int targetId = GetClientIdByName(nameArg);
     if (targetId != -1) {
         SetEntProp(targetId, Prop_Data, "m_ArmorValue", armorValue);
         return Plugin_Handled;
@@ -163,9 +163,9 @@ public Action smSetHealth(int client, int args)
     GetCmdArg(2, healthArg, sizeof(healthArg));
     int healthValue = StringToInt(healthArg);
 
-    int targetId = GetClientIdByName(arg);
+    int targetId = GetClientIdByName(nameArg);
     if (targetId != -1) {
-        SetEntProp(targetId, Prop_Data, "m_iHealth", heatlhValue);
+        SetEntProp(targetId, Prop_Data, "m_iHealth", healthValue);
         return Plugin_Handled;
     }
         
@@ -188,9 +188,9 @@ public Action smRotate(int client, int args)
     float newAngles[3];
     newAngles[0] = StringToFloat(yawArg);
     newAngles[1] = StringToFloat(pitchArg);
-    newAngles[2] = 0;
+    newAngles[2] = 0.0;
 
-    int targetId = GetClientIdByName(arg);
+    int targetId = GetClientIdByName(nameArg);
     if (targetId != -1) {
         TeleportEntity(targetId, NULL_VECTOR, newAngles, NULL_VECTOR);
         return Plugin_Handled;
@@ -212,7 +212,7 @@ public Action smGiveItem(int client, int args)
     GetCmdArg(1, nameArg, sizeof(nameArg));
     GetCmdArg(2, itemArg, sizeof(itemArg));
 
-    int targetId = GetClientIdByName(arg);
+    int targetId = GetClientIdByName(nameArg);
     if (targetId != -1) {
         GivePlayerItem(targetId, itemArg);
         return Plugin_Handled;
@@ -229,27 +229,16 @@ public Action smSetCurrentItem(int client, int args)
         return Plugin_Handled;
     }
 
-    char nameArg[128], itemArg[128];
+    char nameArg[128], itemArg[128], consoleCmd[150];
+    consoleCmd = "use ";
     // arg 0 is the command
     GetCmdArg(1, nameArg, sizeof(nameArg));
     GetCmdArg(2, itemArg, sizeof(itemArg));
+    StrCat(consoleCmd, sizeof(consoleCmd), itemArg);
 
-    int targetId = GetClientIdByName(arg);
+    int targetId = GetClientIdByName(nameArg);
     if (targetId != -1) {
-
-        // see grenade_status.sp for source of this code
-        int entindex = CreateEntityByName();
-        
-        if (entindex == -1) {
-            PrintToConsole(client, "smSetCurrentItem received invalid item name");
-            return Plugin_Handled;
-        }
-
-        DispatchSpawn(entindex);
-        int itemIndex = GetEntProp(entindex, Prop_Send, "m_iItemDefinitionIndex");
-        AcceptEntityInput(entindex, "Kill");
-        
-        SetEntPropEnt(targetId, Prop_Send, "m_hActiveWeapon", itemIndex);
+        FakeClientCommand(targetId, consoleCmd);
         return Plugin_Handled;
     }
         
