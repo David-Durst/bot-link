@@ -4,7 +4,7 @@ bool drawLine;
 public void RegisterDebugFunctions() 
 {
     RegConsoleCmd("sm_savePos", smSavePos, "<player name> - save the position of the named player to place a player in");
-    RegConsoleCmd("sm_setPos", smSetPos, "<x> <y> <z> - set a position to place a bot in");
+    RegConsoleCmd("sm_setPos", smSetPos, "<x> <y> <z> <yaw> <pitch> - set a position to place a bot in (yaw/pitch optional)");
     RegConsoleCmd("sm_getPos", smGetPos, "- get the current a position to place a bot in");
     RegConsoleCmd("sm_teleport", smTeleport, "<player name> - teleport the named player to the saved pos");
     RegConsoleCmd("sm_slayAllBut", smSlayAllBut, "<player name 0> ... - slay all but the listed players");
@@ -13,7 +13,8 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_rotate", smRotate, "<player name> <yaw> <pitch> - rotate the named player to yaw and pitch values");
     RegConsoleCmd("sm_giveItem", smGiveItem, "<player name> <item name> - give the item to the player");
     RegConsoleCmd("sm_setCurrentItem", smSetCurrentItem, "<player name> <item name> - give the item to the player");
-    //RegConsoleCmd("sm_specPos", specPos, "<player name> <x> <y> <z> - give the item to the player");
+    RegConsoleCmd("sm_specPlayerToTarget", smSpecPlayerToTarget, "<player name> <target name> <thirdPerson=f> - make player spectate a target (thirdPerson default false, any value is true)");
+    RegConsoleCmd("sm_specPlayerThirdPerson", smSpecPlayerThirdPerson, "<player name> - make player third person spectate");
     RegConsoleCmd("sm_line", smLine, "- draw line in direction player is trying to move");
     g_iLaserMaterial = PrecacheModel("materials/sprites/laserbeam.vmt");
     g_iHaloMaterial = PrecacheModel("materials/sprites/halo01.vmt");
@@ -256,6 +257,67 @@ public Action smSetCurrentItem(int client, int args)
     }
         
     PrintToConsole(client, "smSetCurrentItem received player name that didnt match any valid clients");
+    return Plugin_Handled;
+}
+
+public Action smSpecPlayerToTarget(int client, int args)
+{
+    if (args != 2 && args != 3) {
+        PrintToConsole(client, "smSpecPlayerToTarget requires 2 or 3 args");
+        return Plugin_Handled;
+    }
+
+    char playerArg[128], targetArg[128], consoleCmd[150];
+    bool thirdPerson = args == 3;
+    consoleCmd = "spec_player ";
+    // arg 0 is the command
+    GetCmdArg(1, playerArg, sizeof(playerArg));
+    GetCmdArg(2, targetArg, sizeof(targetArg));
+    StrCat(consoleCmd, sizeof(consoleCmd), targetArg);
+
+    int playerId = GetClientIdByName(playerArg);
+    if (playerId != -1) {
+        FakeClientCommand(playerId, consoleCmd);
+        if (thirdPerson) {
+            FakeClientCommand(playerId, "spec_mode");
+        }
+        return Plugin_Handled;
+    }
+        
+    PrintToConsole(client, "smSpecPlayerToTarget received player name that didnt match any valid clients");
+    return Plugin_Handled;
+}
+
+public Action smSpecPlayerThirdPerson(int client, int args)
+{
+    if (args != 1) {
+        PrintToConsole(client, "smSpecPlayerThirdPerson requires 1 arg");
+        return Plugin_Handled;
+    }
+
+    char playerArg[128], consoleCmd[150];
+    consoleCmd = "spec_player ";
+    // arg 0 is the command
+    GetCmdArg(1, playerArg, sizeof(playerArg));
+
+    int playerId = GetClientIdByName(playerArg);
+    if (playerId != -1) {
+        for (int targetClient = 1; targetClient <= MaxClients; targetClient++) {
+            if (IsValidClient(targetClient) && IsPlayerAlive(targetClient) && (GetClientTeam(targetClient) == CS_TEAM_T || GetClientTeam(targetClient) == CS_TEAM_CT)) {
+                char targetClientName[128];
+                GetClientName(targetClient, targetClientName, 128);
+                StrCat(consoleCmd, sizeof(consoleCmd), targetClientName);
+                FakeClientCommand(playerId, consoleCmd);
+                FakeClientCommand(playerId, "spec_mode");
+                FakeClientCommand(playerId, "spec_mode");
+                return Plugin_Handled;
+            }
+        }
+        PrintToConsole(client, "smSpecPlayerThirdPerson needs an alive player to use, none were found");
+        return Plugin_Handled;
+    }
+        
+    PrintToConsole(client, "smSpecPlayerThirdPerson received player name that didnt match any valid clients");
     return Plugin_Handled;
 }
 
