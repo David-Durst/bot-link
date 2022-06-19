@@ -8,11 +8,30 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_getPos", smGetPos, "- get the current a position to place a bot in");
     RegConsoleCmd("sm_teleport", smTeleport, "<player name> - teleport the named player to the saved pos");
     RegConsoleCmd("sm_slayAllBut", smSlayAllBut, "<player name 0> ... - slay all but the listed players");
-    RegConsoleCmd("sm_line", smLine, "- test draw line");
+    RegConsoleCmd("sm_setArmor", smSetArmor, "<player name> <armor> - set a players armor value");
+    RegConsoleCmd("sm_setHealth", smSetHealth, "<player name> <armor> - set a players health value");
+    RegConsoleCmd("sm_rotate", smRotate, "<player name> <yaw> <pitch> - rotate the named player to yaw and pitch values");
+    RegConsoleCmd("sm_giveItem", smGiveItem, "<player name> <item name> - give the item to the player");
+    RegConsoleCmd("sm_setCurrentItem", smSetCurrentItem, "<player name> <item name> - give the item to the player");
+    RegConsoleCmd("sm_line", smLine, "- draw line in direction player is trying to move");
     g_iLaserMaterial = PrecacheModel("materials/sprites/laserbeam.vmt");
     g_iHaloMaterial = PrecacheModel("materials/sprites/halo01.vmt");
     drawLine = false;
     CreateTimer(0.1, DrawAllClients, _, TIMER_REPEAT);
+}
+
+stock int GetClientIdByName(const char[] name) {
+    // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
+    for (int target = 1; target <= MaxClients; target++) {
+        if (IsValidClient(target)) {
+            char targetName[128];
+            GetClientName(target, targetName, 128);
+            if (StrEqual(name, targetName, false)) {
+                return target;
+            }
+        }
+    }
+    return -1;
 }
 
 public Action smSavePos(int client, int args)
@@ -26,16 +45,10 @@ public Action smSavePos(int client, int args)
     // arg 0 is the command
     GetCmdArg(1, arg, sizeof(arg));
 
-    // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
-    for (int target = 1; target <= MaxClients; target++) {
-        if (IsValidClient(target)) {
-            char targetName[128];
-            GetClientName(target, targetName, 128);
-            if (StrEqual(arg, targetName, false)) {
-                GetClientAbsOrigin(target, savePos);
-                return Plugin_Handled;
-            }
-        }
+    int targetId = GetClientIdByName(arg);
+    if (targetId != -1) {
+        GetClientAbsOrigin(targetId, savePos);
+        return Plugin_Handled;
     }
         
     PrintToConsole(client, "smSavePos received player name that didnt match any valid clients");
@@ -76,16 +89,10 @@ public Action smTeleport(int client, int args)
 
     float zeroVec[3] = {0.0, 0.0, 0.0};
 
-    // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
-    for (int target = 1; target <= MaxClients; target++) {
-        if (IsValidClient(target)) {
-            char targetName[128];
-            GetClientName(target, targetName, 128);
-            if (StrEqual(arg, targetName, false)) {
-                TeleportEntity(target, savePos, zeroVec, zeroVec);
-                return Plugin_Handled;
-            }
-        }
+    int targetId = GetClientIdByName(arg);
+    if (targetId != -1) {
+        TeleportEntity(target, savePos, zeroVec, zeroVec);
+        return Plugin_Handled;
     }
         
     PrintToConsole(client, "smTeleport received player name that didnt match any valid clients");
@@ -117,6 +124,136 @@ public Action smSlayAllBut(int client, int args)
             }
         }
     }
+    return Plugin_Handled;
+}
+
+public Action smSetArmor(int client, int args)
+{
+    if (args != 2) {
+        PrintToConsole(client, "smSetArmor requires 2 args");
+        return Plugin_Handled;
+    }
+
+    char nameArg[128], armorArg[128];
+    // arg 0 is the command
+    GetCmdArg(1, nameArg, sizeof(nameArg));
+    GetCmdArg(2, armorArg, sizeof(armorArg));
+    int armorValue = StringToInt(armorArg);
+
+    int targetId = GetClientIdByName(arg);
+    if (targetId != -1) {
+        SetEntProp(targetId, Prop_Data, "m_ArmorValue", armorValue);
+        return Plugin_Handled;
+    }
+        
+    PrintToConsole(client, "smSetArmor received player name that didnt match any valid clients");
+    return Plugin_Handled;
+}
+
+public Action smSetHealth(int client, int args)
+{
+    if (args != 2) {
+        PrintToConsole(client, "smSetHealth requires 2 args");
+        return Plugin_Handled;
+    }
+
+    char nameArg[128], healthArg[128];
+    // arg 0 is the command
+    GetCmdArg(1, nameArg, sizeof(nameArg));
+    GetCmdArg(2, healthArg, sizeof(healthArg));
+    int healthValue = StringToInt(healthArg);
+
+    int targetId = GetClientIdByName(arg);
+    if (targetId != -1) {
+        SetEntProp(targetId, Prop_Data, "m_iHealth", heatlhValue);
+        return Plugin_Handled;
+    }
+        
+    PrintToConsole(client, "smSetHealth received player name that didnt match any valid clients");
+    return Plugin_Handled;
+}
+
+public Action smRotate(int client, int args)
+{
+    if (args != 3) {
+        PrintToConsole(client, "smRotate requires 3 args");
+        return Plugin_Handled;
+    }
+
+    char nameArg[128], yawArg[128], pitchArg[128];
+    // arg 0 is the command
+    GetCmdArg(1, nameArg, sizeof(nameArg));
+    GetCmdArg(2, yawArg, sizeof(yawArg));
+    GetCmdArg(3, pitchArg, sizeof(pitchArg));
+    float newAngles[3];
+    newAngles[0] = StringToFloat(yawArg);
+    newAngles[1] = StringToFloat(pitchArg);
+    newAngles[2] = 0;
+
+    int targetId = GetClientIdByName(arg);
+    if (targetId != -1) {
+        TeleportEntity(targetId, NULL_VECTOR, newAngles, NULL_VECTOR);
+        return Plugin_Handled;
+    }
+        
+    PrintToConsole(client, "smRotate received player name that didnt match any valid clients");
+    return Plugin_Handled;
+}
+
+public Action smGiveItem(int client, int args)
+{
+    if (args != 2) {
+        PrintToConsole(client, "smGiveItem requires 2 args");
+        return Plugin_Handled;
+    }
+
+    char nameArg[128], itemArg[128];
+    // arg 0 is the command
+    GetCmdArg(1, nameArg, sizeof(nameArg));
+    GetCmdArg(2, itemArg, sizeof(itemArg));
+
+    int targetId = GetClientIdByName(arg);
+    if (targetId != -1) {
+        GivePlayerItem(targetId, itemArg);
+        return Plugin_Handled;
+    }
+        
+    PrintToConsole(client, "smGiveItem received player name that didnt match any valid clients");
+    return Plugin_Handled;
+}
+
+public Action smSetCurrentItem(int client, int args)
+{
+    if (args != 2) {
+        PrintToConsole(client, "smSetCurrentItem requires 2 args");
+        return Plugin_Handled;
+    }
+
+    char nameArg[128], itemArg[128];
+    // arg 0 is the command
+    GetCmdArg(1, nameArg, sizeof(nameArg));
+    GetCmdArg(2, itemArg, sizeof(itemArg));
+
+    int targetId = GetClientIdByName(arg);
+    if (targetId != -1) {
+
+        // see grenade_status.sp for source of this code
+        int entindex = CreateEntityByName();
+        
+        if (entindex == -1) {
+            PrintToConsole(client, "smSetCurrentItem received invalid item name");
+            return Plugin_Handled;
+        }
+
+        DispatchSpawn(entindex);
+        int itemIndex = GetEntProp(entindex, Prop_Send, "m_iItemDefinitionIndex");
+        AcceptEntityInput(entindex, "Kill");
+        
+        SetEntPropEnt(targetId, Prop_Send, "m_hActiveWeapon", itemIndex);
+        return Plugin_Handled;
+    }
+        
+    PrintToConsole(client, "smSetCurrentItem received player name that didnt match any valid clients");
     return Plugin_Handled;
 }
 
