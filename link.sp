@@ -98,7 +98,7 @@ float lastAngles[2], lastAngleVel[2], maxAngleVel[2], maxAngleAccel[2];
  
 public void OnPluginStart()
 {
-    RegConsoleCmd("sm_botDebug", smBotDebug, "- make bomb time 10 minutes and give infinite ammo");
+    RegConsoleCmd("sm_botDebug", smBotDebug, "(t/f) - make bomb time 10 minutes and give infinite ammo (toggle option)");
     RegConsoleCmd("sm_draw", smDraw, "- immediately end the current round in a draw");
     RegConsoleCmd("sm_printLink", smPrintLink, "- print debugging values from bot-link");
     RegConsoleCmd("sm_recordMaxs", smRecordMaxs, "- record max angular values for debugging");
@@ -163,7 +163,25 @@ public Action:smRecordMaxs(client, args) {
 }
 
 public Action:smBotDebug(client, args) {
-    debugStatus = !debugStatus;
+    if (args != 0 && args != 1) {
+        PrintToConsole(client, "smBotDebug requires 0 or 1 ar1");
+        return Plugin_Handled;
+    }
+
+    if (args == 0) {
+        debugStatus = !debugStatus;
+    }
+    else {
+        char arg[128];
+        GetCmdArg(1, arg, sizeof(arg));
+        if (arg[0] == 't') {
+            debugStatus = true;
+        }
+        else {
+            debugStatus = false;
+        }
+    }
+
     applyConVars();
     return Plugin_Handled;
 }
