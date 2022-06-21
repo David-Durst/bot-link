@@ -277,6 +277,8 @@ public Action smSpecPlayerToTarget(int client, int args)
 
     int playerId = GetClientIdByName(playerArg);
     if (playerId != -1) {
+        ChangeClientTeam(playerId, CS_TEAM_SPECTATOR);
+        ForcePlayerSuicide(playerId);
         FakeClientCommand(playerId, consoleCmd);
         if (thirdPerson) {
             FakeClientCommand(playerId, "spec_mode");
@@ -304,6 +306,8 @@ public Action smSpecPlayerThirdPerson(int client, int args)
     if (playerId != -1) {
         for (int targetClient = 1; targetClient <= MaxClients; targetClient++) {
             if (IsValidClient(targetClient) && IsPlayerAlive(targetClient) && (GetClientTeam(targetClient) == CS_TEAM_T || GetClientTeam(targetClient) == CS_TEAM_CT)) {
+                ChangeClientTeam(playerId, CS_TEAM_SPECTATOR);
+                ForcePlayerSuicide(playerId);
                 char targetClientName[128];
                 GetClientName(targetClient, targetClientName, 128);
                 StrCat(consoleCmd, sizeof(consoleCmd), targetClientName);

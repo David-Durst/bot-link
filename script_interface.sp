@@ -20,6 +20,8 @@ stock void ReadExecuteScript() {
 
         while(!tmpScriptFile.EndOfFile()) {
             tmpScriptFile.ReadLine(scriptBuffer, MAX_INPUT_LENGTH);
+            PrintToServer("executing command");
+            PrintToServer(scriptBuffer);
             ServerCommand(scriptBuffer);
         }
 
