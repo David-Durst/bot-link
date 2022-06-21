@@ -14,7 +14,7 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_giveItem", smGiveItem, "<player name> <item name> - give the item to the player");
     RegConsoleCmd("sm_setCurrentItem", smSetCurrentItem, "<player name> <item name> - give the item to the player");
     RegConsoleCmd("sm_specPlayerToTarget", smSpecPlayerToTarget, "<player name> <target name> <thirdPerson=f> - make player spectate a target (thirdPerson default false, any value is true)");
-    RegConsoleCmd("sm_specPlayerThirdPerson", smSpecPlayerThirdPerson, "<player name> - make player third person spectate");
+    RegConsoleCmd("sm_specGoto", smSpecGoto, "<player name> <orig x> <orig y> <orig z> <pitch> <yaw> - spectate camera in absolute position");
     RegConsoleCmd("sm_line", smLine, "- draw line in direction player is trying to move");
     g_iLaserMaterial = PrecacheModel("materials/sprites/laserbeam.vmt");
     g_iHaloMaterial = PrecacheModel("materials/sprites/halo01.vmt");
@@ -279,6 +279,7 @@ public Action smSpecPlayerToTarget(int client, int args)
     if (playerId != -1) {
         ChangeClientTeam(playerId, CS_TEAM_SPECTATOR);
         ForcePlayerSuicide(playerId);
+        FakeClientCommand(playerId, "spec_goto 0 0 0 0 0");
         FakeClientCommand(playerId, consoleCmd);
         if (thirdPerson) {
             FakeClientCommand(playerId, "spec_mode");
@@ -290,38 +291,29 @@ public Action smSpecPlayerToTarget(int client, int args)
     return Plugin_Handled;
 }
 
-public Action smSpecPlayerThirdPerson(int client, int args)
+public Action smSpecGoto(int client, int args)
 {
-    if (args != 1) {
-        PrintToConsole(client, "smSpecPlayerThirdPerson requires 1 arg");
+    if (args != 6) {
+        PrintToConsole(client, "smSpecGoto requires 6 args");
         return Plugin_Handled;
     }
 
-    char playerArg[128], consoleCmd[150];
-    consoleCmd = "spec_player ";
+    char playerArg[128], origX[128], origY[128], origZ[128], pitch[128], yaw[128];
     // arg 0 is the command
     GetCmdArg(1, playerArg, sizeof(playerArg));
+    GetCmdArg(2, origX, sizeof(origX));
+    GetCmdArg(3, origY, sizeof(origY));
+    GetCmdArg(4, origZ, sizeof(origZ));
+    GetCmdArg(5, pitch, sizeof(pitch));
+    GetCmdArg(6, yaw, sizeof(yaw));
 
     int playerId = GetClientIdByName(playerArg);
     if (playerId != -1) {
-        for (int targetClient = 1; targetClient <= MaxClients; targetClient++) {
-            if (IsValidClient(targetClient) && IsPlayerAlive(targetClient) && (GetClientTeam(targetClient) == CS_TEAM_T || GetClientTeam(targetClient) == CS_TEAM_CT)) {
-                ChangeClientTeam(playerId, CS_TEAM_SPECTATOR);
-                ForcePlayerSuicide(playerId);
-                char targetClientName[128];
-                GetClientName(targetClient, targetClientName, 128);
-                StrCat(consoleCmd, sizeof(consoleCmd), targetClientName);
-                FakeClientCommand(playerId, consoleCmd);
-                FakeClientCommand(playerId, "spec_mode");
-                FakeClientCommand(playerId, "spec_mode");
-                return Plugin_Handled;
-            }
-        }
-        PrintToConsole(client, "smSpecPlayerThirdPerson needs an alive player to use, none were found");
+        FakeClientCommand(playerId, "spec_goto %s %s %s %s %s", origX, origY, origZ, pitch, yaw);
         return Plugin_Handled;
     }
         
-    PrintToConsole(client, "smSpecPlayerThirdPerson received player name that didnt match any valid clients");
+    PrintToConsole(client, "smSpecGoto received player name that didnt match any valid clients");
     return Plugin_Handled;
 }
 
