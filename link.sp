@@ -82,7 +82,8 @@ bool tmpInputOpen = false;
 int currentFrame;
 
 // general variables
-ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers;
+ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers, cvarWarmupTime, cvarMaxRounds, cvarMatchCanClinch, cvarRoundRestartDelay, cvarFreezeTime, cvarMatchRestartDelay;
+
 int roundNumber, mapNumber;
 
 // debugging variables
@@ -108,6 +109,12 @@ public void OnPluginStart()
     cvarBotStop = FindConVar("bot_stop");
     cvarBotChatter = FindConVar("bot_chatter");
     cvarBotSnipers = FindConVar("bot_allow_snipers");
+    cvarWarmupTime = FindConVar("mp_warmuptime");
+    cvarMaxRounds = FindConVar("mp_maxrounds");
+    cvarMatchCanClinch = FindConVar("mp_match_can_clinch");
+    cvarRoundRestartDelay = FindConVar("mp_round_restart_delay");
+    cvarFreezeTime = FindConVar("mp_freezetime");
+    cvarMatchRestartDelay = FindConVar("mp_match_restart_delay");
     cvarInfAmmo = FindConVar("sv_infinite_ammo");
     cvarBombTime = FindConVar("mp_c4timer");
     cvarAutoKick = FindConVar("mp_autokick");
@@ -208,6 +215,12 @@ stock void applyConVars() {
     SetConVarString(cvarBotChatter, "off", true, true);
     SetConVarInt(cvarAutoKick, 0, true, true);
     SetConVarInt(cvarBotSnipers, 0, true, true);
+    SetConVarInt(cvarWarmupTime, 0, true, true);
+    SetConVarInt(cvarMaxRounds, 100, true, true);
+    SetConVarInt(cvarMatchCanClinch, 0, true, true);
+    SetConVarInt(cvarRoundRestartDelay, 0, true, true);
+    SetConVarInt(cvarFreezeTime, 0, true, true);
+    SetConVarInt(cvarMatchRestartDelay, 0, true, true);
     if (debugStatus) {
         SetConVarInt(cvarInfAmmo, 1, true, true);
         SetConVarInt(cvarBombTime, 600, true, true);
