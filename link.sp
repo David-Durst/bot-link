@@ -219,7 +219,7 @@ stock void applyConVars() {
     SetConVarInt(cvarMaxRounds, 100, true, true);
     SetConVarInt(cvarMatchCanClinch, 0, true, true);
     SetConVarInt(cvarRoundRestartDelay, 0, true, true);
-    SetConVarInt(cvarFreezeTime, 0, true, true);
+    SetConVarFloat(cvarFreezeTime, 0.1, true, true);
     SetConVarInt(cvarMatchRestartDelay, 0, true, true);
     if (debugStatus) {
         SetConVarInt(cvarInfAmmo, 1, true, true);
