@@ -134,7 +134,7 @@ public Action smSlayAllBut(int client, int args)
                 }
             }
             if (!savePlayer) {
-                SDKHooks_TakeDamage(target, client, client, 450.0);
+                SDKHooks_TakeDamage(target, 0, 0, 450.0);
             }
         }
     }
