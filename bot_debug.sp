@@ -3,6 +3,10 @@ float savePos[3], saveAngle[3];
 bool drawLine;
 public void RegisterDebugFunctions() 
 {
+    for (int i = 0; i <= MAXPLAYERS; i++) {
+        clientTeleportedSinceLastInput[i] = false;
+    }
+
     RegConsoleCmd("sm_savePos", smSavePos, "<player name> - save the position of the named player to place a player in");
     RegConsoleCmd("sm_setPos", smSetPos, "<x> <y> <z> <pitch> <yaw> - set a position to place a bot in (pitch/yaw optional)");
     RegConsoleCmd("sm_getPos", smGetPos, "- get the current a position to place a bot in");
@@ -50,7 +54,8 @@ public Action smSavePos(int client, int args)
     int targetId = GetClientIdByName(arg);
     if (targetId != -1) {
         GetClientAbsOrigin(targetId, savePos);
-        saveAngle = clientEyeAngle[targetId];
+        GetClientEyeAngles(client, saveAngle);
+        //saveAngle = clientEyeAngle[targetId];
         return Plugin_Handled;
     }
         
@@ -101,11 +106,13 @@ public Action smTeleport(int client, int args)
     // arg 0 is the command
     GetCmdArg(1, arg, sizeof(arg));
 
-    float zeroVec[3] = {0.0, 0.0, 0.0};
+    //float zeroVec[3] = {0.0, 0.0, 0.0};
 
     int targetId = GetClientIdByName(arg);
     if (targetId != -1) {
-        TeleportEntity(targetId, savePos, saveAngle, zeroVec);
+        clientTeleportedSinceLastInput[targetId] = true;
+        clientEyeAngle[targetId] = saveAngle;
+        TeleportEntity(targetId, savePos, saveAngle, NULL_VECTOR);
         return Plugin_Handled;
     }
         

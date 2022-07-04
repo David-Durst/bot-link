@@ -93,6 +93,7 @@ bool printStatus;
 bool recordMaxs;
 int clientToRecord;
 float lastAngles[2], lastAngleVel[2], maxAngleVel[2], maxAngleAccel[2];
+bool clientTeleportedSinceLastInput[MAXPLAYERS+1];
 
 // placed down here so it has access to all variables defined above
 #include "bot-link/bot_debug.sp"
@@ -152,6 +153,7 @@ public void OnPluginStart()
 
 public Action:smPrintLink(client, args) {
     printStatus = !printStatus;
+    PrintToConsole(client, "running smPrintLink");
     return Plugin_Handled;
 }
 
@@ -391,7 +393,7 @@ stock void GetViewAngleWithRecoil(int client) {
     // confirmed that both GetClientAbsAngles and GetClientEyeAngles dont adjust for recoil
 
     // since bots drift, if under my control, dont actually update EyeAngles
-    if (!inputSet[client]) {
+    if (!inputSet[client] && !clientTeleportedSinceLastInput[client]) {
         GetClientEyeAngles(client, clientEyeAngle[client]);
     }
 
@@ -524,7 +526,7 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
 
     float newAngles[3];
     float oldAngles[3];
-    if (inputSetLastFrame[client]) {
+    if (inputSetLastFrame[client] || clientTeleportedSinceLastInput[client]) {
         newAngles = clientEyeAngle[client];
     }
     else {
@@ -539,11 +541,12 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     newAngles[1] = makeNeg180To180(newAngles[1]);
 
     TeleportEntity(client, NULL_VECTOR, newAngles, NULL_VECTOR);
+
     //fAngles = newAngles;
     //SetEntPropVector(client, Prop_Data, "m_angEyeAngles", newAngles);
     clientEyeAngle[client] = newAngles;
 
-    if (printStatus) {
+    if (printStatus && IsPlayerAlive(client)) {
         char clientName[128];
         GetClientName(client, clientName, 128);
         PrintToServer("new inputs for %i: %s", client, clientName);
@@ -566,6 +569,7 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     //inputAngleDeltaPct[client][1] = 0.0;
 
     inputSetLastFrame[client] = true;
+    clientTeleportedSinceLastInput[client] = false;
 
     return Plugin_Changed;
 }
