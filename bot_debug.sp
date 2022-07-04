@@ -19,6 +19,7 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_setCurrentItem", smSetCurrentItem, "<player name> <item name> - give the item to the player");
     RegConsoleCmd("sm_specPlayerToTarget", smSpecPlayerToTarget, "<player name> <target name> <thirdPerson=f> - make player spectate a target (thirdPerson default false, any value is true)");
     RegConsoleCmd("sm_specGoto", smSpecGoto, "<player name> <orig x> <orig y> <orig z> <pitch> <yaw> - spectate camera in absolute position");
+    RegConsoleCmd("sm_fakeCmd", smFakeCmd, "<player name> <fake cmd> - do fake client cmd for player");
     RegConsoleCmd("sm_line", smLine, "- draw line in direction player is trying to move");
     g_iLaserMaterial = PrecacheModel("materials/sprites/laserbeam.vmt");
     g_iHaloMaterial = PrecacheModel("materials/sprites/halo01.vmt");
@@ -316,11 +317,37 @@ public Action smSpecGoto(int client, int args)
 
     int playerId = GetClientIdByName(playerArg);
     if (playerId != -1) {
+        ChangeClientTeam(playerId, CS_TEAM_SPECTATOR);
+        ForcePlayerSuicide(playerId);
         FakeClientCommand(playerId, "spec_goto %s %s %s %s %s", origX, origY, origZ, pitch, yaw);
         return Plugin_Handled;
     }
         
     PrintToConsole(client, "smSpecGoto received player name that didnt match any valid clients");
+    return Plugin_Handled;
+}
+
+public Action smFakeCmd(int client, int args)
+{
+    if (args != 2) {
+        PrintToConsole(client, "smFakeCmd requires 2 args");
+        return Plugin_Handled;
+    }
+
+    char arg[128], cmd[128];
+    // arg 0 is the command
+    GetCmdArg(1, arg, sizeof(arg));
+    GetCmdArg(2, cmd, sizeof(cmd));
+
+    //float zeroVec[3] = {0.0, 0.0, 0.0};
+
+    int targetId = GetClientIdByName(arg);
+    if (targetId != -1) {
+        FakeClientCommand(targetId, cmd);
+        return Plugin_Handled;
+    }
+        
+    PrintToConsole(client, "smFakeCmd received player name that didnt match any valid clients");
     return Plugin_Handled;
 }
 
