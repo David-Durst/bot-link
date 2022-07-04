@@ -16,6 +16,7 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_setHealth", smSetHealth, "<player name> <armor> - set a players health value");
     RegConsoleCmd("sm_rotate", smRotate, "<player name> <pitch> <yaw> - rotate the named player to pitch yaw values");
     RegConsoleCmd("sm_giveItem", smGiveItem, "<player name> <item name> - give the item to the player");
+    RegConsoleCmd("sm_removeGuns", smRemoveGuns, "<player name> - remove a players guns");
     RegConsoleCmd("sm_setCurrentItem", smSetCurrentItem, "<player name> <item name> - give the item to the player");
     RegConsoleCmd("sm_specPlayerToTarget", smSpecPlayerToTarget, "<player name> <target name> <thirdPerson=f> - make player spectate a target (thirdPerson default false, any value is true)");
     RegConsoleCmd("sm_specGoto", smSpecGoto, "<player name> <orig x> <orig y> <orig z> <pitch> <yaw> - spectate camera in absolute position");
@@ -241,6 +242,30 @@ public Action smGiveItem(int client, int args)
     }
         
     PrintToConsole(client, "smGiveItem received player name that didnt match any valid clients");
+    return Plugin_Handled;
+}
+
+public Action smRemoveGuns(int client, int args)
+{
+    if (args != 1) {
+        PrintToConsole(client, "smRemoveGuns requires 1 arg");
+        return Plugin_Handled;
+    }
+
+    char nameArg[128];
+    // arg 0 is the command
+    GetCmdArg(1, nameArg, sizeof(nameArg));
+
+    int targetId = GetClientIdByName(nameArg);
+    if (targetId != -1) {
+        int rifleId = GetRifleEntityId(targetId);
+        RemovePlayerItem(targetId, rifleId);
+        int pistolId = GetPistolEntityId(targetId);
+        RemovePlayerItem(targetId, pistolId);
+        return Plugin_Handled;
+    }
+        
+    PrintToConsole(client, "smRemoveGuns received player name that didnt match any valid clients");
     return Plugin_Handled;
 }
 
