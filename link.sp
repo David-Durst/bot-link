@@ -82,7 +82,8 @@ bool tmpInputOpen = false;
 int currentFrame;
 
 // general variables
-ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers, cvarWarmupTime, cvarMaxRounds, cvarMatchCanClinch, cvarRoundRestartDelay, cvarFreezeTime, cvarMatchRestartDelay;
+ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers, cvarWarmupTime, cvarMaxRounds, cvarMatchCanClinch, cvarRoundRestartDelay, cvarFreezeTime, cvarMatchRestartDelay,
+    cvarCompetitiveOfficial5v5;
 
 int roundNumber, mapNumber;
 
@@ -116,6 +117,7 @@ public void OnPluginStart()
     cvarRoundRestartDelay = FindConVar("mp_round_restart_delay");
     cvarFreezeTime = FindConVar("mp_freezetime");
     cvarMatchRestartDelay = FindConVar("mp_match_restart_delay");
+    cvarCompetitiveOfficial5v5 = FindConVar("sv_competitive_official_5v5");
     cvarInfAmmo = FindConVar("sv_infinite_ammo");
     cvarBombTime = FindConVar("mp_c4timer");
     cvarAutoKick = FindConVar("mp_autokick");
@@ -223,6 +225,7 @@ stock void applyConVars() {
     SetConVarInt(cvarRoundRestartDelay, 0, true, true);
     SetConVarFloat(cvarFreezeTime, 0.1, true, true);
     SetConVarInt(cvarMatchRestartDelay, 0, true, true);
+    SetConVarInt(cvarCompetitiveOfficial5v5, 1, true, true);
     if (debugStatus) {
         SetConVarInt(cvarInfAmmo, 1, true, true);
         SetConVarInt(cvarBombTime, 600, true, true);

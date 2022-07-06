@@ -259,9 +259,13 @@ public Action smRemoveGuns(int client, int args)
     int targetId = GetClientIdByName(nameArg);
     if (targetId != -1) {
         int rifleId = GetRifleEntityId(targetId);
-        RemovePlayerItem(targetId, rifleId);
+        if (rifleId != -1) {
+            RemovePlayerItem(targetId, rifleId);
+        }
         int pistolId = GetPistolEntityId(targetId);
-        RemovePlayerItem(targetId, pistolId);
+        if (pistolId != -1) {
+            RemovePlayerItem(targetId, pistolId);
+        }
         return Plugin_Handled;
     }
         
