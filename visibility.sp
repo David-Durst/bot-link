@@ -41,7 +41,7 @@ stock bool SourceCanSeeTarget(int source, int target, float maxDistance = 0.0)
     if (maxDistance == 0.0 || GetVectorDistance(sourcePosition, targetPosition, false) < maxDistance)
     {
         Handle hTrace = TR_TraceRayFilterEx(sourcePosition, targetPosition, 
-            MASK_SOLID_BRUSHONLY, RayType_EndPoint, Base_TraceFilter, target);
+            MASK_VISIBLE, RayType_EndPoint, Base_TraceFilter, target);
         
         if (TR_DidHit(hTrace) && TR_GetEntityIndex(hTrace) != target)
         {

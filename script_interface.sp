@@ -16,10 +16,8 @@ stock void ReadExecuteScript() {
 
         tmpScriptFile = OpenFile(tmpScriptFilePath, "r", false, "");
         tmpScriptOpen = true;
-        tmpScriptFile.ReadLine(scriptBuffer, MAX_INPUT_LENGTH);
 
-        while(!tmpScriptFile.EndOfFile()) {
-            tmpScriptFile.ReadLine(scriptBuffer, MAX_INPUT_LENGTH);
+        while(tmpScriptFile.ReadLine(scriptBuffer, MAX_INPUT_LENGTH)) {
             PrintToServer("executing command");
             PrintToServer(scriptBuffer);
             ServerCommand(scriptBuffer);
