@@ -225,13 +225,13 @@ stock void applyConVars() {
     SetConVarInt(cvarRoundRestartDelay, 0, true, true);
     SetConVarFloat(cvarFreezeTime, 0.1, true, true);
     SetConVarInt(cvarMatchRestartDelay, 0, true, true);
-    SetConVarInt(cvarCompetitiveOfficial5v5, 1, true, true);
     if (debugStatus) {
         SetConVarInt(cvarInfAmmo, 1, true, true);
         SetConVarInt(cvarBombTime, 600, true, true);
         SetConVarInt(cvarRadarShowall, 1, true, true);
         SetConVarInt(cvarForceCamera, 0, true, true);
         SetConVarInt(cvarIgnoreRoundWinConditions, 1, true, true);
+        SetConVarInt(cvarCompetitiveOfficial5v5, 1, true, true);
     }
     else {
         SetConVarInt(cvarInfAmmo, 0, true, true);
@@ -239,6 +239,7 @@ stock void applyConVars() {
         SetConVarInt(cvarRadarShowall, 0, true, true);
         SetConVarInt(cvarForceCamera, 1, true, true);
         SetConVarInt(cvarIgnoreRoundWinConditions, 0, true, true);
+        SetConVarInt(cvarCompetitiveOfficial5v5, 0, true, true);
     }
 }
 
