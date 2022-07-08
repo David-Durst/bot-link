@@ -38,6 +38,11 @@ stock bool SourceCanSeeTarget(int source, int target, float maxDistance = 0.0)
     GetClientEyePosition(source, sourcePosition);
     GetClientEyePosition(target, targetPosition);
     
+    return VisibilityTest(sourcePosition, targetPosition, maxDistance);
+}
+
+stock bool VisibilityTest(float[] sourcePosition, float[] targetPosition, float maxDistance = 0.0)
+{
     if (maxDistance == 0.0 || GetVectorDistance(sourcePosition, targetPosition, false) < maxDistance)
     {
         Handle hTrace = TR_TraceRayFilterEx(sourcePosition, targetPosition, 
