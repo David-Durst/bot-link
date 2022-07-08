@@ -14,6 +14,7 @@
 #define MAX_ONE_DIRECTION_ANGLE_VEL 15.0
 #define DEBUG_INVALID_DIFF -20000.0
 #include "bot-link/script_interface.sp"
+#include "bot-link/vis_points.sp"
 
 public Plugin myinfo =
 {
@@ -105,6 +106,7 @@ public void OnPluginStart()
     RegConsoleCmd("sm_draw", smDraw, "- immediately end the current round in a draw");
     RegConsoleCmd("sm_printLink", smPrintLink, "- print debugging values from bot-link");
     RegConsoleCmd("sm_recordMaxs", smRecordMaxs, "- record max angular values for debugging");
+    RegConsoleCmd("sm_queryAllVisPointPairs", smQueryAllVisPointPairs, "- query all vis point pairs to determine basic PVS");
     RegisterDebugFunctions();
     HookEvent("round_start", OnRoundStart, EventHookMode_PostNoCopy);
 

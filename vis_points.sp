@@ -1,10 +1,10 @@
 #define MAX_VIS_POINTS 2000
-float visPoints[MAX_VIS_POINTS][MAX_VIS_POINTS];
+float visPoints[MAX_VIS_POINTS][3];
 bool visValid[MAX_VIS_POINTS][MAX_VIS_POINTS];
 char visValidBuf[MAX_VIS_POINTS + 1];
 
 int numVisPoints;
-char visPointsBuffer[MAX_INPUT_LENGTH], visPointsExplodedBuffer[MAX_INPUT_LENGTH];
+char visPointsBuffer[MAX_INPUT_LENGTH], visPointsExplodedBuffer[MAX_INPUT_FIELDS][MAX_INPUT_LENGTH];
 
 static char visPointsFilePath[] = "addons/sourcemod/bot-link-data/vis_points.csv";
 static char tmpVisPointsFilePath[] = "addons/sourcemod/bot-link-data/vis_points.csv.tmp.read";
@@ -62,7 +62,7 @@ stock void WriteVisValid() {
             visValidBuf[j] = visValid[i][j] ? 't' : 'f';
         }
         visValidBuf[numVisPoints] = '\0';
-        tmpVisValidFile.writeLine(visValidBuf);
+        tmpVisValidFile.WriteLine(visValidBuf);
     }
 
     tmpVisValidFile.Close();
@@ -70,10 +70,24 @@ stock void WriteVisValid() {
     RenameFile(visValidFilePath, tmpVisValidFilePath);
 }
 
+stock bool VisibilityTest(const float sourcePosition[3], const float targetPosition[3])
+{
+    Handle hTrace = TR_TraceRayFilterEx(sourcePosition, targetPosition, 
+        MASK_VISIBLE, RayType_EndPoint, Base_TraceFilter, MaxClients);
+    
+    if (TR_DidHit(hTrace))
+    {
+        delete hTrace;
+        return false;
+    }
+    
+    delete hTrace;
+    return true;
+}
+
 
 public Action smQueryAllVisPointPairs(int client, int args)
 {
-    ClearVisValid();
     ReadVisPoints();
 
     for (int i = 0; i < numVisPoints; i++) {

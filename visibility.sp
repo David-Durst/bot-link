@@ -38,11 +38,6 @@ stock bool SourceCanSeeTarget(int source, int target, float maxDistance = 0.0)
     GetClientEyePosition(source, sourcePosition);
     GetClientEyePosition(target, targetPosition);
     
-    return VisibilityTest(sourcePosition, targetPosition, maxDistance);
-}
-
-stock bool VisibilityTest(float[] sourcePosition, float[] targetPosition, float maxDistance = 0.0)
-{
     if (maxDistance == 0.0 || GetVectorDistance(sourcePosition, targetPosition, false) < maxDistance)
     {
         Handle hTrace = TR_TraceRayFilterEx(sourcePosition, targetPosition, 
@@ -61,7 +56,7 @@ stock bool VisibilityTest(float[] sourcePosition, float[] targetPosition, float 
     return false;
 }
 
-public bool Base_TraceFilter(int entity, int contentsMask, int data)
+stock bool Base_TraceFilter(int entity, int contentsMask, int data)
 {
     // return true (can hit) if not any non-target player (aka target player or environment)
     return entity >= MaxClients || entity == data || !IsValidClient(entity);
