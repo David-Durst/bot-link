@@ -99,6 +99,7 @@ bool clientTeleportedSinceLastInput[MAXPLAYERS+1];
 
 // placed down here so it has access to all variables defined above
 #include "bot-link/bot_debug.sp"
+#include "bot-link/overlay.sp"
  
 public void OnPluginStart()
 {
@@ -389,6 +390,8 @@ stock void WriteState() {
     tmpStateFile.Close();
     tmpStateOpen = false;
     RenameFile(stateFilePath, tmpStateFilePath);
+
+    ReadUpdateOverlay();
 }
 
 
