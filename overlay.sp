@@ -83,7 +83,7 @@ stock void DrawOverlay() {
     int color[4];
     for (int i = 0; i < numOverlayAreas; i++) {
         if (overlayColor[i] == 'b') {
-            color = {128, 128, 128, 255};
+            color = {0, 0, 0, 255};
         }
         else if (overlayColor[i] == 'u') {
             color = {0, 0, 255, 255};
@@ -124,14 +124,14 @@ void TE_SendX(float m_vecMins[3], float m_vecMaxs[3], int color[4], float flDur 
     m_vecBaseMaxs[0] = m_vecMaxs[0];
     m_vecBaseMaxs[1] = m_vecMaxs[1];
     m_vecBaseMaxs[2] = m_vecMaxs[2];
-    TE_SetupBeamPoints(m_vecBaseMins, m_vecBaseMaxs, g_iLaserMaterial, g_iHaloMaterial, 0, 0, flDur, 1.0, 1.0, 1, 0.0, color, 0);
+    TE_SetupBeamPoints(m_vecBaseMins, m_vecBaseMaxs, g_iWhiteMaterial, g_iWhiteMaterial, 0, 0, flDur, 1.0, 1.0, 1, 0.0, color, 0);
     TE_SendToAll();
-    m_vecBaseMins2[0] = m_vecMins[0];
+    m_vecBaseMins2[0] = m_vecMaxs[0];
     m_vecBaseMins2[1] = m_vecMins[1];
-    m_vecBaseMins2[2] = m_vecMins[2] + 200.0;
-    m_vecBaseMaxs2[0] = m_vecMaxs[0];
+    m_vecBaseMins2[2] = m_vecMins[2];
+    m_vecBaseMaxs2[0] = m_vecMins[0];
     m_vecBaseMaxs2[1] = m_vecMaxs[1];
-    m_vecBaseMaxs2[2] = m_vecMaxs[2] + 200.0;
-    TE_SetupBeamPoints(m_vecBaseMins2, m_vecBaseMaxs2, g_iWhiteMaterial, g_iHaloMaterial, 0, 0, flDur, 1.0, 1.0, 1, 0.0, color, 0);
+    m_vecBaseMaxs2[2] = m_vecMaxs[2];
+    TE_SetupBeamPoints(m_vecBaseMins2, m_vecBaseMaxs2, g_iWhiteMaterial, g_iWhiteMaterial, 0, 0, flDur, 1.0, 1.0, 1, 0.0, color, 0);
     TE_SendToAll();
 }
