@@ -5,8 +5,8 @@ int numOverlayAreas;
 float overlayDuration;
 char overlayBuffer[MAX_INPUT_LENGTH], overlayExplodedBuffer[MAX_INPUT_FIELDS][MAX_INPUT_LENGTH];
 
-static char overlayFilePath[] = "addons/sourcemod/bot-link-data/overlay_areas.csv";
-static char tmpOverlayFilePath[] = "addons/sourcemod/bot-link-data/overlay_areas.csv.tmp.read";
+static char overlayFilePath[] = "addons/sourcemod/bot-link-data/overlay.csv";
+static char tmpOverlayFilePath[] = "addons/sourcemod/bot-link-data/overlay.csv.tmp.read";
 File tmpOverlayFile;
 bool tmpOverlayOpen = false;
 
@@ -29,7 +29,6 @@ stock void ReadUpdateOverlay() {
         overlayDuration = StringToFloat(overlayBuffer);
 
         for(int i = 0; tmpOverlayFile.ReadLine(overlayBuffer, MAX_INPUT_LENGTH); i++) {
-            ServerCommand(overlayBuffer);
             ExplodeString(overlayBuffer, ",", overlayExplodedBuffer, MAX_INPUT_FIELDS, MAX_INPUT_LENGTH);
             for (int j = 0; j < 3; j++) {
               overlayMins[i][j] = StringToFloat(overlayExplodedBuffer[j]);
@@ -40,7 +39,7 @@ stock void ReadUpdateOverlay() {
             overlayColor[i] = overlayExplodedBuffer[6][0];
             numOverlayAreas = i + 1;
         }
-        PrintToServer("Read %i overlay areas", numOverlayAreas);
+        PrintToConsoleAll("Read %i overlay areas with duration %f", numOverlayAreas, overlayDuration);
 
         DrawOverlay();
 
@@ -49,11 +48,42 @@ stock void ReadUpdateOverlay() {
     }
 }
 
+public Action smDrawAABB(int client, int args)
+{
+    if (args != 8) {
+        PrintToConsole(client, "smSavePos requires 8 args");
+        return Plugin_Handled;
+    }
+
+    char arg[128];
+
+    for (int i = 1; i <= 6; i++) {
+        GetCmdArg(i, arg, sizeof(arg));
+        if (i < 4) {
+            overlayMins[0][i - 1] = StringToFloat(arg);
+        }
+        else {
+            overlayMaxs[0][i - 4] = StringToFloat(arg);
+        }
+    }
+
+    GetCmdArg(7, arg, sizeof(arg));
+    overlayColor[0] = arg[0];
+
+    GetCmdArg(8, arg, sizeof(arg));
+    overlayDuration = StringToFloat(arg);
+
+    numOverlayAreas = 1;
+
+    DrawOverlay();
+    return Plugin_Handled;
+}
+
 stock void DrawOverlay() {
     int color[4];
     for (int i = 0; i < numOverlayAreas; i++) {
         if (overlayColor[i] == 'b') {
-            color = {0, 0, 0, 255};
+            color = {255, 0, 0, 255};
         }
         else if (overlayColor[i] == 'u') {
             color = {0, 0, 255, 255};
@@ -70,13 +100,33 @@ stock void DrawOverlay() {
         else if (overlayColor[i] == 'y') {
             color = {255, 255, 0, 255};
         }
-        else if (overlayColor[i] == 'y') {
+        else if (overlayColor[i] == 'p') {
             color = {255, 0, 255, 255};
         }
         else if (overlayColor[i] == 'c') {
             color = {0, 255, 255, 255};
         }
-        TE_SendBeam(overlayMins[i], overlayMaxs[i], color, overlayDuration);
+        PrintToConsoleAll("drawing overlay aabb (%f, %f, %f) (%f, %f, %f) (%d, %d, %d) %c", 
+            overlayMins[i][0], overlayMins[i][1], overlayMins[i][2], overlayMaxs[i][0], overlayMaxs[i][1], overlayMaxs[i][2],
+            color[0], color[1], color[2], overlayColor[i]);
+        TE_SendAABB(overlayMins[i], overlayMaxs[i], color, overlayDuration);
     }
     return;
+}
+
+void TE_SendAABB(float m_vecMins[3], float m_vecMaxs[3], int color[4], float flDur = 0.1)
+{
+    float m_vecBaseMins[3], m_vecBaseMaxs[3];
+    float width;
+    float amplitude;
+    m_vecBaseMins[0] = m_vecMins[0];
+    m_vecBaseMins[1] = m_vecMins[1];
+    m_vecBaseMins[2] = m_vecMins[2];
+    m_vecBaseMaxs[0] = m_vecMaxs[0];
+    m_vecBaseMaxs[1] = m_vecMins[1];
+    m_vecBaseMaxs[2] = m_vecMins[2];
+    width = m_vecMaxs[1] - m_vecMins[1];
+    amplitude = m_vecMaxs[2] - m_vecMins[2];
+    TE_SetupBeamPoints(m_vecBaseMins, m_vecBaseMaxs, g_iLaserMaterial, g_iHaloMaterial, 0, 0, flDur, width, amplitude, 1, 0.0, color, 0);
+    TE_SendToAll();
 }

@@ -104,6 +104,7 @@ bool clientTeleportedSinceLastInput[MAXPLAYERS+1];
 public void OnPluginStart()
 {
     RegConsoleCmd("sm_botDebug", smBotDebug, "(t/f) - make bomb time 10 minutes and give infinite ammo (toggle option)");
+    RegConsoleCmd("sm_drawAABB", smDrawAABB, "<minX> <minY> <minZ> <maxX> <maxY> <maxZ> <color b/u/r/g/w/y/p/c> <duration> - draw aabb");
     RegConsoleCmd("sm_draw", smDraw, "- immediately end the current round in a draw");
     RegConsoleCmd("sm_printLink", smPrintLink, "- print debugging values from bot-link");
     RegConsoleCmd("sm_recordMaxs", smRecordMaxs, "- record max angular values for debugging");

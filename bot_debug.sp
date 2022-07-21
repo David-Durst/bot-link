@@ -1,4 +1,4 @@
-static int g_iLaserMaterial, g_iHaloMaterial;
+int g_iLaserMaterial, g_iHaloMaterial;
 float savePos[3], saveAngle[3];
 bool drawLine;
 public void RegisterDebugFunctions() 
