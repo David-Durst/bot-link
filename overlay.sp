@@ -83,9 +83,6 @@ stock void DrawOverlay() {
     int color[4];
     for (int i = 0; i < numOverlayAreas; i++) {
         if (overlayColor[i] == 'b') {
-            color = {0, 0, 0, 255};
-        }
-        else if (overlayColor[i] == 'u') {
             color = {0, 0, 255, 255};
         }
         else if (overlayColor[i] == 'r') {
@@ -105,6 +102,9 @@ stock void DrawOverlay() {
         }
         else if (overlayColor[i] == 'c') {
             color = {0, 255, 255, 255};
+        }
+        else if (overlayColor[i] == 'e') {
+            color = {255, 128, 128, 255};
         }
         PrintToConsoleAll("drawing overlay aabb (%f, %f, %f) (%f, %f, %f) (%d, %d, %d) %c", 
             overlayMins[i][0], overlayMins[i][1], overlayMins[i][2], overlayMaxs[i][0], overlayMaxs[i][1], overlayMaxs[i][2],
