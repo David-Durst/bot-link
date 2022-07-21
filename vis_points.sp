@@ -30,7 +30,6 @@ stock void ReadVisPoints() {
         tmpVisPointsOpen = true;
 
         for(int i = 0; tmpVisPointsFile.ReadLine(visPointsBuffer, MAX_INPUT_LENGTH); i++) {
-            ServerCommand(visPointsBuffer);
             ExplodeString(visPointsBuffer, ",", visPointsExplodedBuffer, MAX_INPUT_FIELDS, MAX_INPUT_LENGTH);
             for (int j = 0; j < 3; j++) {
                 visPoints[i][j] = StringToFloat(visPointsExplodedBuffer[j]);
@@ -90,12 +89,18 @@ public Action smQueryAllVisPointPairs(int client, int args)
 {
     ReadVisPoints();
 
+    int numValid = 0, numChecked = 0;
     for (int i = 0; i < numVisPoints; i++) {
         for (int j = i + 1; j < numVisPoints; j++) {
             visValid[i][j] = VisibilityTest(visPoints[i], visPoints[j]);
+            if (visValid[i][j]) {
+                numValid++;
+            }
+            numChecked++;
         }
     }
 
     WriteVisValid();
+    PrintToServer("%i / %i (%f pct) vis pairs valid", numValid, numChecked, (numValid * 1.0) / numChecked);
     return Plugin_Handled;
 }
