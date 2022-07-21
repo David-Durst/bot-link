@@ -1,4 +1,4 @@
-int g_iLaserMaterial, g_iHaloMaterial;
+int g_iLaserMaterial, g_iHaloMaterial, g_iWhiteMaterial;
 float savePos[3], saveAngle[3];
 bool drawLine;
 public void RegisterDebugFunctions() 
@@ -23,6 +23,7 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_fakeCmd", smFakeCmd, "<player name> <fake cmd> - do fake client cmd for player");
     RegConsoleCmd("sm_line", smLine, "- draw line in direction player is trying to move");
     g_iLaserMaterial = PrecacheModel("materials/sprites/laserbeam.vmt");
+    g_iWhiteMaterial = PrecacheModel("materials/props/white.vmt");
     g_iHaloMaterial = PrecacheModel("materials/sprites/halo01.vmt");
     drawLine = false;
     CreateTimer(0.1, DrawAllClients, _, TIMER_REPEAT);
