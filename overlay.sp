@@ -109,36 +109,28 @@ stock void DrawOverlay() {
         PrintToConsoleAll("drawing overlay aabb (%f, %f, %f) (%f, %f, %f) (%d, %d, %d) %c", 
             overlayMins[i][0], overlayMins[i][1], overlayMins[i][2], overlayMaxs[i][0], overlayMaxs[i][1], overlayMaxs[i][2],
             color[0], color[1], color[2], overlayColor[i]);
-        TE_SendAABB(overlayMins[i], overlayMaxs[i], color, overlayDuration);
+        TE_SendX(overlayMins[i], overlayMaxs[i], color, overlayDuration);
     }
     return;
 }
 
-void TE_SendAABB(float m_vecMins[3], float m_vecMaxs[3], int color[4], float flDur = 0.1)
+void TE_SendX(float m_vecMins[3], float m_vecMaxs[3], int color[4], float flDur = 0.1)
 {
     float m_vecBaseMins[3], m_vecBaseMaxs[3];
-    float width;
-    float amplitude;
     m_vecBaseMins[0] = m_vecMins[0];
     m_vecBaseMins[1] = m_vecMins[1];
     m_vecBaseMins[2] = m_vecMins[2];
     m_vecBaseMaxs[0] = m_vecMaxs[0];
     m_vecBaseMaxs[1] = m_vecMins[1];
     m_vecBaseMaxs[2] = m_vecMins[2];
-    width = m_vecMaxs[1] - m_vecMins[1];
-    amplitude = m_vecMaxs[2] - m_vecMins[2];
-    // amplitude doesnt seem to do anything
-    TE_SetupBeamPoints(m_vecBaseMins, m_vecBaseMaxs, g_iLaserMaterial, g_iHaloMaterial, 0, 0, flDur, 10.0, 1.0, 1, 0.0, color, 0);
-    TE_SendToAll();
-    float m_vecBaseMins2[3], m_vecBaseMaxs2[3];
-    m_vecBaseMins2[0] = m_vecMins[0];
-    m_vecBaseMins2[1] = m_vecMins[1];
-    m_vecBaseMins2[2] = m_vecMins[2];
-    m_vecBaseMaxs2[0] = m_vecMaxs[0];
-    m_vecBaseMaxs2[1] = m_vecMins[1] + 100.0;
-    m_vecBaseMaxs2[2] = m_vecMins[2];
-    m_vecBaseMins2[2] += 200.0;
-    m_vecBaseMaxs2[2] += 300.0;
-    TE_SetupBeamPoints(m_vecBaseMins2, m_vecBaseMaxs2, g_iWhiteMaterial, g_iHaloMaterial, 0, 0, flDur, 10.0, 1.0, 0, 10.0, color, 0);
+    //TE_SetupBeamPoints(m_vecBaseMins, m_vecBaseMaxs, g_iLaserMaterial, g_iHaloMaterial, 0, 0, flDur, 1.0, 1.0, 1, 0.0, color, 0);
+    //TE_SendToAll();
+    m_vecBaseMins[0] = m_vecMaxs[0];
+    m_vecBaseMins[1] = m_vecMins[1];
+    m_vecBaseMins[2] = m_vecMins[2];
+    m_vecBaseMaxs[0] = m_vecMins[0];
+    m_vecBaseMaxs[1] = m_vecMaxs[1];
+    m_vecBaseMaxs[2] = m_vecMaxs[2];
+    TE_SetupBeamPoints(m_vecBaseMins, m_vecBaseMaxs, g_iWhiteMaterial, g_iHaloMaterial, 0, 0, flDur, 1.0, 1.0, 1, 0.0, color, 0);
     TE_SendToAll();
 }
