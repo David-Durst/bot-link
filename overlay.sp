@@ -3,9 +3,10 @@ float overlayMins[MAX_OVERLAY_AREAS][3], overlayMaxs[MAX_OVERLAY_AREAS][3];
 char overlayColor[MAX_OVERLAY_AREAS];
 int numOverlayAreas;
 float overlayDuration;
+char overlayBuffer[MAX_INPUT_LENGTH], overlayExplodedBuffer[MAX_INPUT_FIELDS][MAX_INPUT_LENGTH];
 
 static char overlayFilePath[] = "addons/sourcemod/bot-link-data/overlay_areas.csv";
-static char overlayFilePath[] = "addons/sourcemod/bot-link-data/overlay_areas.csv.tmp.read";
+static char tmpOverlayFilePath[] = "addons/sourcemod/bot-link-data/overlay_areas.csv.tmp.read";
 File tmpOverlayFile;
 bool tmpOverlayOpen = false;
 
@@ -24,7 +25,7 @@ stock void ReadUpdateOverlay() {
 
         numOverlayAreas = 0;
 
-        tmpOverlayFile.ReadLine(overlayBuffer, MAX_INPUT_LENGTH)
+        tmpOverlayFile.ReadLine(overlayBuffer, MAX_INPUT_LENGTH);
         overlayDuration = StringToFloat(overlayBuffer);
 
         for(int i = 0; tmpOverlayFile.ReadLine(overlayBuffer, MAX_INPUT_LENGTH); i++) {
@@ -39,7 +40,7 @@ stock void ReadUpdateOverlay() {
             overlayColor[i] = overlayExplodedBuffer[6][0];
             numOverlayAreas = i + 1;
         }
-        PrintToServer("Read %i overlay areas", numOverlay);
+        PrintToServer("Read %i overlay areas", numOverlayAreas);
 
         DrawOverlay();
 
@@ -49,24 +50,33 @@ stock void ReadUpdateOverlay() {
 }
 
 stock void DrawOverlay() {
-  int color[4];
-  for (int i = 0; i < numOverlayAreas; i++) {
-    if (overlayColor[i] == 'b') {
-      color = {0, 0, 0, 255};
+    int color[4];
+    for (int i = 0; i < numOverlayAreas; i++) {
+        if (overlayColor[i] == 'b') {
+            color = {0, 0, 0, 255};
+        }
+        else if (overlayColor[i] == 'u') {
+            color = {0, 0, 255, 255};
+        }
+        else if (overlayColor[i] == 'r') {
+            color = {255, 0, 0, 255};
+        }
+        else if (overlayColor[i] == 'g') {
+            color = {0, 255, 0, 255};
+        }
+        else if (overlayColor[i] == 'w') {
+            color = {255, 255, 255, 255};
+        }
+        else if (overlayColor[i] == 'y') {
+            color = {255, 255, 0, 255};
+        }
+        else if (overlayColor[i] == 'y') {
+            color = {255, 0, 255, 255};
+        }
+        else if (overlayColor[i] == 'c') {
+            color = {0, 255, 255, 255};
+        }
+        TE_SendBeam(overlayMins[i], overlayMaxs[i], color, overlayDuration);
     }
-    else if (overlayColor[i] == 'u') {
-      color = {0, 0, 255, 255};
-    }
-    else if (overlayColor[i] == 'r') {
-      color = {255, 0, 0, 255};
-    }
-    else if (overlayColor[i] == 'g') {
-      color = {0, 255, 0, 255};
-    }
-    else if (overlayColor[i] == 'w') {
-      color = {255, 255, 255, 255};
-    }
-    TE_SendBeam(overlayMins[i], overlayMaxs[i], color, overlayDuration)
-  }
-  return;
+    return;
 }
