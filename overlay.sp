@@ -1,6 +1,6 @@
 #define MAX_OVERLAY_AREAS MAX_VIS_POINTS * 4 * 2 // two overlays (danger attention and diffusion) and four entries per overlay (where enemies can be)
 float overlayMins[MAX_OVERLAY_AREAS][3], overlayMaxs[MAX_OVERLAY_AREAS][3];
-char overlayColor[MAX_OVERLAY_AREAS];
+int overlayColor[MAX_OVERLAY_AREAS];
 int numOverlayAreas;
 float overlayDuration;
 char overlayBuffer[MAX_INPUT_LENGTH], overlayExplodedBuffer[MAX_INPUT_FIELDS][MAX_INPUT_LENGTH];
@@ -69,7 +69,7 @@ public Action smDrawX(int client, int args)
     }
 
     GetCmdArg(7, arg, sizeof(arg));
-    overlayColor[0] = arg[0];
+    overlayColor[0] = StringToInt(arg);
 
     GetCmdArg(8, arg, sizeof(arg));
     overlayDuration = StringToFloat(arg);
@@ -80,53 +80,68 @@ public Action smDrawX(int client, int args)
     return Plugin_Handled;
 }
 
+int colorOptions[4][4] = {{255, 0, 0, 255}, {0, 255, 0, 255}, {0, 0, 255, 255}, {255, 255, 255, 255}};
+
 stock void DrawOverlay() {
     int color[4];
     for (int i = 0; i < numOverlayAreas; i++) {
-        if (overlayColor[i] == 'b') {
-            color = {0, 0, 255, 255};
-        }
-        else if (overlayColor[i] == 'r') {
-            color = {255, 0, 0, 255};
-        }
-        else if (overlayColor[i] == 'g') {
-            color = {0, 255, 0, 255};
-        }
-        else if (overlayColor[i] == 'w') {
-            color = {255, 255, 255, 255};
-        }
-        else if (overlayColor[i] == 'y') {
-            color = {255, 255, 0, 255};
-        }
-        else if (overlayColor[i] == 'p') {
-            color = {255, 0, 255, 255};
-        }
-        else if (overlayColor[i] == 'c') {
-            color = {0, 255, 255, 255};
-        }
-        else if (overlayColor[i] == 'e') {
-            color = {255, 128, 128, 255};
+        for (int j = 0; j < 4; j++) {
+            float m_vecMins[3], m_vecMaxs[3];
+            if (overlayColor[i] & 1 << j != 0) {
+                color = colorOptions[j];
+            }
+            else {
+                continue;
+            }
+            if (j == 0) {
+                m_vecMins[0] = overlayMins[i][0];
+                m_vecMins[1] = overlayMins[i][1];
+                m_vecMins[2] = overlayMins[i][2];
+                m_vecMaxs[0] = overlayMaxs[i][0];
+                m_vecMaxs[1] = overlayMaxs[i][1];
+                m_vecMaxs[2] = overlayMaxs[i][2];
+            }
+            else if (j == 1) {
+                m_vecMins[0] = overlayMaxs[i][0];
+                m_vecMins[1] = overlayMins[i][1];
+                m_vecMins[2] = overlayMins[i][2];
+                m_vecMaxs[0] = overlayMins[i][0];
+                m_vecMaxs[1] = overlayMaxs[i][1];
+                m_vecMaxs[2] = overlayMaxs[i][2];
+            }
+            else if (j == 2) {
+                m_vecMins[0] = overlayMins[i][0];
+                m_vecMins[1] = overlayMins[i][1];
+                m_vecMins[2] = overlayMins[i][2];
+                m_vecMaxs[0] = overlayMaxs[i][0];
+                m_vecMaxs[1] = overlayMaxs[i][1];
+                m_vecMaxs[2] = overlayMaxs[i][2] + 30.0;
+            }
+            else {
+                m_vecMins[0] = overlayMaxs[i][0];
+                m_vecMins[1] = overlayMins[i][1];
+                m_vecMins[2] = overlayMins[i][2];
+                m_vecMaxs[0] = overlayMins[i][0];
+                m_vecMaxs[1] = overlayMaxs[i][1];
+                m_vecMaxs[2] = overlayMaxs[i][2] + 30.0;
+            }
+            TE_SetupBeamPoints(m_vecMins, m_vecMaxs, g_iWhiteMaterial, g_iWhiteMaterial, 0, 0, overlayDuration, 1.0, 1.0, 1, 0.0, color, 0);
+            TE_SendToAll();
         }
         /*
         PrintToConsoleAll("drawing overlay aabb (%f, %f, %f) (%f, %f, %f) (%d, %d, %d) %c", 
             overlayMins[i][0], overlayMins[i][1], overlayMins[i][2], overlayMaxs[i][0], overlayMaxs[i][1], overlayMaxs[i][2],
             color[0], color[1], color[2], overlayColor[i]);
         */
-        TE_SendX(overlayMins[i], overlayMaxs[i], color, overlayDuration);
+        //TE_SendX(overlayMins[i], overlayMaxs[i], color, overlayDuration);
     }
     return;
 }
 
+/*
 void TE_SendX(float m_vecMins[3], float m_vecMaxs[3], int color[4], float flDur = 0.1)
 {
-    float m_vecBaseMins[3], m_vecBaseMaxs[3];
     float m_vecBaseMins2[3], m_vecBaseMaxs2[3];
-    m_vecBaseMins[0] = m_vecMins[0];
-    m_vecBaseMins[1] = m_vecMins[1];
-    m_vecBaseMins[2] = m_vecMins[2];
-    m_vecBaseMaxs[0] = m_vecMaxs[0];
-    m_vecBaseMaxs[1] = m_vecMaxs[1];
-    m_vecBaseMaxs[2] = m_vecMaxs[2];
     TE_SetupBeamPoints(m_vecBaseMins, m_vecBaseMaxs, g_iWhiteMaterial, g_iWhiteMaterial, 0, 0, flDur, 1.0, 1.0, 1, 0.0, color, 0);
     TE_SendToAll();
     m_vecBaseMins2[0] = m_vecMaxs[0];
@@ -138,3 +153,4 @@ void TE_SendX(float m_vecMins[3], float m_vecMaxs[3], int color[4], float flDur 
     TE_SetupBeamPoints(m_vecBaseMins2, m_vecBaseMaxs2, g_iWhiteMaterial, g_iWhiteMaterial, 0, 0, flDur, 1.0, 1.0, 1, 0.0, color, 0);
     TE_SendToAll();
 }
+*/
