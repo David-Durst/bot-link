@@ -85,6 +85,7 @@ int colorOptions[4][4] = {{255, 0, 0, 255}, {0, 255, 0, 255}, {0, 0, 255, 255}, 
 stock void DrawOverlay() {
     int color[4];
     for (int i = 0; i < numOverlayAreas; i++) {
+        int linesUsed = 0;
         for (int j = 0; j < 4; j++) {
             float m_vecMins[3], m_vecMaxs[3];
             if (overlayColor[i] & 1 << j != 0) {
@@ -93,7 +94,7 @@ stock void DrawOverlay() {
             else {
                 continue;
             }
-            if (j == 0) {
+            if (linesUsed == 0) {
                 m_vecMins[0] = overlayMins[i][0];
                 m_vecMins[1] = overlayMins[i][1];
                 m_vecMins[2] = overlayMins[i][2];
@@ -101,7 +102,7 @@ stock void DrawOverlay() {
                 m_vecMaxs[1] = overlayMaxs[i][1];
                 m_vecMaxs[2] = overlayMaxs[i][2];
             }
-            else if (j == 1) {
+            else if (linesUsed == 1) {
                 m_vecMins[0] = overlayMaxs[i][0];
                 m_vecMins[1] = overlayMins[i][1];
                 m_vecMins[2] = overlayMins[i][2];
@@ -109,22 +110,23 @@ stock void DrawOverlay() {
                 m_vecMaxs[1] = overlayMaxs[i][1];
                 m_vecMaxs[2] = overlayMaxs[i][2];
             }
-            else if (j == 2) {
-                m_vecMins[0] = overlayMins[i][0];
+            else if (linesUsed == 2) {
+                m_vecMins[0] = (overlayMins[i][0] + overlayMaxs[i][0]) / 2.0;
                 m_vecMins[1] = overlayMins[i][1];
                 m_vecMins[2] = overlayMins[i][2];
-                m_vecMaxs[0] = overlayMaxs[i][0];
+                m_vecMaxs[0] = (overlayMins[i][0] + overlayMaxs[i][0]) / 2.0;
                 m_vecMaxs[1] = overlayMaxs[i][1];
-                m_vecMaxs[2] = overlayMaxs[i][2] + 30.0;
+                m_vecMaxs[2] = overlayMaxs[i][2];
             }
             else {
                 m_vecMins[0] = overlayMaxs[i][0];
-                m_vecMins[1] = overlayMins[i][1];
+                m_vecMins[1] = (overlayMins[i][1] + overlayMaxs[i][1]) / 2.0;
                 m_vecMins[2] = overlayMins[i][2];
                 m_vecMaxs[0] = overlayMins[i][0];
-                m_vecMaxs[1] = overlayMaxs[i][1];
-                m_vecMaxs[2] = overlayMaxs[i][2] + 30.0;
+                m_vecMaxs[1] = (overlayMins[i][1] + overlayMaxs[i][1]) / 2.0;
+                m_vecMaxs[2] = overlayMaxs[i][2];
             }
+            linesUsed++;
             TE_SetupBeamPoints(m_vecMins, m_vecMaxs, g_iWhiteMaterial, g_iWhiteMaterial, 0, 0, overlayDuration, 1.0, 1.0, 1, 0.0, color, 0);
             TE_SendToAll();
         }
