@@ -39,7 +39,7 @@ stock void ReadUpdateOverlay() {
             overlayColor[i] = overlayExplodedBuffer[6][0];
             numOverlayAreas = i + 1;
         }
-        PrintToConsoleAll("Read %i overlay areas with duration %f", numOverlayAreas, overlayDuration);
+        //PrintToConsoleAll("Read %i overlay areas with duration %f", numOverlayAreas, overlayDuration);
 
         DrawOverlay();
 
@@ -48,7 +48,8 @@ stock void ReadUpdateOverlay() {
     }
 }
 
-public Action smDrawAABB(int client, int args)
+// works in b site on d2 sm_drawAABB -1643.615479 2133.535400 112.794823 -1700.615479 2433.535400 112.794823 g 10.0 
+public Action smDrawX(int client, int args)
 {
     if (args != 8) {
         PrintToConsole(client, "smSavePos requires 8 args");
@@ -106,9 +107,11 @@ stock void DrawOverlay() {
         else if (overlayColor[i] == 'e') {
             color = {255, 128, 128, 255};
         }
+        /*
         PrintToConsoleAll("drawing overlay aabb (%f, %f, %f) (%f, %f, %f) (%d, %d, %d) %c", 
             overlayMins[i][0], overlayMins[i][1], overlayMins[i][2], overlayMaxs[i][0], overlayMaxs[i][1], overlayMaxs[i][2],
             color[0], color[1], color[2], overlayColor[i]);
+        */
         TE_SendX(overlayMins[i], overlayMaxs[i], color, overlayDuration);
     }
     return;
