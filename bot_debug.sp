@@ -22,6 +22,7 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_specGoto", smSpecGoto, "<player name> <orig x> <orig y> <orig z> <pitch> <yaw> - spectate camera in absolute position");
     RegConsoleCmd("sm_fakeCmd", smFakeCmd, "<player name> <fake cmd> - do fake client cmd for player");
     RegConsoleCmd("sm_line", smLine, "- draw line in direction player is trying to move");
+    RegConsoleCmd("sm_refresh", smRefresh, "- draw line in direction player is trying to move");
     g_iLaserMaterial = PrecacheModel("materials/sprites/laserbeam.vmt");
     g_iWhiteMaterial = PrecacheModel("materials/sprites/white.vmt");
     g_iHaloMaterial = PrecacheModel("materials/sprites/halo01.vmt");
@@ -451,4 +452,9 @@ void TE_SendBeam(float m_vecMins[3], float m_vecMaxs[3], int color[4], float flD
 {
 	TE_SetupBeamPoints(m_vecMins, m_vecMaxs, g_iLaserMaterial, g_iHaloMaterial, 0, 0, flDur, 1.0, 1.0, 1, 0.0, color, 0);
 	TE_SendToAll();
+}
+
+public Action smRefresh(int client, int args) {
+    ServerCommand("sm plugins unload link; sm plugins load link");
+    return Plugin_Handled;
 }
