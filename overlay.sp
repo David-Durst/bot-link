@@ -1,4 +1,4 @@
-#define MAX_OVERLAY_AREAS MAX_VIS_POINTS * 4 * 2 // two overlays (danger attention and diffusion) and four entries per overlay (where enemies can be)
+#define MAX_OVERLAY_AREAS 2000
 float overlayMins[MAX_OVERLAY_AREAS][3], overlayMaxs[MAX_OVERLAY_AREAS][3];
 int overlayColor[MAX_OVERLAY_AREAS];
 int numOverlayAreas;
@@ -28,7 +28,7 @@ stock void ReadUpdateOverlay() {
         tmpOverlayFile.ReadLine(overlayBuffer, MAX_INPUT_LENGTH);
         overlayDuration = StringToFloat(overlayBuffer);
 
-        for(int i = 0; tmpOverlayFile.ReadLine(overlayBuffer, MAX_INPUT_LENGTH); i++) {
+        for(int i = 0; i < MAX_OVERLAY_AREAS && tmpOverlayFile.ReadLine(overlayBuffer, MAX_INPUT_LENGTH); i++) {
             ExplodeString(overlayBuffer, ",", overlayExplodedBuffer, MAX_INPUT_FIELDS, MAX_INPUT_LENGTH);
             for (int j = 0; j < 3; j++) {
               overlayMins[i][j] = StringToFloat(overlayExplodedBuffer[j]);
@@ -36,12 +36,14 @@ stock void ReadUpdateOverlay() {
             for (int j = 0; j < 3; j++) {
               overlayMaxs[i][j] = StringToFloat(overlayExplodedBuffer[3+j]);
             }
-            overlayColor[i] = overlayExplodedBuffer[6][0];
+            overlayColor[i] = StringToInt(overlayExplodedBuffer[6]);
             numOverlayAreas = i + 1;
         }
-        //PrintToConsoleAll("Read %i overlay areas with duration %f", numOverlayAreas, overlayDuration);
+        PrintToConsoleAll("Read %i overlay areas with duration %f", numOverlayAreas, overlayDuration);
 
         DrawOverlay();
+
+        PrintToConsoleAll("Drew overlays");
 
         tmpOverlayFile.Close();
         tmpOverlayOpen = false;
@@ -137,6 +139,7 @@ stock void DrawOverlay() {
         */
         //TE_SendX(overlayMins[i], overlayMaxs[i], color, overlayDuration);
     }
+    PrintToConsoleAll("drew overlay with %i areas", numOverlayAreas);
     return;
 }
 
