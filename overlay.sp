@@ -48,7 +48,7 @@ stock void ReadUpdateOverlay() {
     }
 }
 
-// works in b site on d2 sm_drawAABB -1643.615479 2133.535400 112.794823 -1700.615479 2433.535400 112.794823 g 10.0 
+// works in b site on d2 sm_drawX -1643 2133 112 -1700 2433 112 15 10.0 
 public Action smDrawX(int client, int args)
 {
     if (args != 8) {
