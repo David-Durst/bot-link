@@ -18,7 +18,7 @@ stock void ReadUpdateOverlay() {
     }
     // move file to tmp location so not overwritten, then read it and run each line in console
     if (FileExists(overlayFilePath)) {
-        PrintToServer("hi");
+        //PrintToServer("starting red update overlay");
         RenameFile(tmpOverlayFilePath, overlayFilePath);
 
         tmpOverlayFile = OpenFile(tmpOverlayFilePath, "r", false, "");
@@ -40,11 +40,11 @@ stock void ReadUpdateOverlay() {
             overlayColor[i] = StringToInt(overlayExplodedBuffer[6]);
             numOverlayAreas = i + 1;
         }
-        PrintToConsoleAll("Read %i overlay areas with duration %f", numOverlayAreas, overlayDuration);
+        //PrintToConsoleAll("Read %i overlay areas with duration %f", numOverlayAreas, overlayDuration);
 
         DrawOverlay();
 
-        PrintToConsoleAll("Drew overlays");
+        //PrintToConsoleAll("Drew overlays");
 
         tmpOverlayFile.Close();
         tmpOverlayOpen = false;
@@ -142,7 +142,7 @@ stock void DrawOverlay() {
         */
         //TE_SendX(overlayMins[i], overlayMaxs[i], color, overlayDuration);
     }
-    PrintToConsoleAll("drew overlay with %i areas and %i total lines", numOverlayAreas, totalLines);
+    //PrintToConsoleAll("drew overlay with %i areas and %i total lines", numOverlayAreas, totalLines);
     return;
 }
 

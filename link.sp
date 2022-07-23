@@ -81,6 +81,7 @@ static char tmpInputFilePath[] = "addons/sourcemod/bot-link-data/input.csv.tmp.r
 File tmpInputFile;
 bool tmpInputOpen = false;
 int currentFrame;
+static char debugIndicatorDirPath[] = "addons/sourcemod/bot-link-data/debug_indicator";
 
 // general variables
 ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers, cvarWarmupTime, cvarMaxRounds, cvarMatchCanClinch, cvarRoundRestartDelay, cvarFreezeTime, cvarMatchRestartDelay,
@@ -131,7 +132,12 @@ public void OnPluginStart()
 
     mapNumber = 0;
     roundNumber = 0;
-    debugStatus = false;
+    if (DirExists(debugIndicatorDirPath)) {
+        debugStatus = true;
+    }
+    else {
+        debugStatus = false;
+    }
     printStatus = false;
     recordMaxs = false;
     applyConVars();
@@ -195,6 +201,13 @@ public Action:smBotDebug(client, args) {
         else {
             debugStatus = false;
         }
+    }
+
+    if (debugStatus && !DirExists(debugIndicatorDirPath)) {
+        CreateDirectory(debugIndicatorDirPath, 509);
+    }
+    else if (!debugStatus && DirExists(debugIndicatorDirPath)) {
+        RemoveDir(debugIndicatorDirPath);
     }
 
     applyConVars();
