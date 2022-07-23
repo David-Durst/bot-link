@@ -90,7 +90,7 @@ stock void DrawOverlay() {
         int linesUsed = 0;
         for (int j = 0; j < 4; j++) {
             float m_vecMins[3], m_vecMaxs[3];
-            if (overlayColor[i] & 1 << j != 0) {
+            if ((overlayColor[i] & (1 << j)) != 0) {
                 color = colorOptions[j];
             }
             else {
