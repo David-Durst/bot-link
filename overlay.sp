@@ -18,6 +18,7 @@ stock void ReadUpdateOverlay() {
     }
     // move file to tmp location so not overwritten, then read it and run each line in console
     if (FileExists(overlayFilePath)) {
+        PrintToServer("hi");
         RenameFile(tmpOverlayFilePath, overlayFilePath);
 
         tmpOverlayFile = OpenFile(tmpOverlayFilePath, "r", false, "");
@@ -86,6 +87,7 @@ int colorOptions[4][4] = {{255, 0, 0, 255}, {0, 255, 0, 255}, {0, 0, 255, 255}, 
 
 stock void DrawOverlay() {
     int color[4];
+    int totalLines = 0;
     for (int i = 0; i < numOverlayAreas; i++) {
         int linesUsed = 0;
         for (int j = 0; j < 4; j++) {
@@ -129,7 +131,8 @@ stock void DrawOverlay() {
                 m_vecMaxs[2] = overlayMaxs[i][2];
             }
             linesUsed++;
-            TE_SetupBeamPoints(m_vecMins, m_vecMaxs, g_iWhiteMaterial, g_iWhiteMaterial, 0, 0, overlayDuration, 1.0, 1.0, 1, 0.0, color, 0);
+            totalLines++;
+            TE_SetupBeamPoints(m_vecMins, m_vecMaxs, g_iWhiteMaterial, g_iHaloMaterial, 0, 0, overlayDuration, 1.0, 1.0, 1, 0.0, color, 0);
             TE_SendToAll();
         }
         /*
@@ -139,7 +142,7 @@ stock void DrawOverlay() {
         */
         //TE_SendX(overlayMins[i], overlayMaxs[i], color, overlayDuration);
     }
-    PrintToConsoleAll("drew overlay with %i areas", numOverlayAreas);
+    PrintToConsoleAll("drew overlay with %i areas and %i total lines", numOverlayAreas, totalLines);
     return;
 }
 
