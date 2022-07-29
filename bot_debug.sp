@@ -11,6 +11,7 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_setPos", smSetPos, "<x> <y> <z> <pitch> <yaw> - set a position to place a bot in (pitch/yaw optional)");
     RegConsoleCmd("sm_getPos", smGetPos, "- get the current a position to place a bot in");
     RegConsoleCmd("sm_teleport", smTeleport, "<player name> - teleport the named player to the saved pos");
+    RegConsoleCmd("sm_teleportPlantedC4", smTeleportPlantedC4, " - teleport the planted C4 to the saved pos");
     RegConsoleCmd("sm_slayAllBut", smSlayAllBut, "<player name 0> ... - slay all but the listed players");
     RegConsoleCmd("sm_setArmor", smSetArmor, "<player name> <armor> - set a players armor value");
     RegConsoleCmd("sm_setHealth", smSetHealth, "<player name> <armor> - set a players health value");
@@ -110,19 +111,45 @@ public Action smTeleport(int client, int args)
     // arg 0 is the command
     GetCmdArg(1, arg, sizeof(arg));
 
-    //float zeroVec[3] = {0.0, 0.0, 0.0};
-
     int targetId = GetClientIdByName(arg);
     if (targetId != -1) {
-        clientTeleportedSinceLastInput[targetId] = true;
-        clientEyeAngle[targetId] = saveAngle;
-        TeleportEntity(targetId, savePos, saveAngle, NULL_VECTOR);
+        teleportInternal(targetId);
         return Plugin_Handled;
     }
         
     PrintToConsole(client, "smTeleport received player name that didnt match any valid clients");
     return Plugin_Handled;
 }
+
+public Action smTeleportPlantedC4(int client, int args)
+{
+    if (args != 0) {
+        PrintToConsole(client, "smTeleportC4 requires 0 arg");
+        return Plugin_Handled;
+    }
+
+    int c4Ent = -1;
+    c4Ent = FindEntityByClassname(c4Ent, "planted_c4"); 
+    bool isPlanted = c4Ent != -1;
+
+    if (isPlanted) {
+        teleportInternal(c4Ent);
+        return Plugin_Handled;
+    }
+        
+    PrintToConsole(client, "smTeleportPlantedC4 didnt find planted c4");
+    return Plugin_Handled;
+}
+
+void teleportInternal(int targetId)
+{
+    if (targetId <= MAXPLAYERS) {
+        clientTeleportedSinceLastInput[targetId] = true;
+        clientEyeAngle[targetId] = saveAngle;
+    }
+    TeleportEntity(targetId, savePos, saveAngle, NULL_VECTOR);
+}
+
 
 char savedPlayers[MAXPLAYERS][128];
 public Action smSlayAllBut(int client, int args)
