@@ -373,6 +373,8 @@ stock void WriteState() {
 
             int hasC4 = GetC4EntityId(client) != -1 ? 1 : 0;
 
+            int isAirborne = !(GetEntityFlags(client) & FL_ONGROUND) ? 1 : 0;
+
             tmpStateFile.WriteLine("%i,%i,%s,%i,%i,"
                                     ... "%i,%i,%i,"
                                     ... "%i,%i,%i,%i,"
@@ -385,7 +387,7 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%f,%f,"
                                     ... "%f,%f,"
-                                    ... "%i,%i",
+                                    ... "%i,%i,%i",
                 currentFrame, client, clientName, clientTeam, activeWeaponId,
                 rifleWeaponId, rifleClipAmmo, rifleReserveAmmo,
                 pistolWeaponId, pistolClipAmmo, pistolReserveAmmo, hasC4,
@@ -398,7 +400,7 @@ stock void WriteState() {
                 clientEyeAngle[client][0], clientEyeAngle[client][1],
                 mAimPunchAngle[client][0], mAimPunchAngle[client][1],
                 clientEyeAngleWithRecoil[client][0], clientEyeAngleWithRecoil[client][1],
-                clientOtherState[client], clientFake);
+                clientOtherState[client], clientFake, isAirborne);
         }
     }
     tmpStateFile.Close();
