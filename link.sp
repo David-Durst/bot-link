@@ -219,6 +219,18 @@ public Action:smDraw(client, args) {
     return Plugin_Handled;
 }
 
+public Action:smSkipFirstRoundOrDraw(client, args) {
+    int tScore = CS_GetTeamScore(CS_TEAM_T),
+        ctScore = CS_GetTeamScore(CS_TEAM_CT);
+    if (tScore == 0 && ctScore == 0) {
+        CS_TerminateRound(0.0, CSRoundEnd_CTWin, false); 
+    }
+    else {
+        CS_TerminateRound(0.0, CSRoundEnd_Draw, false); 
+    }
+    return Plugin_Handled;
+}
+
 public OnMapStart() {
     roundNumber = 0;
     mapNumber++;
