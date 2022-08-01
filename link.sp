@@ -593,6 +593,12 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     //inputAngleDeltaPct[client][0] = 0.0;
     //inputAngleDeltaPct[client][1] = 0.0;
 
+    if (clientTeleportedSinceLastInput[client]) {
+        fVel[0] = 0.0;
+        fVel[1] = 0.0;
+        fVel[2] = 0.0;
+    }
+
     inputSetLastFrame[client] = true;
     clientTeleportedSinceLastInput[client] = false;
 
