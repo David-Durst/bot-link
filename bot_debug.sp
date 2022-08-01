@@ -21,6 +21,7 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_setCurrentItem", smSetCurrentItem, "<player name> <item name> - give the item to the player");
     RegConsoleCmd("sm_specPlayerToTarget", smSpecPlayerToTarget, "<player name> <target name> <thirdPerson=f> - make player spectate a target (thirdPerson default false, any value is true)");
     RegConsoleCmd("sm_specGoto", smSpecGoto, "<player name> <orig x> <orig y> <orig z> <pitch> <yaw> - spectate camera in absolute position");
+    RegConsoleCmd("sm_allHumansSpec", smAllHumansSpec, " - force all humans to spectator team");
     RegConsoleCmd("sm_fakeCmd", smFakeCmd, "<player name> <fake cmd> - do fake client cmd for player");
     RegConsoleCmd("sm_line", smLine, "- draw line in direction player is trying to move");
     RegConsoleCmd("sm_refresh", smRefresh, "- draw line in direction player is trying to move");
@@ -382,6 +383,23 @@ public Action smSpecGoto(int client, int args)
     }
         
     PrintToConsole(client, "smSpecGoto received player name that didnt match any valid clients");
+    return Plugin_Handled;
+}
+
+public Action smAllHumansSpec(int client, int args)
+{
+    if (args != 0) {
+        PrintToConsole(client, "smSpecGoto requires 0 args");
+        return Plugin_Handled;
+    }
+
+    for (int clientInner = 1; clientInner <= MaxClients; clientInner++) {
+        if (IsValidClient(clientInner) && !IsFakeClient(clientInner)) {
+            ChangeClientTeam(clientInner, CS_TEAM_SPECTATOR);
+            ForcePlayerSuicide(clientInner);
+        }
+    }
+        
     return Plugin_Handled;
 }
 

@@ -107,6 +107,7 @@ public void OnPluginStart()
     RegConsoleCmd("sm_botDebug", smBotDebug, "(t/f) - make bomb time 10 minutes and give infinite ammo (toggle option)");
     RegConsoleCmd("sm_drawX", smDrawX, "<minX> <minY> <minZ> <maxX> <maxY> <maxZ> <colors sum of 1,2,4,8> <duration> - draw x");
     RegConsoleCmd("sm_draw", smDraw, "- immediately end the current round in a draw");
+    RegConsoleCmd("sm_skipFirstRound", smSkipFirstRound, "- force team to win a round (in way that server recognizes)");
     RegConsoleCmd("sm_printLink", smPrintLink, "- print debugging values from bot-link");
     RegConsoleCmd("sm_recordMaxs", smRecordMaxs, "- record max angular values for debugging");
     RegConsoleCmd("sm_queryAllVisPointPairs", smQueryAllVisPointPairs, "- query all vis point pairs to determine basic PVS");
@@ -219,14 +220,14 @@ public Action:smDraw(client, args) {
     return Plugin_Handled;
 }
 
-public Action:smSkipFirstRoundOrDraw(client, args) {
+public Action:smSkipFirstRound(client, args) {
     int tScore = CS_GetTeamScore(CS_TEAM_T),
         ctScore = CS_GetTeamScore(CS_TEAM_CT);
     if (tScore == 0 && ctScore == 0) {
-        CS_TerminateRound(0.0, CSRoundEnd_CTWin, false); 
-    }
-    else {
-        CS_TerminateRound(0.0, CSRoundEnd_Draw, false); 
+        //CS_SetTeamScore(CS_TEAM_CT, 1);
+        //SetTeamScore(CS_TEAM_CT, 1);
+        //CS_TerminateRound(0.0, CSRoundEnd_CTWin, false); 
+        smSlayAllBut(client, 0);
     }
     return Plugin_Handled;
 }
@@ -301,12 +302,15 @@ stock void WriteGeneral() {
         PrintToServer("opening tmpGeneralFile returned null");
         return;
     }
-    tmpGeneralFile.WriteLine("Map Name,Round Number,Tick Rate,Map Number");
+    tmpGeneralFile.WriteLine("Map Name,Round Number,T Score,CT Score,Map Number,Tick Rate");
 
     char mapName[MAX_INPUT_LENGTH];
     GetCurrentMap(mapName, MAX_INPUT_LENGTH);
 
-    tmpGeneralFile.WriteLine("%s,%i,%i,%f", mapName, roundNumber, mapNumber, GetTickInterval());
+    int tScore = CS_GetTeamScore(CS_TEAM_T),
+        ctScore = CS_GetTeamScore(CS_TEAM_CT);
+
+    tmpGeneralFile.WriteLine("%s,%i,%i,%i,%i,%f", mapName, roundNumber, tScore, ctScore, mapNumber, GetTickInterval());
 
     tmpGeneralFile.Close();
     tmpGeneralOpen = false;
