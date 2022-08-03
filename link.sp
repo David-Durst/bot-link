@@ -336,7 +336,7 @@ stock void WriteState() {
         ... "Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,Has C4,"
         ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
         ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,"
-        ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot");
+        ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped");
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
     for (int client = 1; client <= MaxClients; client++) {
@@ -390,6 +390,7 @@ stock void WriteState() {
             int hasC4 = GetC4EntityId(client) != -1 ? 1 : 0;
 
             int isAirborne = !(GetEntityFlags(client) & FL_ONGROUND) ? 1 : 0;
+            int isScoped = GetEntProp(client, Prop_Send, "m_bIsScoped") ? 1 : 0;
 
             tmpStateFile.WriteLine("%i,%i,%s,%i,%i,"
                                     ... "%i,%i,%i,"
@@ -403,7 +404,7 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%f,%f,"
                                     ... "%f,%f,"
-                                    ... "%i,%i,%i",
+                                    ... "%i,%i,%i,%i",
                 currentFrame, client, clientName, clientTeam, activeWeaponId,
                 rifleWeaponId, rifleClipAmmo, rifleReserveAmmo,
                 pistolWeaponId, pistolClipAmmo, pistolReserveAmmo, hasC4,
@@ -416,7 +417,7 @@ stock void WriteState() {
                 clientEyeAngle[client][0], clientEyeAngle[client][1],
                 mAimPunchAngle[client][0], mAimPunchAngle[client][1],
                 clientEyeAngleWithRecoil[client][0], clientEyeAngleWithRecoil[client][1],
-                clientOtherState[client], clientFake, isAirborne);
+                clientOtherState[client], clientFake, isAirborne, isScoped);
         }
     }
     tmpStateFile.Close();
@@ -520,9 +521,9 @@ stock void ReadInput() {
             inputMovement[client][Left] = inputButtons[client] & IN_MOVELEFT > 0;
             inputMovement[client][Right] = inputButtons[client] & IN_MOVERIGHT > 0;
             inputAngleDeltaPct[client][0] = StringToFloat(inputExplodedBuffer[2]);
-            inputAngleDeltaPct[client][0] = fmax(-1.0, fmin(1.0, inputAngleDeltaPct[client][0]));
+            //inputAngleDeltaPct[client][0] = fmax(-1.0, fmin(1.0, inputAngleDeltaPct[client][0]));
             inputAngleDeltaPct[client][1] = StringToFloat(inputExplodedBuffer[3]);
-            inputAngleDeltaPct[client][1] = fmax(-1.0, fmin(1.0, inputAngleDeltaPct[client][1]));
+            //inputAngleDeltaPct[client][1] = fmax(-1.0, fmin(1.0, inputAngleDeltaPct[client][1]));
         }
 
         tmpInputFile.Close();
@@ -575,10 +576,10 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     }
     oldAngles = newAngles;
 
-    newAngles[0] += inputAngleDeltaPct[client][0] * MAX_ONE_DIRECTION_ANGLE_VEL;
+    newAngles[0] = inputAngleDeltaPct[client][0];// * MAX_ONE_DIRECTION_ANGLE_VEL;
     newAngles[0] = fmax(-89.0, fmin(89.0, newAngles[0]));
 
-    newAngles[1] += inputAngleDeltaPct[client][1] * MAX_ONE_DIRECTION_ANGLE_VEL;
+    newAngles[1] = inputAngleDeltaPct[client][1];// * MAX_ONE_DIRECTION_ANGLE_VEL;
     newAngles[1] = makeNeg180To180(newAngles[1]);
 
     TeleportEntity(client, NULL_VECTOR, newAngles, NULL_VECTOR);
