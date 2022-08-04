@@ -289,6 +289,7 @@ public OnGameFrame() {
         return;
     }
 
+    EnsureAllAK();
     WriteGeneral();
     WriteState();
     WriteC4();
@@ -296,6 +297,41 @@ public OnGameFrame() {
     ReadInput();
     ReadExecuteScript();
     currentFrame++;
+}
+
+stock void EnsureAllAK() {
+    for (int client = 1; client <= MaxClients; client++) {
+        if (IsValidClient(client) && IsPlayerAlive(client)) {
+            int activeWeaponEntityId = GetActiveWeaponEntityId(client);
+            int activeWeaponId = -1;
+            if (activeWeaponEntityId != -1) {
+                activeWeaponId = GetWeaponIdFromEntityId(activeWeaponEntityId);
+            }
+
+            int rifleId = GetRifleEntityId(client), rifleWeaponId = -1;
+            if (rifleId != -1) {
+                rifleWeaponId = GetWeaponIdFromEntityId(rifleId);
+            }
+
+            int pistolId = GetPistolEntityId(client), pistolWeaponId = -1;
+            if (pistolWeaponId != -1) {
+                pistolWeaponId = GetWeaponIdFromEntityId(pistolId);
+            }
+
+            if (rifleWeaponId != -1 && rifleWeaponId != 7) {
+                RemovePlayerItem(client, rifleId);
+            } 
+            else if (pistolWeaponId != -1) {
+                RemovePlayerItem(client, pistolId);
+            }
+            else if (rifleWeaponId == -1) {
+                GivePlayerItem(client, "weapon_ak47");
+            }
+            else if (activeWeaponId != rifleWeaponId) {
+                FakeClientCommand(client, "use weapon_ak47");
+            }
+        }
+    }
 }
 
 
