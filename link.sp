@@ -87,7 +87,7 @@ static char debugIndicatorDirPath[] = "addons/sourcemod/bot-link-data/debug_indi
 ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers, cvarWarmupTime, cvarMaxRounds, cvarMatchCanClinch, cvarRoundRestartDelay, cvarFreezeTime, cvarMatchRestartDelay,
     cvarCompetitiveOfficial5v5;
 
-int roundNumber, mapNumber;
+int roundNumber, mapNumber, lastBombDefusalRoundNumber;
 
 // debugging variables
 ConVar cvarInfAmmo, cvarBombTime, cvarAutoKick, cvarRadarShowall, cvarForceCamera, cvarIgnoreRoundWinConditions;
@@ -113,6 +113,7 @@ public void OnPluginStart()
     RegConsoleCmd("sm_queryAllVisPointPairs", smQueryAllVisPointPairs, "- query all vis point pairs to determine basic PVS");
     RegisterDebugFunctions();
     HookEvent("round_start", OnRoundStart, EventHookMode_PostNoCopy);
+    HookEvent("bomb_defused", OnBombDefused, EventHookMode_PostNoCopy);
 
     cvarBotStop = FindConVar("bot_stop");
     cvarBotChatter = FindConVar("bot_chatter");
@@ -133,6 +134,7 @@ public void OnPluginStart()
 
     mapNumber = 0;
     roundNumber = 0;
+    lastBombDefusalRoundNumber = -1;
     if (DirExists(debugIndicatorDirPath)) {
         debugStatus = true;
     }
@@ -241,6 +243,12 @@ public OnMapStart() {
 
 public Action OnRoundStart(Event event, const char[] sName, bool bDontBroadcast) {
     roundNumber++;
+    lastBombDefusalRoundNumber = -1;
+    return Plugin_Continue;
+}
+
+public Action OnBombDefused(Event event, const char[] sName, bool bDontBroadcast) {
+    lastBombDefusalRoundNumber = roundNumber;
     return Plugin_Continue;
 }
 
@@ -462,7 +470,7 @@ stock void WriteC4() {
         PrintToServer("opening tmpC4File returned null");
         return;
     }
-    tmpC4File.WriteLine("Is Planted,Is Dropped,"
+    tmpC4File.WriteLine("Is Planted,Is Dropped,Is Defused,"
         ... "Pos X,Pos Y,Pos Z");
 
     int c4Ent = -1;
@@ -476,9 +484,9 @@ stock void WriteC4() {
         float zeroVector[3] = {0.0, 0.0, 0.0};
         GetEntPropVector(c4Ent, Prop_Send, "m_vecOrigin", c4Position);
         int isDropped = !isPlanted && GetVectorDistance(zeroVector, c4Position) != 0.0 ? 1 : 0;
-        tmpC4File.WriteLine("%i,%i,"
+        tmpC4File.WriteLine("%i,%i,%i,"
             ... "%f,%f,%f",
-            isPlanted, isDropped, 
+            isPlanted, isDropped, lastBombDefusalRoundNumber == roundNumber,
             c4Position[0], c4Position[1], c4Position[2]);
     }
 
