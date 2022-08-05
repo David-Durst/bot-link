@@ -258,7 +258,7 @@ stock void applyConVars() {
     SetConVarInt(cvarAutoKick, 0, true, true);
     SetConVarInt(cvarBotSnipers, 0, true, true);
     SetConVarInt(cvarWarmupTime, 0, true, true);
-    SetConVarInt(cvarMaxRounds, 4, true, true);
+    SetConVarInt(cvarMaxRounds, 100, true, true);
     SetConVarInt(cvarMatchCanClinch, 0, true, true);
     SetConVarFloat(cvarRoundRestartDelay, 0.1, true, true);
     SetConVarFloat(cvarFreezeTime, 0.1, true, true);
