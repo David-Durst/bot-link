@@ -716,7 +716,7 @@ stock bool IsValidClient(int client)
 }
 
 
-stock bool PrintCantFindFolder() {
+stock void PrintCantFindFolder() {
     PrintToServer("Cant access root folder %s, please create it with permissions 777", rootFolder);
 }
 
