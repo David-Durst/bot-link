@@ -50,5 +50,6 @@ public Action Timer_EndRound(Handle timer, int fireRoundNumber)
     if (roundNumber == fireRoundNumber && limitRoundTime) {
         CS_TerminateRound(0.0, CSRoundEnd_Draw, false);
     }
+    return Plugin_Continue;
 }
 
