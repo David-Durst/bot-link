@@ -85,7 +85,7 @@ static char debugIndicatorDirPath[] = "addons/sourcemod/bot-link-data/debug_indi
 
 // general variables
 ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers, cvarWarmupTime, cvarMaxRounds, cvarMatchCanClinch, cvarRoundRestartDelay, cvarFreezeTime, cvarMatchRestartDelay,
-    cvarCompetitiveOfficial5v5;
+    cvarCompetitiveOfficial5v5, cvarMatchEndChangeLevel, cvarSMNextMap;
 
 int roundNumber, mapNumber, lastBombDefusalRoundNumber;
 
@@ -125,6 +125,8 @@ public void OnPluginStart()
     cvarFreezeTime = FindConVar("mp_freezetime");
     cvarMatchRestartDelay = FindConVar("mp_match_restart_delay");
     cvarCompetitiveOfficial5v5 = FindConVar("sv_competitive_official_5v5");
+    cvarMatchEndChangeLevel = FindConVar("mp_match_end_changelevel");
+    cvarSMNextMap = FindConVar("sm_nextmap");
     cvarInfAmmo = FindConVar("sv_infinite_ammo");
     cvarBombTime = FindConVar("mp_c4timer");
     cvarAutoKick = FindConVar("mp_autokick");
@@ -244,6 +246,7 @@ public OnMapStart() {
 public Action OnRoundStart(Event event, const char[] sName, bool bDontBroadcast) {
     roundNumber++;
     lastBombDefusalRoundNumber = -1;
+    SetConVarString(cvarSMNextMap, "de_dust2", true, true);
     return Plugin_Continue;
 }
 
@@ -263,6 +266,7 @@ stock void applyConVars() {
     SetConVarFloat(cvarRoundRestartDelay, 0.1, true, true);
     SetConVarFloat(cvarFreezeTime, 0.1, true, true);
     SetConVarInt(cvarMatchRestartDelay, 10, true, true);
+    SetConVarInt(cvarMatchEndChangeLevel, 1, true, true);
     if (debugStatus) {
         SetConVarInt(cvarInfAmmo, 1, true, true);
         SetConVarInt(cvarBombTime, 600, true, true);
