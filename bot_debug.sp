@@ -59,6 +59,25 @@ public Action smSavePos(int client, int args)
 
     int targetId = GetClientIdByName(arg);
     if (targetId != -1) {
+        char className[128];
+        bool res = GetEdictClassname(targetId, className, 128);
+        if (res) {
+            PrintToConsole(client, "classname: %s", className);
+        }
+        else {
+            PrintToConsole(client, "no classname");
+        }
+        res = HasEntProp(targetId, Prop_Send, "m_Collision");
+        if (res) {
+            PrintToConsole(client, "has collision");
+        }
+        else {
+            PrintToConsole(client, "no collision");
+        }
+        int resi = GetEntPropArraySize(targetId, Prop_Send, "m_Collision");
+        PrintToConsole(client, "collision size: %i", resi);
+            
+
         GetClientAbsOrigin(targetId, savePos);
         GetClientEyeAngles(client, saveAngle);
         //saveAngle = clientEyeAngle[targetId];
@@ -490,6 +509,67 @@ public Action DrawAllClients(Handle timer) {
             }
         }
     }
+    return Plugin_Handled;
+}
+
+stock void Vec3Assign(float dstVec[3], float x, float y, float z) {
+    dstVec[0] = x;
+    dstVec[1] = y;
+    dstVec[2] = z;
+}
+
+public Action smDrawAABB(int client, int args) {
+    if (args != 8) {
+        PrintToConsole(client, "smDrawAABB requires 7 args");
+        return Plugin_Handled;
+    }
+
+    char nameArg[128], floatArg[128];
+    float duration;
+    // first is mins, second is maxs, will sort after loading
+    float vals[2][3];
+    // arg 0 is the command
+    GetCmdArg(1, nameArg, sizeof(nameArg));
+    GetCmdArg(2, nameArg, sizeof(floatArg));
+    duration = StringToFloat(floatArg);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 3; j++) {
+            GetCmdArg(3 + i*3 + j, floatArg, sizeof(floatArg));
+            vals[i][j] = StringToFloat(floatArg);
+        }
+    }
+    for (int i = 0; i < 3; i++) {
+        float tmpMin = fmin(vals[0][i], vals[1][i]);
+        vals[1][i] = fmax(vals[0][i], vals[1][i]);
+        vals[0][i] = tmpMin;
+    }
+
+    float mins[3], maxs[3];
+    mins = vals[0];
+    maxs = vals[1];
+    
+    // from min point
+    float tmpMins[3], tmpMaxs[3];
+    Vec3Assign(tmpMins,  mins[0], mins[1], mins[2]);
+    Vec3Assign(tmpMaxs, maxs[0], mins[1], mins[2]);
+    TE_SendBeam(tmpMins, tmpMaxs, {255, 0, 0, 255}, duration);
+/*
+    TE_SendBeam({mins[0], mins[1], mins[2]}, {mins[0], maxs[1], mins[2]}, {255, 0, 0, 255}, duration);
+    TE_SendBeam({mins[0], mins[1], mins[2]}, {mins[0], mins[1], maxs[2]}, {255, 0, 0, 255}, duration);
+    TE_SendBeam({maxs[0], maxs[1], maxs[2]}, {mins[0], maxs[1], maxs[2]}, {255, 0, 0, 255}, duration);
+    // reverse from max point
+    TE_SendBeam({maxs[0], maxs[1], maxs[2]}, {mins[0], maxs[1], maxs[2]}, {255, 0, 0, 255}, duration);
+    TE_SendBeam({maxs[0], maxs[1], maxs[2]}, {maxs[0], mins[1], maxs[2]}, {255, 0, 0, 255}, duration);
+    TE_SendBeam({maxs[0], maxs[1], maxs[2]}, {maxs[0], maxs[1], mins[2]}, {255, 0, 0, 255}, duration);
+    // from corners above/below min/max point
+    TE_SendBeam({mins[0], mins[1], maxs[2]}, {mins[0], maxs[1], maxs[2]}, {255, 0, 0, 255}, duration);
+    TE_SendBeam({mins[0], mins[1], maxs[2]}, {maxs[0], mins[1], maxs[2]}, {255, 0, 0, 255}, duration);
+    TE_SendBeam({maxs[0], maxs[1], mins[2]}, {maxs[0], mins[1], mins[2]}, {255, 0, 0, 255}, duration);
+    TE_SendBeam({maxs[0], maxs[1], mins[2]}, {mins[0], maxs[1], mins[2]}, {255, 0, 0, 255}, duration);
+    // vertical bars not connected to max or min points
+    TE_SendBeam({maxs[0], mins[1], mins[2]}, {maxs[0], mins[1], maxs[2]}, {255, 0, 0, 255}, duration);
+    TE_SendBeam({mins[0], maxs[1], mins[2]}, {mins[0], maxs[1], maxs[2]}, {255, 0, 0, 255}, duration);
+*/
     return Plugin_Handled;
 }
 
