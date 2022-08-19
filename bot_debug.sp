@@ -575,7 +575,7 @@ public Action smDrawAABBRadius(int client, int args) {
     vals[1][0] += radius;
     vals[1][1] += radius;
     vals[1][2] += zRadius;
-    drawAABBsThroughWalls(client, duration, vals);
+    drawAABBsThroughWalls(duration, vals);
     return Plugin_Handled;
 }
 
@@ -598,7 +598,7 @@ public Action smDrawAABB(int client, int args) {
             vals[i][j] = StringToFloat(floatArg);
         }
     }
-    drawAABBsThroughWalls(client, duration, vals);
+    drawAABBsThroughWalls(duration, vals);
     return Plugin_Handled;
 }
 
@@ -643,7 +643,7 @@ void makeInsideWorld(float valid[3], float point[3]) {
     
 }
 
-void drawAABBsThroughWalls(int client, float duration, float vals[2][3]) {
+void drawAABBsThroughWalls(float duration, float vals[2][3]) {
     for (int i = 0; i < 3; i++) {
         float tmpMin = fmin(vals[0][i], vals[1][i]);
         vals[1][i] = fmax(vals[0][i], vals[1][i]);
