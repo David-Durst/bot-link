@@ -575,12 +575,6 @@ public Action smDrawAABBRadius(int client, int args) {
     vals[1][0] += radius;
     vals[1][1] += radius;
     vals[1][2] += zRadius;
-    if (TR_PointOutsideWorld(vals[0])) { 
-        PrintToConsole(client, "outside world (%f, %f, %f)", vals[0][0], vals[0][1], vals[0][2]);
-    }
-    if (TR_PointOutsideWorld(vals[1])) { 
-        PrintToConsole(client, "outside world (%f, %f, %f)", vals[1][0], vals[1][1], vals[1][2]);
-    }
     drawAABBsThroughWalls(client, duration, vals);
     return Plugin_Handled;
 }
@@ -661,80 +655,12 @@ void drawAABBsThroughWalls(int client, float duration, float vals[2][3]) {
     maxs = vals[1];
     int color[4] = {255, 0, 0, 255};
 
-/*
-    PrintToConsole(client, "%i pre mins (%f, %f, %f)", client, mins[0], mins[1], mins[2]);
-    PrintToConsole(client, "pre maxs (%f, %f, %f)", maxs[0], maxs[1], maxs[2]);
-
-    PrintToConsole(client, "mins (%f, %f, %f)", mins[0], mins[1], mins[2]);
-    PrintToConsole(client, "maxs (%f, %f, %f)", maxs[0], maxs[1], maxs[2]);
-*/
-
     float tmpMins[3], tmpMaxs[3];
     tmpMins = mins;
     tmpMaxs = maxs;
-    //bool reachedBottom = false;
     checkInsideUsingEachDimension(tmpMins, tmpMaxs);
-    PrintToConsole(client, "drawing (%f, %f, %f) to (%f, %f, %f)", tmpMaxs[0], tmpMaxs[1], tmpMaxs[2], tmpMins[0], tmpMins[1], tmpMins[2]);
+    //PrintToConsole(client, "drawing (%f, %f, %f) to (%f, %f, %f)", tmpMaxs[0], tmpMaxs[1], tmpMaxs[2], tmpMins[0], tmpMins[1], tmpMins[2]);
     drawAABBInternal(tmpMins, tmpMaxs, color, duration);
-    /*
-    for (int i = 0; i < 20 && !reachedBottom; i++) {
-        // use tmp mins and maxes for each z level
-        float minValidZ = traceAABBRaysDown(client, tmpMins, tmpMaxs);
-        tmpMins[2] = minValidZ;
-        PrintToConsole(client, "drawing (%f, %f, %f) to (%f, %f, %f)", tmpMaxs[0], tmpMaxs[1], tmpMaxs[2], tmpMins[0], tmpMins[1], tmpMins[2]);
-        drawAABBInternal(tmpMins, tmpMaxs, color, duration);
-
-        //PrintToConsole(client, "test%i", i);
-        // reset for next loop with max starting at current min
-        if (minValidZ == mins[2]) {
-            reachedBottom = true;
-        }
-        else {
-            tmpMins[2] = mins[2];
-            tmpMaxs[2] = minValidZ;
-        }
-    }
-    */
-}
-
-float traceAABBRaysDown(int client, float mins[3], float maxs[3]) {
-    float minValidZ = mins[2];
-    float lowerCornerPoint[3], upperCornerPoint[3], hitPoint[3];
-    lowerCornerPoint = mins;
-    upperCornerPoint = mins;
-    upperCornerPoint[2] = maxs[2];
-    client += 1;
-    client -= 1;
-    //PrintToConsole(client, "test");
-    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, CONTENTS_EMPTY, hitPoint)) {
-        //PrintToConsole(client, "hit1 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
-        minValidZ = fmax(minValidZ, hitPoint[2]);
-    }
-    lowerCornerPoint = maxs;
-    lowerCornerPoint[2] = mins[2];
-    upperCornerPoint = maxs;
-    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, CONTENTS_EMPTY, hitPoint)) {
-        //PrintToConsole(client, "hit2 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
-        minValidZ = fmax(minValidZ, hitPoint[2]);
-    }
-    lowerCornerPoint = mins;
-    lowerCornerPoint[1] = maxs[1];
-    upperCornerPoint = maxs;
-    upperCornerPoint[0] = mins[0];
-    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, CONTENTS_EMPTY, hitPoint)) {
-        //PrintToConsole(client, "hit3 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
-        minValidZ = fmax(minValidZ, hitPoint[2]);
-    }
-    lowerCornerPoint = mins;
-    lowerCornerPoint[0] = maxs[0];
-    upperCornerPoint = maxs;
-    upperCornerPoint[1] = mins[1];
-    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, CONTENTS_EMPTY, hitPoint)) {
-        //PrintToConsole(client, "hit4 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
-        minValidZ = fmax(minValidZ, hitPoint[2]);
-        //PrintToConsole(client, "hi2 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
-    }
-    return minValidZ;
 }
 
 void drawAABBInternal(float mins[3], float maxs[3], int color[4], float duration) {
