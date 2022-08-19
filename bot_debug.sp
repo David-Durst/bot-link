@@ -575,6 +575,12 @@ public Action smDrawAABBRadius(int client, int args) {
     vals[1][0] += radius;
     vals[1][1] += radius;
     vals[1][2] += zRadius;
+    if (TR_PointOutsideWorld(vals[0])) { 
+        PrintToConsole(client, "outside world (%f, %f, %f)", vals[0][0], vals[0][1], vals[0][2]);
+    }
+    if (TR_PointOutsideWorld(vals[1])) { 
+        PrintToConsole(client, "outside world (%f, %f, %f)", vals[1][0], vals[1][1], vals[1][2]);
+    }
     drawAABBsThroughWalls(client, duration, vals);
     return Plugin_Handled;
 }
@@ -602,6 +608,47 @@ public Action smDrawAABB(int client, int args) {
     return Plugin_Handled;
 }
 
+void checkInsideUsingEachDimension(float mins[3], float maxs[3]) {
+    float center[3];
+    for (int i = 0; i < 3; i++) {
+        center[i] = (mins[i] + maxs[i]) / 2.0;
+    }
+    for (int i = 0; i < 3; i++) {
+        float minOneDimOnly[3], maxOneDimOnly[3];
+        minOneDimOnly = center;
+        minOneDimOnly[i] = mins[i];
+        maxOneDimOnly = center;
+        maxOneDimOnly[i] = maxs[i];
+        makeInsideWorld(center, minOneDimOnly);
+        mins[i] = minOneDimOnly[i];
+        makeInsideWorld(center, maxOneDimOnly);
+        maxs[i] = maxOneDimOnly[i];
+    }
+}
+
+void makeInsideWorld(float valid[3], float point[3]) {
+    // make sure dont infinite loop if valid check goes wrong
+    bool equalDims[3] = {false, false, false};
+    while (TR_PointOutsideWorld(point) && !(equalDims[0] && equalDims[1] && equalDims[2])) {
+        PrintToServer("Point (%f, %f, %f)", point[0], point[1], point[2]);
+        // if out of bounds, shrink in all dimensions towards valid
+        for (int i = 0; i < 3; i++) {
+            if (FloatAbs(valid[i] - point[i]) > 1.0) {
+                if (valid[i] > point[i]) {
+                    point[i] += 0.5;
+                }
+                else {
+                    point[i] -= 0.5;
+                }
+            }
+            else {
+                equalDims[i] = true;
+            }
+        }
+    }
+    
+}
+
 void drawAABBsThroughWalls(int client, float duration, float vals[2][3]) {
     for (int i = 0; i < 3; i++) {
         float tmpMin = fmin(vals[0][i], vals[1][i]);
@@ -625,7 +672,11 @@ void drawAABBsThroughWalls(int client, float duration, float vals[2][3]) {
     float tmpMins[3], tmpMaxs[3];
     tmpMins = mins;
     tmpMaxs = maxs;
-    bool reachedBottom = false;
+    //bool reachedBottom = false;
+    checkInsideUsingEachDimension(tmpMins, tmpMaxs);
+    PrintToConsole(client, "drawing (%f, %f, %f) to (%f, %f, %f)", tmpMaxs[0], tmpMaxs[1], tmpMaxs[2], tmpMins[0], tmpMins[1], tmpMins[2]);
+    drawAABBInternal(tmpMins, tmpMaxs, color, duration);
+    /*
     for (int i = 0; i < 20 && !reachedBottom; i++) {
         // use tmp mins and maxes for each z level
         float minValidZ = traceAABBRaysDown(client, tmpMins, tmpMaxs);
@@ -643,6 +694,7 @@ void drawAABBsThroughWalls(int client, float duration, float vals[2][3]) {
             tmpMaxs[2] = minValidZ;
         }
     }
+    */
 }
 
 float traceAABBRaysDown(int client, float mins[3], float maxs[3]) {
@@ -654,14 +706,14 @@ float traceAABBRaysDown(int client, float mins[3], float maxs[3]) {
     client += 1;
     client -= 1;
     //PrintToConsole(client, "test");
-    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
+    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, CONTENTS_EMPTY, hitPoint)) {
         //PrintToConsole(client, "hit1 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
         minValidZ = fmax(minValidZ, hitPoint[2]);
     }
     lowerCornerPoint = maxs;
     lowerCornerPoint[2] = mins[2];
     upperCornerPoint = maxs;
-    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
+    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, CONTENTS_EMPTY, hitPoint)) {
         //PrintToConsole(client, "hit2 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
         minValidZ = fmax(minValidZ, hitPoint[2]);
     }
@@ -669,7 +721,7 @@ float traceAABBRaysDown(int client, float mins[3], float maxs[3]) {
     lowerCornerPoint[1] = maxs[1];
     upperCornerPoint = maxs;
     upperCornerPoint[0] = mins[0];
-    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
+    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, CONTENTS_EMPTY, hitPoint)) {
         //PrintToConsole(client, "hit3 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
         minValidZ = fmax(minValidZ, hitPoint[2]);
     }
@@ -677,7 +729,7 @@ float traceAABBRaysDown(int client, float mins[3], float maxs[3]) {
     lowerCornerPoint[0] = maxs[0];
     upperCornerPoint = maxs;
     upperCornerPoint[1] = mins[1];
-    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
+    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, CONTENTS_EMPTY, hitPoint)) {
         //PrintToConsole(client, "hit4 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
         minValidZ = fmax(minValidZ, hitPoint[2]);
         //PrintToConsole(client, "hi2 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
