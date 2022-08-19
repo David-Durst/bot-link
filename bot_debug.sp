@@ -654,14 +654,14 @@ float traceAABBRaysDown(int client, float mins[3], float maxs[3]) {
     client += 1;
     client -= 1;
     //PrintToConsole(client, "test");
-    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, CONTENTS_EMPTY, hitPoint)) {
+    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
         //PrintToConsole(client, "hit1 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
         minValidZ = fmax(minValidZ, hitPoint[2]);
     }
     lowerCornerPoint = maxs;
     lowerCornerPoint[2] = mins[2];
     upperCornerPoint = maxs;
-    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, CONTENTS_EMPTY, hitPoint)) {
+    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
         //PrintToConsole(client, "hit2 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
         minValidZ = fmax(minValidZ, hitPoint[2]);
     }
@@ -669,7 +669,7 @@ float traceAABBRaysDown(int client, float mins[3], float maxs[3]) {
     lowerCornerPoint[1] = maxs[1];
     upperCornerPoint = maxs;
     upperCornerPoint[0] = mins[0];
-    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, CONTENTS_EMPTY, hitPoint)) {
+    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
         //PrintToConsole(client, "hit3 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
         minValidZ = fmax(minValidZ, hitPoint[2]);
     }
@@ -677,7 +677,7 @@ float traceAABBRaysDown(int client, float mins[3], float maxs[3]) {
     lowerCornerPoint[0] = maxs[0];
     upperCornerPoint = maxs;
     upperCornerPoint[1] = mins[1];
-    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, CONTENTS_EMPTY, hitPoint)) {
+    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
         //PrintToConsole(client, "hit4 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
         minValidZ = fmax(minValidZ, hitPoint[2]);
         //PrintToConsole(client, "hi2 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
