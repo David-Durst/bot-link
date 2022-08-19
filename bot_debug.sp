@@ -24,7 +24,8 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_allHumansSpec", smAllHumansSpec, " - force all humans to spectator team");
     RegConsoleCmd("sm_fakeCmd", smFakeCmd, "<player name> <fake cmd> - do fake client cmd for player");
     RegConsoleCmd("sm_line", smLine, "- draw line in direction player is trying to move");
-    RegConsoleCmd("sm_drawAABB", smDrawAABB, "<x0> <y0> <z0> <x1> <y1> <z1> <duration_seconds> - draw AABB");
+    RegConsoleCmd("sm_drawAABBRadius", smDrawAABBRadius, "<duration_seconds> <x> <y> <z> <radius> <z radius | optional>  - draw AABB with fixed radius");
+    RegConsoleCmd("sm_drawAABB", smDrawAABB, "<duration_seconds> <x0> <y0> <z0> <x1> <y1> <z1> - draw AABB");
     RegConsoleCmd("sm_refresh", smRefresh, "- draw line in direction player is trying to move");
     g_iLaserMaterial = PrecacheModel("materials/sprites/laserbeam.vmt");
     g_iWhiteMaterial = PrecacheModel("materials/sprites/white.vmt");
@@ -519,6 +520,51 @@ stock void Vec3Assign(float dstVec[3], float x, float y, float z) {
     dstVec[2] = z;
 }
 
+public Action smDrawAABBRadius(int client, int args) {
+    if (args != 0 && args != 5 && args != 6) {
+        PrintToConsole(client, "smDrawAABBRadius requires 0 or 5 or 6 args");
+        return Plugin_Handled;
+    }
+    char floatArg[128];
+    float duration, radius, zRadius;
+    // first is mins, second is maxs, will sort after loading
+    float vals[2][3];
+    if (args > 0) {
+        // arg 0 is the command
+        GetCmdArg(1, floatArg, sizeof(floatArg));
+        duration = StringToFloat(floatArg);
+        for (int i = 0; i < 3; i++) {
+            GetCmdArg(2 + i, floatArg, sizeof(floatArg));
+            vals[0][i] = StringToFloat(floatArg);
+            vals[1][i] = StringToFloat(floatArg);
+        }
+        GetCmdArg(5, floatArg, sizeof(floatArg));
+        radius = StringToFloat(floatArg);
+        if (args == 5) {
+            zRadius = radius;
+        }
+        else {
+            GetCmdArg(6, floatArg, sizeof(floatArg));
+            zRadius = StringToFloat(floatArg);
+        }
+    }
+    else {
+        duration = 5.0;
+        radius = 32.0;
+        zRadius = 32.0;
+        vals[0] = savePos;
+        vals[1] = savePos;
+    }
+    vals[0][0] -= radius;
+    vals[0][1] -= radius;
+    vals[0][2] -= zRadius;
+    vals[1][0] += radius;
+    vals[1][1] += radius;
+    vals[1][2] += zRadius;
+    drawAABBsThroughWalls(client, duration, vals);
+    return Plugin_Handled;
+}
+
 public Action smDrawAABB(int client, int args) {
     if (args != 7) {
         PrintToConsole(client, "smDrawAABB requires 7 args");
@@ -538,6 +584,11 @@ public Action smDrawAABB(int client, int args) {
             vals[i][j] = StringToFloat(floatArg);
         }
     }
+    drawAABBsThroughWalls(client, duration, vals);
+    return Plugin_Handled;
+}
+
+void drawAABBsThroughWalls(int client, float duration, float vals[2][3]) {
     for (int i = 0; i < 3; i++) {
         float tmpMin = fmin(vals[0][i], vals[1][i]);
         vals[1][i] = fmax(vals[0][i], vals[1][i]);
@@ -565,9 +616,10 @@ public Action smDrawAABB(int client, int args) {
         // use tmp mins and maxes for each z level
         float minValidZ = traceAABBRaysDown(client, tmpMins, tmpMaxs);
         tmpMins[2] = minValidZ;
+        PrintToConsole(client, "drawing (%f, %f, %f) to (%f, %f, %f)", tmpMaxs[0], tmpMaxs[1], tmpMaxs[2], tmpMins[0], tmpMins[1], tmpMins[2]);
         drawAABBInternal(tmpMins, tmpMaxs, color, duration);
 
-        PrintToConsole(client, "test%i", i);
+        //PrintToConsole(client, "test%i", i);
         // reset for next loop with max starting at current min
         if (minValidZ == mins[2]) {
             reachedBottom = true;
@@ -577,8 +629,6 @@ public Action smDrawAABB(int client, int args) {
             tmpMaxs[2] = minValidZ;
         }
     }
-
-    return Plugin_Handled;
 }
 
 float traceAABBRaysDown(int client, float mins[3], float maxs[3]) {
@@ -587,16 +637,18 @@ float traceAABBRaysDown(int client, float mins[3], float maxs[3]) {
     lowerCornerPoint = mins;
     upperCornerPoint = mins;
     upperCornerPoint[2] = maxs[2];
-    PrintToConsole(client, "test");
+    client += 1;
+    client -= 1;
+    //PrintToConsole(client, "test");
     if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
-        PrintToConsole(client, "hit1 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
+        //PrintToConsole(client, "hit1 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
         minValidZ = fmax(minValidZ, hitPoint[2]);
     }
     lowerCornerPoint = maxs;
     lowerCornerPoint[2] = mins[2];
     upperCornerPoint = maxs;
     if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
-        PrintToConsole(client, "hit2 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
+        //PrintToConsole(client, "hit2 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
         minValidZ = fmax(minValidZ, hitPoint[2]);
     }
     lowerCornerPoint = mins;
@@ -604,7 +656,7 @@ float traceAABBRaysDown(int client, float mins[3], float maxs[3]) {
     upperCornerPoint = maxs;
     upperCornerPoint[0] = mins[0];
     if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
-        PrintToConsole(client, "hit3 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
+        //PrintToConsole(client, "hit3 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
         minValidZ = fmax(minValidZ, hitPoint[2]);
     }
     lowerCornerPoint = mins;
@@ -612,9 +664,9 @@ float traceAABBRaysDown(int client, float mins[3], float maxs[3]) {
     upperCornerPoint = maxs;
     upperCornerPoint[1] = mins[1];
     if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
-        PrintToConsole(client, "hit4 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
+        //PrintToConsole(client, "hit4 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
         minValidZ = fmax(minValidZ, hitPoint[2]);
-        PrintToConsole(client, "hi2 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
+        //PrintToConsole(client, "hi2 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
     }
     return minValidZ;
 }
