@@ -24,6 +24,7 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_allHumansSpec", smAllHumansSpec, " - force all humans to spectator team");
     RegConsoleCmd("sm_fakeCmd", smFakeCmd, "<player name> <fake cmd> - do fake client cmd for player");
     RegConsoleCmd("sm_line", smLine, "- draw line in direction player is trying to move");
+    RegConsoleCmd("sm_drawAABB", smDrawAABB, "<x0> <y0> <z0> <x1> <y1> <z1> <duration_seconds> - draw AABB");
     RegConsoleCmd("sm_refresh", smRefresh, "- draw line in direction player is trying to move");
     g_iLaserMaterial = PrecacheModel("materials/sprites/laserbeam.vmt");
     g_iWhiteMaterial = PrecacheModel("materials/sprites/white.vmt");
@@ -519,22 +520,21 @@ stock void Vec3Assign(float dstVec[3], float x, float y, float z) {
 }
 
 public Action smDrawAABB(int client, int args) {
-    if (args != 8) {
+    if (args != 7) {
         PrintToConsole(client, "smDrawAABB requires 7 args");
         return Plugin_Handled;
     }
 
-    char nameArg[128], floatArg[128];
+    char floatArg[128];
     float duration;
     // first is mins, second is maxs, will sort after loading
     float vals[2][3];
     // arg 0 is the command
-    GetCmdArg(1, nameArg, sizeof(nameArg));
-    GetCmdArg(2, nameArg, sizeof(floatArg));
+    GetCmdArg(1, floatArg, sizeof(floatArg));
     duration = StringToFloat(floatArg);
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 3; j++) {
-            GetCmdArg(3 + i*3 + j, floatArg, sizeof(floatArg));
+            GetCmdArg(2 + i*3 + j, floatArg, sizeof(floatArg));
             vals[i][j] = StringToFloat(floatArg);
         }
     }
@@ -547,35 +547,101 @@ public Action smDrawAABB(int client, int args) {
     float mins[3], maxs[3];
     mins = vals[0];
     maxs = vals[1];
+    int color[4] = {255, 0, 0, 255};
+
+    PrintToConsole(client, "%i pre mins (%f, %f, %f)", client, mins[0], mins[1], mins[2]);
+    PrintToConsole(client, "pre maxs (%f, %f, %f)", maxs[0], maxs[1], maxs[2]);
+
+    // since beams dont go through ground well, find smallest valid z below max z that is visible
+    float minValidZ = mins[2];
+    float lowerCornerPoint[3], upperCornerPoint[3], hitPoint[3];
+    lowerCornerPoint = mins;
+    upperCornerPoint = mins;
+    upperCornerPoint[2] = maxs[2];
+    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_ALL, hitPoint)) {
+        PrintToConsole(client, "hit1 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
+        minValidZ = fmax(minValidZ, hitPoint[2]);
+    }
+    lowerCornerPoint = maxs;
+    lowerCornerPoint[2] = mins[2];
+    upperCornerPoint = maxs;
+    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
+        PrintToConsole(client, "hit2 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
+        minValidZ = fmax(minValidZ, hitPoint[2]);
+    }
+    lowerCornerPoint = mins;
+    lowerCornerPoint[1] = maxs[1];
+    upperCornerPoint = maxs;
+    upperCornerPoint[0] = mins[0];
+    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
+        PrintToConsole(client, "hit3 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
+        minValidZ = fmax(minValidZ, hitPoint[2]);
+    }
+    lowerCornerPoint = mins;
+    lowerCornerPoint[0] = maxs[0];
+    upperCornerPoint = maxs;
+    upperCornerPoint[1] = mins[1];
+    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
+        PrintToConsole(client, "hit4 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
+        minValidZ = fmax(minValidZ, hitPoint[2]);
+        PrintToConsole(client, "hi2 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
+    }
+    mins[2] = minValidZ;
+
+    PrintToConsole(client, "mins (%f, %f, %f)", mins[0], mins[1], mins[2]);
+    PrintToConsole(client, "maxs (%f, %f, %f)", maxs[0], maxs[1], maxs[2]);
     
     // from min point
-    float tmpMins[3], tmpMaxs[3];
-    Vec3Assign(tmpMins,  mins[0], mins[1], mins[2]);
-    Vec3Assign(tmpMaxs, maxs[0], mins[1], mins[2]);
-    TE_SendBeam(tmpMins, tmpMaxs, {255, 0, 0, 255}, duration);
-/*
-    TE_SendBeam({mins[0], mins[1], mins[2]}, {mins[0], maxs[1], mins[2]}, {255, 0, 0, 255}, duration);
-    TE_SendBeam({mins[0], mins[1], mins[2]}, {mins[0], mins[1], maxs[2]}, {255, 0, 0, 255}, duration);
-    TE_SendBeam({maxs[0], maxs[1], maxs[2]}, {mins[0], maxs[1], maxs[2]}, {255, 0, 0, 255}, duration);
+    float tmpSrc[3], tmpDst[3];
+    Vec3Assign(tmpSrc,  mins[0], mins[1], mins[2]);
+    Vec3Assign(tmpDst, maxs[0], mins[1], mins[2]);
+    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+    Vec3Assign(tmpSrc, mins[0], mins[1], mins[2]);
+    Vec3Assign(tmpDst, mins[0], maxs[1], mins[2]);
+    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+    Vec3Assign(tmpSrc, mins[0], mins[1], mins[2]);
+    Vec3Assign(tmpDst, mins[0], mins[1], maxs[2]);
+    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+
     // reverse from max point
-    TE_SendBeam({maxs[0], maxs[1], maxs[2]}, {mins[0], maxs[1], maxs[2]}, {255, 0, 0, 255}, duration);
-    TE_SendBeam({maxs[0], maxs[1], maxs[2]}, {maxs[0], mins[1], maxs[2]}, {255, 0, 0, 255}, duration);
-    TE_SendBeam({maxs[0], maxs[1], maxs[2]}, {maxs[0], maxs[1], mins[2]}, {255, 0, 0, 255}, duration);
+    Vec3Assign(tmpSrc, maxs[0], maxs[1], maxs[2]);
+    Vec3Assign(tmpDst, mins[0], maxs[1], maxs[2]);
+    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+    Vec3Assign(tmpSrc, maxs[0], maxs[1], maxs[2]);
+    Vec3Assign(tmpDst, maxs[0], mins[1], maxs[2]);
+    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+    Vec3Assign(tmpSrc, maxs[0], maxs[1], maxs[2]);
+    Vec3Assign(tmpDst, maxs[0], maxs[1], mins[2]);
+    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+
     // from corners above/below min/max point
-    TE_SendBeam({mins[0], mins[1], maxs[2]}, {mins[0], maxs[1], maxs[2]}, {255, 0, 0, 255}, duration);
-    TE_SendBeam({mins[0], mins[1], maxs[2]}, {maxs[0], mins[1], maxs[2]}, {255, 0, 0, 255}, duration);
-    TE_SendBeam({maxs[0], maxs[1], mins[2]}, {maxs[0], mins[1], mins[2]}, {255, 0, 0, 255}, duration);
-    TE_SendBeam({maxs[0], maxs[1], mins[2]}, {mins[0], maxs[1], mins[2]}, {255, 0, 0, 255}, duration);
+    Vec3Assign(tmpSrc, mins[0], mins[1], maxs[2]);
+    Vec3Assign(tmpDst, mins[0], maxs[1], maxs[2]);
+    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+    Vec3Assign(tmpSrc, mins[0], mins[1], maxs[2]);
+    Vec3Assign(tmpDst, maxs[0], mins[1], maxs[2]);
+    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+    Vec3Assign(tmpSrc, maxs[0], maxs[1], mins[2]);
+    Vec3Assign(tmpDst, maxs[0], mins[1], mins[2]);
+    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+    Vec3Assign(tmpSrc, maxs[0], maxs[1], mins[2]);
+    Vec3Assign(tmpDst, mins[0], maxs[1], mins[2]);
+    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+
     // vertical bars not connected to max or min points
-    TE_SendBeam({maxs[0], mins[1], mins[2]}, {maxs[0], mins[1], maxs[2]}, {255, 0, 0, 255}, duration);
-    TE_SendBeam({mins[0], maxs[1], mins[2]}, {mins[0], maxs[1], maxs[2]}, {255, 0, 0, 255}, duration);
-*/
+    Vec3Assign(tmpSrc, maxs[0], mins[1], mins[2]);
+    Vec3Assign(tmpDst, maxs[0], mins[1], maxs[2]);
+    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+    Vec3Assign(tmpSrc, mins[0], maxs[1], mins[2]);
+    Vec3Assign(tmpDst, mins[0], maxs[1], maxs[2]);
+    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+
     return Plugin_Handled;
 }
 
-void TE_SendBeam(float m_vecMins[3], float m_vecMaxs[3], int color[4], float flDur = 0.1)
+void TE_SendBeam(float src[3], float dst[3], int color[4], float flDur = 0.1)
 {
-	TE_SetupBeamPoints(m_vecMins, m_vecMaxs, g_iLaserMaterial, g_iHaloMaterial, 0, 0, flDur, 1.0, 1.0, 1, 0.0, color, 0);
+	TE_SetupBeamPoints(src, dst, g_iLaserMaterial, g_iHaloMaterial, 0, 0, flDur, 1.0, 1.0, 1, 0.0, color, 0);
 	TE_SendToAll();
 }
 
