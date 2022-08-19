@@ -87,8 +87,7 @@ stock bool VisibilityTest(const float sourcePosition[3], const float targetPosit
 stock bool VisibilityTestWithPoint(const float sourcePosition[3], const float targetPosition[3], int flags, float hitPoint[3])
 {
     Handle hTrace = TR_TraceRayFilterEx(sourcePosition, targetPosition, 
-        flags, RayType_EndPoint, Base_TraceFilter2, MaxClients);
-    PrintToConsole(2, "dude1");
+        flags, RayType_EndPoint, Base_TraceFilter, MaxClients);
     
     if (TR_DidHit(hTrace))
     {
@@ -99,14 +98,6 @@ stock bool VisibilityTestWithPoint(const float sourcePosition[3], const float ta
     
     delete hTrace;
     return true;
-}
-
-
-stock bool Base_TraceFilter2(int entity, int contentsMask, int data)
-{
-    PrintToServer("dude");
-    // return true (can hit) if not any non-target player (aka target player or environment)
-    return entity >= MaxClients || entity == data || !IsValidClient(entity);
 }
 
 public Action smQueryAllVisPointPairs(int client, int args)

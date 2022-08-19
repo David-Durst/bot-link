@@ -549,6 +549,7 @@ public Action smDrawAABB(int client, int args) {
     maxs = vals[1];
     int color[4] = {255, 0, 0, 255};
 
+/*
     PrintToConsole(client, "%i pre mins (%f, %f, %f)", client, mins[0], mins[1], mins[2]);
     PrintToConsole(client, "pre maxs (%f, %f, %f)", maxs[0], maxs[1], maxs[2]);
 
@@ -558,7 +559,7 @@ public Action smDrawAABB(int client, int args) {
     lowerCornerPoint = mins;
     upperCornerPoint = mins;
     upperCornerPoint[2] = maxs[2];
-    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_ALL, hitPoint)) {
+    if (!VisibilityTestWithPoint(upperCornerPoint, lowerCornerPoint, MASK_SOLID_BRUSHONLY, hitPoint)) {
         PrintToConsole(client, "hit1 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
         minValidZ = fmax(minValidZ, hitPoint[2]);
     }
@@ -587,54 +588,63 @@ public Action smDrawAABB(int client, int args) {
         PrintToConsole(client, "hi2 (%f, %f, %f) %f", hitPoint[0], hitPoint[1], hitPoint[2], minValidZ);
     }
     mins[2] = minValidZ;
-
     PrintToConsole(client, "mins (%f, %f, %f)", mins[0], mins[1], mins[2]);
     PrintToConsole(client, "maxs (%f, %f, %f)", maxs[0], maxs[1], maxs[2]);
-    
-    // from min point
-    float tmpSrc[3], tmpDst[3];
-    Vec3Assign(tmpSrc,  mins[0], mins[1], mins[2]);
-    Vec3Assign(tmpDst, maxs[0], mins[1], mins[2]);
-    TE_SendBeam(tmpSrc, tmpDst, color, duration);
-    Vec3Assign(tmpSrc, mins[0], mins[1], mins[2]);
-    Vec3Assign(tmpDst, mins[0], maxs[1], mins[2]);
-    TE_SendBeam(tmpSrc, tmpDst, color, duration);
-    Vec3Assign(tmpSrc, mins[0], mins[1], mins[2]);
-    Vec3Assign(tmpDst, mins[0], mins[1], maxs[2]);
-    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+*/
 
-    // reverse from max point
-    Vec3Assign(tmpSrc, maxs[0], maxs[1], maxs[2]);
-    Vec3Assign(tmpDst, mins[0], maxs[1], maxs[2]);
-    TE_SendBeam(tmpSrc, tmpDst, color, duration);
-    Vec3Assign(tmpSrc, maxs[0], maxs[1], maxs[2]);
-    Vec3Assign(tmpDst, maxs[0], mins[1], maxs[2]);
-    TE_SendBeam(tmpSrc, tmpDst, color, duration);
-    Vec3Assign(tmpSrc, maxs[0], maxs[1], maxs[2]);
-    Vec3Assign(tmpDst, maxs[0], maxs[1], mins[2]);
-    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+    float zDistance = maxs[2] - mins[2];
+    for (int i = 0; i < 19; i++) {
+        // use tmp mins and maxes for each z level
+        float tmpMins[3], tmpMaxs[3];
+        tmpMins = mins;
+        tmpMaxs = maxs;
+        tmpMins[2] = mins[2] + (i/20.0) * zDistance;
+        tmpMaxs[2] = mins[2] + ((i+1)/20.0) * zDistance;
+        // from min point
+        float tmpSrc[3], tmpDst[3];
+        Vec3Assign(tmpSrc,  tmpMins[0], tmpMins[1], tmpMins[2]);
+        Vec3Assign(tmpDst, tmpMaxs[0], tmpMins[1], tmpMins[2]);
+        TE_SendBeam(tmpSrc, tmpDst, color, duration);
+        Vec3Assign(tmpSrc, tmpMins[0], tmpMins[1], tmpMins[2]);
+        Vec3Assign(tmpDst, tmpMins[0], tmpMaxs[1], tmpMins[2]);
+        TE_SendBeam(tmpSrc, tmpDst, color, duration);
+        Vec3Assign(tmpSrc, tmpMins[0], tmpMins[1], tmpMins[2]);
+        Vec3Assign(tmpDst, tmpMins[0], tmpMins[1], tmpMaxs[2]);
+        TE_SendBeam(tmpSrc, tmpDst, color, duration);
 
-    // from corners above/below min/max point
-    Vec3Assign(tmpSrc, mins[0], mins[1], maxs[2]);
-    Vec3Assign(tmpDst, mins[0], maxs[1], maxs[2]);
-    TE_SendBeam(tmpSrc, tmpDst, color, duration);
-    Vec3Assign(tmpSrc, mins[0], mins[1], maxs[2]);
-    Vec3Assign(tmpDst, maxs[0], mins[1], maxs[2]);
-    TE_SendBeam(tmpSrc, tmpDst, color, duration);
-    Vec3Assign(tmpSrc, maxs[0], maxs[1], mins[2]);
-    Vec3Assign(tmpDst, maxs[0], mins[1], mins[2]);
-    TE_SendBeam(tmpSrc, tmpDst, color, duration);
-    Vec3Assign(tmpSrc, maxs[0], maxs[1], mins[2]);
-    Vec3Assign(tmpDst, mins[0], maxs[1], mins[2]);
-    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+        // reverse from max point
+        Vec3Assign(tmpSrc, tmpMaxs[0], tmpMaxs[1], tmpMaxs[2]);
+        Vec3Assign(tmpDst, tmpMins[0], tmpMaxs[1], tmpMaxs[2]);
+        TE_SendBeam(tmpSrc, tmpDst, color, duration);
+        Vec3Assign(tmpSrc, tmpMaxs[0], tmpMaxs[1], tmpMaxs[2]);
+        Vec3Assign(tmpDst, tmpMaxs[0], tmpMins[1], tmpMaxs[2]);
+        TE_SendBeam(tmpSrc, tmpDst, color, duration);
+        Vec3Assign(tmpSrc, tmpMaxs[0], tmpMaxs[1], tmpMaxs[2]);
+        Vec3Assign(tmpDst, tmpMaxs[0], tmpMaxs[1], tmpMins[2]);
+        TE_SendBeam(tmpSrc, tmpDst, color, duration);
 
-    // vertical bars not connected to max or min points
-    Vec3Assign(tmpSrc, maxs[0], mins[1], mins[2]);
-    Vec3Assign(tmpDst, maxs[0], mins[1], maxs[2]);
-    TE_SendBeam(tmpSrc, tmpDst, color, duration);
-    Vec3Assign(tmpSrc, mins[0], maxs[1], mins[2]);
-    Vec3Assign(tmpDst, mins[0], maxs[1], maxs[2]);
-    TE_SendBeam(tmpSrc, tmpDst, color, duration);
+        // from corners above/below min/max point
+        Vec3Assign(tmpSrc, tmpMins[0], tmpMins[1], tmpMaxs[2]);
+        Vec3Assign(tmpDst, tmpMins[0], tmpMaxs[1], tmpMaxs[2]);
+        TE_SendBeam(tmpSrc, tmpDst, color, duration);
+        Vec3Assign(tmpSrc, tmpMins[0], tmpMins[1], tmpMaxs[2]);
+        Vec3Assign(tmpDst, tmpMaxs[0], tmpMins[1], tmpMaxs[2]);
+        TE_SendBeam(tmpSrc, tmpDst, color, duration);
+        Vec3Assign(tmpSrc, tmpMaxs[0], tmpMaxs[1], tmpMins[2]);
+        Vec3Assign(tmpDst, tmpMaxs[0], tmpMins[1], tmpMins[2]);
+        TE_SendBeam(tmpSrc, tmpDst, color, duration);
+        Vec3Assign(tmpSrc, tmpMaxs[0], tmpMaxs[1], tmpMins[2]);
+        Vec3Assign(tmpDst, tmpMins[0], tmpMaxs[1], tmpMins[2]);
+        TE_SendBeam(tmpSrc, tmpDst, color, duration);
+
+        // vertical bars not connected to max or min points
+        Vec3Assign(tmpSrc, tmpMaxs[0], tmpMins[1], tmpMins[2]);
+        Vec3Assign(tmpDst, tmpMaxs[0], tmpMins[1], tmpMaxs[2]);
+        TE_SendBeam(tmpSrc, tmpDst, color, duration);
+        Vec3Assign(tmpSrc, tmpMins[0], tmpMaxs[1], tmpMins[2]);
+        Vec3Assign(tmpDst, tmpMins[0], tmpMaxs[1], tmpMaxs[2]);
+        TE_SendBeam(tmpSrc, tmpDst, color, duration);
+    }
 
     return Plugin_Handled;
 }
