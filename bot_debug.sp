@@ -745,11 +745,55 @@ public Action smDrawCollisionAABBs(int client, int args)
         int resi = GetEntPropArraySize(targetId, Prop_Send, "m_Collision");
         PrintToConsole(client, "collision size: %i", resi);
         //res = HasEntProp(targetId, Prop_Send, "m_Collision[0]");
-        if (FindSendPropInfo(className, "m_Collision") >= 0) {
-            PrintToConsole(client, "has collision[0]");
+        PropFieldType type;
+        int num_bits;
+        int local_offset;
+        int array_size;
+        if (FindSendPropInfo(className, "m_Collision", type, num_bits, local_offset, array_size) >= 0) {
+            string typeString;
+            switch(type)
+            {
+                case PropField_Unsupported:
+                {  
+                    typeString = "unsupported";
+                }
+                case PropField_Integer:
+                {  
+                    typeString = "integer";
+                }
+                case PropField_Float:
+                {  
+                    typeString = "float";
+                }
+                case PropField_Entity:
+                {  
+                    typeString = "entity";
+                }
+                case PropField_Vector:
+                {  
+                    typeString = "vector";
+                }
+                case PropField_String:
+                {  
+                    typeString = "string";
+                }
+                case PropField_String_T:
+                {  
+                    typeString = "string_t";
+                }
+                case PropField_Variant:
+                {  
+                    typeString = "variant";
+                }
+                default:
+                {  
+                    typeString = "no_match";
+                }
+            }
+            PrintToConsole(client, "has collision type %s num_bits %i local_offset %i array_size %i", typeString, num_bits, local_offset, array_size);
         }
         else {
-            PrintToConsole(client, "no collision[0]");
+            PrintToConsole(client, "no collision");
         }
             
         return Plugin_Handled;
