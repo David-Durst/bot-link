@@ -575,7 +575,7 @@ public Action smDrawAABBRadius(int client, int args) {
     vals[1][0] += radius;
     vals[1][1] += radius;
     vals[1][2] += zRadius;
-    drawAABBsThroughWalls(duration, vals);
+    drawAABBsThroughWalls(client, duration, vals);
     return Plugin_Handled;
 }
 
@@ -598,26 +598,40 @@ public Action smDrawAABB(int client, int args) {
             vals[i][j] = StringToFloat(floatArg);
         }
     }
-    drawAABBsThroughWalls(duration, vals);
+    drawAABBsThroughWalls(client, duration, vals);
     return Plugin_Handled;
 }
 
-void checkInsideUsingEachDimension(float mins[3], float maxs[3]) {
-    float center[3];
-    for (int i = 0; i < 3; i++) {
-        center[i] = (mins[i] + maxs[i]) / 2.0;
+bool checkInsideUsingEachDimension(float mins[3], float maxs[3]) {
+    float valid[3];
+    if (!TR_PointOutsideWorld(mins)) {
+        valid = mins;
     }
+    else if (!TR_PointOutsideWorld(maxs)) {
+        valid = maxs;
+    }
+    else {
+        for (int i = 0; i < 3; i++) {
+            valid[i] = (mins[i] + maxs[i]) / 2.0;
+        }
+        if (TR_PointOutsideWorld(valid)) {
+            return false;
+        }
+    }
+    PrintToConsole(2, "min (%f, %f, %f)", mins[0], mins[1], mins[2]);
     for (int i = 0; i < 3; i++) {
         float minOneDimOnly[3], maxOneDimOnly[3];
-        minOneDimOnly = center;
+        minOneDimOnly = valid;
         minOneDimOnly[i] = mins[i];
-        maxOneDimOnly = center;
+        maxOneDimOnly = valid;
         maxOneDimOnly[i] = maxs[i];
-        makeInsideWorld(center, minOneDimOnly);
+        makeInsideWorld(valid, minOneDimOnly);
         mins[i] = minOneDimOnly[i];
-        makeInsideWorld(center, maxOneDimOnly);
+        PrintToConsole(2, "min (%f, %f, %f)", mins[0], mins[1], mins[2]);
+        makeInsideWorld(valid, maxOneDimOnly);
         maxs[i] = maxOneDimOnly[i];
     }
+    return true;
 }
 
 void makeInsideWorld(float valid[3], float point[3]) {
@@ -643,7 +657,7 @@ void makeInsideWorld(float valid[3], float point[3]) {
     
 }
 
-void drawAABBsThroughWalls(float duration, float vals[2][3]) {
+void drawAABBsThroughWalls(int client, float duration, float vals[2][3]) {
     for (int i = 0; i < 3; i++) {
         float tmpMin = fmin(vals[0][i], vals[1][i]);
         vals[1][i] = fmax(vals[0][i], vals[1][i]);
@@ -658,7 +672,10 @@ void drawAABBsThroughWalls(float duration, float vals[2][3]) {
     float tmpMins[3], tmpMaxs[3];
     tmpMins = mins;
     tmpMaxs = maxs;
-    checkInsideUsingEachDimension(tmpMins, tmpMaxs);
+    if (!checkInsideUsingEachDimension(tmpMins, tmpMaxs)) {
+        PrintToConsole(client, "min, max, and center not valid, so not drawing an AABB");
+        return;
+    }
     //PrintToConsole(client, "drawing (%f, %f, %f) to (%f, %f, %f)", tmpMaxs[0], tmpMaxs[1], tmpMaxs[2], tmpMins[0], tmpMins[1], tmpMins[2]);
     drawAABBInternal(tmpMins, tmpMaxs, color, duration);
 }
