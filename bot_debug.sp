@@ -24,9 +24,10 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_allHumansSpec", smAllHumansSpec, " - force all humans to spectator team");
     RegConsoleCmd("sm_fakeCmd", smFakeCmd, "<player name> <fake cmd> - do fake client cmd for player");
     RegConsoleCmd("sm_line", smLine, "- draw line in direction player is trying to move");
-    RegConsoleCmd("sm_drawAABBRadius", smDrawAABBRadius, "<duration_seconds> <x> <y> <z> <radius> <z radius | optional>  - draw AABB with fixed radius");
+    RegConsoleCmd("sm_drawAABBRadius", smDrawAABBRadius, "<duration_seconds> <x> <y> <z> <radius> <z radius>  - draw AABB with fixed radius");
     RegConsoleCmd("sm_drawAABB", smDrawAABB, "<duration_seconds> <x0> <y0> <z0> <x1> <y1> <z1> - draw AABB");
-    RegConsoleCmd("sm_refresh", smRefresh, "- draw line in direction player is trying to move");
+    RegConsoleCmd("sm_drawCollisionAABBs", smDrawCollisionAABBs, "<player name> - draw AABBs for player collision areas");
+    RegConsoleCmd("sm_refresh", smRefresh, "- reload the plugin");
     g_iLaserMaterial = PrecacheModel("materials/sprites/laserbeam.vmt");
     g_iWhiteMaterial = PrecacheModel("materials/sprites/white.vmt");
     g_iHaloMaterial = PrecacheModel("materials/sprites/halo01.vmt");
@@ -68,25 +69,6 @@ public Action smSavePos(int client, int args)
     }
 
     if (targetId != -1) {
-        char className[128];
-        bool res = GetEdictClassname(targetId, className, 128);
-        if (res) {
-            PrintToConsole(client, "classname: %s", className);
-        }
-        else {
-            PrintToConsole(client, "no classname");
-        }
-        res = HasEntProp(targetId, Prop_Send, "m_Collision");
-        if (res) {
-            PrintToConsole(client, "has collision");
-        }
-        else {
-            PrintToConsole(client, "no collision");
-        }
-        int resi = GetEntPropArraySize(targetId, Prop_Send, "m_Collision");
-        PrintToConsole(client, "collision size: %i", resi);
-            
-
         GetClientAbsOrigin(targetId, savePos);
         GetClientEyeAngles(client, saveAngle);
         //saveAngle = clientEyeAngle[targetId];
@@ -723,6 +705,58 @@ void drawAABBInternal(float mins[3], float maxs[3], int color[4], float duration
     Vec3Assign(tmpSrc, mins[0], maxs[1], mins[2]);
     Vec3Assign(tmpDst, mins[0], maxs[1], maxs[2]);
     TE_SendBeam(tmpSrc, tmpDst, color, duration);
+}
+
+public Action smDrawCollisionAABBs(int client, int args)
+{
+    if (args != 0 && args != 1) {
+        PrintToConsole(client, "smDrawCollisionAABBs requires 0 or 1 arg");
+        return Plugin_Handled;
+    }
+
+    int targetId;
+    if (args == 1) {
+        char arg[128];
+        // arg 0 is the command
+        GetCmdArg(1, arg, sizeof(arg));
+
+        targetId = GetClientIdByName(arg);
+    }
+    else {
+        targetId = client;
+    }
+
+    if (targetId != -1) {
+        char className[128];
+        bool res = GetEntityNetClass(targetId, className, 128);
+        if (res) {
+            PrintToConsole(client, "classname: %s", className);
+        }
+        else {
+            PrintToConsole(client, "no classname");
+        }
+        res = HasEntProp(targetId, Prop_Send, "m_Collision");
+        if (res) {
+            PrintToConsole(client, "has collision");
+        }
+        else {
+            PrintToConsole(client, "no collision");
+        }
+        int resi = GetEntPropArraySize(targetId, Prop_Send, "m_Collision");
+        PrintToConsole(client, "collision size: %i", resi);
+        //res = HasEntProp(targetId, Prop_Send, "m_Collision[0]");
+        if (FindSendPropInfo(className, "m_Collision") >= 0) {
+            PrintToConsole(client, "has collision[0]");
+        }
+        else {
+            PrintToConsole(client, "no collision[0]");
+        }
+            
+        return Plugin_Handled;
+    }
+        
+    PrintToConsole(client, "smDrawCollisionAABBs received player name that didnt match any valid clients");
+    return Plugin_Handled;
 }
 
 void TE_SendBeam(float src[3], float dst[3], int color[4], float flDur = 0.1)
