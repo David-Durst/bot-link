@@ -618,7 +618,6 @@ bool checkInsideUsingEachDimension(float mins[3], float maxs[3]) {
             return false;
         }
     }
-    PrintToConsole(2, "min (%f, %f, %f)", mins[0], mins[1], mins[2]);
     for (int i = 0; i < 3; i++) {
         float minOneDimOnly[3], maxOneDimOnly[3];
         minOneDimOnly = valid;
@@ -627,7 +626,6 @@ bool checkInsideUsingEachDimension(float mins[3], float maxs[3]) {
         maxOneDimOnly[i] = maxs[i];
         makeInsideWorld(valid, minOneDimOnly);
         mins[i] = minOneDimOnly[i];
-        PrintToConsole(2, "min (%f, %f, %f)", mins[0], mins[1], mins[2]);
         makeInsideWorld(valid, maxOneDimOnly);
         maxs[i] = maxOneDimOnly[i];
     }
