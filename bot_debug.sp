@@ -707,6 +707,48 @@ void drawAABBInternal(float mins[3], float maxs[3], int color[4], float duration
     TE_SendBeam(tmpSrc, tmpDst, color, duration);
 }
 
+stock void toStringPropFieldType(char typeString[100], PropFieldType type) {
+    switch(type)
+    {
+        case PropField_Unsupported:
+        {  
+            typeString = "unsupported";
+        }
+        case PropField_Integer:
+        {  
+            typeString = "integer";
+        }
+        case PropField_Float:
+        {  
+            typeString = "float";
+        }
+        case PropField_Entity:
+        {  
+            typeString = "entity";
+        }
+        case PropField_Vector:
+        {  
+            typeString = "vector";
+        }
+        case PropField_String:
+        {  
+            typeString = "string";
+        }
+        case PropField_String_T:
+        {  
+            typeString = "string_t";
+        }
+        case PropField_Variant:
+        {  
+            typeString = "variant";
+        }
+        default:
+        {  
+            typeString = "no_match";
+        }
+    }
+}
+
 public Action smDrawCollisionAABBs(int client, int args)
 {
     if (args != 0 && args != 1) {
@@ -749,51 +791,42 @@ public Action smDrawCollisionAABBs(int client, int args)
         int num_bits;
         int local_offset;
         int array_size;
-        if (FindSendPropInfo(className, "m_Collision", type, num_bits, local_offset, array_size) >= 0) {
-            string typeString;
-            switch(type)
-            {
-                case PropField_Unsupported:
-                {  
-                    typeString = "unsupported";
-                }
-                case PropField_Integer:
-                {  
-                    typeString = "integer";
-                }
-                case PropField_Float:
-                {  
-                    typeString = "float";
-                }
-                case PropField_Entity:
-                {  
-                    typeString = "entity";
-                }
-                case PropField_Vector:
-                {  
-                    typeString = "vector";
-                }
-                case PropField_String:
-                {  
-                    typeString = "string";
-                }
-                case PropField_String_T:
-                {  
-                    typeString = "string_t";
-                }
-                case PropField_Variant:
-                {  
-                    typeString = "variant";
-                }
-                default:
-                {  
-                    typeString = "no_match";
-                }
-            }
-            PrintToConsole(client, "has collision type %s num_bits %i local_offset %i array_size %i", typeString, num_bits, local_offset, array_size);
+
+        int global_offset;
+        global_offset = FindSendPropInfo(className, "m_Collision", type, num_bits, local_offset, array_size);
+        if (global_offset >= 0) {
+            char typeString[100];
+            toStringPropFieldType(typeString, type);
+            PrintToConsole(client, "has collision global offset %i type %s num_bits %i local_offset %i array_size %i", global_offset, typeString, num_bits, local_offset, array_size);
         }
         else {
             PrintToConsole(client, "no collision");
+        }
+
+        global_offset = FindSendPropInfo(className, "m_vecMins", type, num_bits, local_offset, array_size);
+        if (global_offset >= 0) {
+            char typeString[100];
+            toStringPropFieldType(typeString, type);
+            PrintToConsole(client, "has vecMins global offset %i type %s num_bits %i local_offset %i array_size %i", global_offset, typeString, num_bits, local_offset, array_size);
+            float vecMins[3];
+            GetEntPropVector(client, Prop_Send, "m_vecMins", vecMins);
+            PrintToConsole(client, "vecMins (%f, %f, %f)", vecMins[0], vecMins[1], vecMins[2]);
+        }
+        else {
+            PrintToConsole(client, "no vecMins");
+        }
+
+        global_offset = FindSendPropInfo(className, "m_vecMaxs", type, num_bits, local_offset, array_size);
+        if (global_offset >= 0) {
+            char typeString[100];
+            toStringPropFieldType(typeString, type);
+            PrintToConsole(client, "has vecMaxs global offset %i type %s num_bits %i local_offset %i array_size %i", global_offset, typeString, num_bits, local_offset, array_size);
+            float vecMaxs[3];
+            GetEntPropVector(client, Prop_Send, "m_vecMaxs", vecMaxs);
+            PrintToConsole(client, "vecMaxs (%f, %f, %f)", vecMaxs[0], vecMaxs[1], vecMaxs[2]);
+        }
+        else {
+            PrintToConsole(client, "no vecMaxs");
         }
             
         return Plugin_Handled;
