@@ -42,13 +42,18 @@ bool inputMovement[MAXPLAYERS+1][NUM_MOVEMENT_INPUTS];
 float inputAngleDeltaPct[MAXPLAYERS+1][3];
 
 // GetClientEyePosition - this will store where looking
+
 // check GetClientAbsOrigin vs  GetEntPropVector(client, Prop_Send, "m_vecOrigin", fPos); 
+// 8-21-22 - abs origin gets the position fo the player model in absolute space
+// m_vecOrigin gets it relevant to parent, which is 0 for all players since not attached.
+// m_vecAbsOrigin is in prop_data, which should always be same as GetClientAbsOrigin, but not in demo so dont
+// care about it for now
+
 // states to outpuot
 float clientEyePos[MAXPLAYERS+1][3];
 float clientEyeAngle[MAXPLAYERS+1][3];
 float clientEyeAngleWithRecoil[MAXPLAYERS+1][3];
 float clientFootPos[MAXPLAYERS+1][3];
-float clientFootPosOther[MAXPLAYERS+1][3];
 float clientVelocity[MAXPLAYERS+1][3];
 float mAimPunchAngle[MAXPLAYERS+1][3];
 float mViewAdjustedAimPunchAngle[MAXPLAYERS+1][3];
@@ -398,7 +403,6 @@ stock void WriteState() {
             GetViewAngleWithRecoil(client);
             // this gets position result from getpos_exact
             GetClientAbsOrigin(client, clientFootPos[client]);
-            GetEntPropVector(client, Prop_Send, "m_vecOrigin", clientFootPosOther[client]); 
             // this gets velocity
             GetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", clientVelocity[client]);
 
@@ -447,7 +451,7 @@ stock void WriteState() {
                                     ... "%i,%i,"
                                     ... "%i,%i,"
                                     ... "%f,%f,"
-                                    ... "%f,%f,%f,"
+                                    ... "%f,%f,"
                                     ... "%f,%f,%f,"
                                     ... "%f,%f,"
                                     ... "%f,%f,"
@@ -460,7 +464,9 @@ stock void WriteState() {
                 GetGrenade(client, Smoke), GetGrenade(client, HE), 
                 GetGrenade(client, Decoy), GetGrenade(client, Incendiary), 
                 clientEyePos[client][0], clientEyePos[client][1], 
-                clientEyePos[client][2], clientFootPos[client][2], clientFootPosOther[client][2],
+                // 8-21-22 - investigated using separate eye and foot poses for all three dimensions
+                // didnt make a different as eye pos is camera pos and thats directly above origin
+                clientEyePos[client][2], clientFootPos[client][2], 
                 clientVelocity[client][0], clientVelocity[client][1], clientVelocity[client][2],
                 clientEyeAngle[client][0], clientEyeAngle[client][1],
                 mAimPunchAngle[client][0], mAimPunchAngle[client][1],
@@ -480,6 +486,7 @@ stock void GetViewAngleWithRecoil(int client) {
     // this gets angle from getpos, getpos_exact seems to be this in range of 0-360 for pitch,
     // which is weird as legal pitch range is -90-90 yaw
     // tried GetClientAbsAngles and those werent as useful, might be with abs value for getpos_exact
+    // 8-20-22 - confirmed that abs angles are for body, not camera (so pitch never 0), getpos_exact is similarly for body and not camera
     // confirmed that both GetClientAbsAngles and GetClientEyeAngles dont adjust for recoil
 
     // since bots drift, if under my control, dont actually update EyeAngles
