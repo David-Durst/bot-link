@@ -45,6 +45,7 @@ float inputAngleDeltaPct[MAXPLAYERS+1][3];
 // check GetClientAbsOrigin vs  GetEntPropVector(client, Prop_Send, "m_vecOrigin", fPos); 
 // states to outpuot
 float clientEyePos[MAXPLAYERS+1][3];
+float clientEyePosOther[MAXPLAYERS+1][3];
 float clientEyeAngle[MAXPLAYERS+1][3];
 float clientEyeAngleWithRecoil[MAXPLAYERS+1][3];
 float clientFootPos[MAXPLAYERS+1][3];
@@ -398,7 +399,13 @@ stock void WriteState() {
             GetViewAngleWithRecoil(client);
             // this gets position result from getpos_exact
             GetClientAbsOrigin(client, clientFootPos[client]);
+            // I would prefer to use m_vecAbsOrigin, but thats not a send prop
             GetEntPropVector(client, Prop_Send, "m_vecOrigin", clientFootPosOther[client]); 
+            clientEyePosOther[client][0] = GetEntPropFloat(client, Prop_Send, "m_vecViewOffset[0]"); 
+            clientEyePosOther[client][1] = GetEntPropFloat(client, Prop_Send, "m_vecViewOffset[1]"); 
+            clientEyePosOther[client][2] = GetEntPropFloat(client, Prop_Send, "m_vecViewOffset[2]"); 
+            //AddVectors(clientEyePosOther[client], clientFootPosOther[client], clientEyePosOther[client]);
+
             // this gets velocity
             GetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", clientVelocity[client]);
 
@@ -446,7 +453,9 @@ stock void WriteState() {
                                     ... "%i,%i,"
                                     ... "%i,%i,"
                                     ... "%i,%i,"
-                                    ... "%f,%f,"
+                                    ... "%f,%f,%f,"
+                                    ... "%f,%f,%f,"
+                                    ... "%f,%f,%f,"
                                     ... "%f,%f,%f,"
                                     ... "%f,%f,%f,"
                                     ... "%f,%f,"
@@ -459,8 +468,10 @@ stock void WriteState() {
                 GetGrenade(client, Flash), GetGrenade(client, Molotov), 
                 GetGrenade(client, Smoke), GetGrenade(client, HE), 
                 GetGrenade(client, Decoy), GetGrenade(client, Incendiary), 
-                clientEyePos[client][0], clientEyePos[client][1], 
-                clientEyePos[client][2], clientFootPos[client][2], clientFootPosOther[client][2],
+                clientEyePos[client][0], clientEyePos[client][1], clientEyePos[client][2],
+                clientEyePosOther[client][0], clientEyePosOther[client][1], clientEyePosOther[client][2],
+                clientFootPos[client][0], clientFootPos[client][1], clientFootPos[client][2],
+                clientFootPosOther[client][0], clientFootPosOther[client][1], clientFootPosOther[client][2],
                 clientVelocity[client][0], clientVelocity[client][1], clientVelocity[client][2],
                 clientEyeAngle[client][0], clientEyeAngle[client][1],
                 mAimPunchAngle[client][0], mAimPunchAngle[client][1],
@@ -480,6 +491,7 @@ stock void GetViewAngleWithRecoil(int client) {
     // this gets angle from getpos, getpos_exact seems to be this in range of 0-360 for pitch,
     // which is weird as legal pitch range is -90-90 yaw
     // tried GetClientAbsAngles and those werent as useful, might be with abs value for getpos_exact
+    // 8-20-22 - confirmed that abs angles are for body, not camera (so pitch never 0), getpos_exact is similarly for body and not camera
     // confirmed that both GetClientAbsAngles and GetClientEyeAngles dont adjust for recoil
 
     // since bots drift, if under my control, dont actually update EyeAngles
