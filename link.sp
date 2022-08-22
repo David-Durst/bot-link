@@ -389,7 +389,7 @@ stock void WriteState() {
         ... "Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,Has C4,"
         ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
         ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,"
-        ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped");
+        ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount");
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
     for (int client = 1; client <= MaxClients; client++) {
@@ -443,6 +443,7 @@ stock void WriteState() {
 
             int isAirborne = !(GetEntityFlags(client) & FL_ONGROUND) ? 1 : 0;
             int isScoped = GetEntProp(client, Prop_Send, "m_bIsScoped") ? 1 : 0;
+            float duckAmount = GetEntPropFloat(client, Prop_Send, "m_flDuckAmount");
 
             tmpStateFile.WriteLine("%i,%i,%s,%i,%i,"
                                     ... "%i,%i,%i,"
@@ -456,7 +457,7 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%f,%f,"
                                     ... "%f,%f,"
-                                    ... "%i,%i,%i,%i",
+                                    ... "%i,%i,%i,%i,%f",
                 currentFrame, client, clientName, clientTeam, activeWeaponId,
                 rifleWeaponId, rifleClipAmmo, rifleReserveAmmo,
                 pistolWeaponId, pistolClipAmmo, pistolReserveAmmo, hasC4,
@@ -471,7 +472,7 @@ stock void WriteState() {
                 clientEyeAngle[client][0], clientEyeAngle[client][1],
                 mAimPunchAngle[client][0], mAimPunchAngle[client][1],
                 clientEyeAngleWithRecoil[client][0], clientEyeAngleWithRecoil[client][1],
-                clientOtherState[client], clientFake, isAirborne, isScoped);
+                clientOtherState[client], clientFake, isAirborne, isScoped, duckAmount);
         }
     }
     tmpStateFile.Close();
@@ -594,6 +595,9 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
         printHumanAngleStats(fAngles, iButtons);
     }
     if (!inputSet[client]) {
+        // DO NOT SET TELEPORT HERE
+        // game will continue to reset to pre-teleport angles
+        // so just dont change bot angles if not driving them every frame
         inputSetLastFrame[client] = false;
         return Plugin_Continue;
     }
