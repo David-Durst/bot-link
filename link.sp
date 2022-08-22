@@ -473,6 +473,24 @@ stock void WriteState() {
                 mAimPunchAngle[client][0], mAimPunchAngle[client][1],
                 clientEyeAngleWithRecoil[client][0], clientEyeAngleWithRecoil[client][1],
                 clientOtherState[client], clientFake, isAirborne, isScoped, duckAmount);
+
+            /*
+            int sz = GetEntPropArraySize(client, Prop_Send, "m_flPoseParameter");
+            float poseParams[24];
+            for (int j = 0; j < sz; j++) {
+                poseParams[j] = GetEntPropFloat(client, Prop_Send, "m_flPoseParameter", j);
+            }
+            tmpStateFile.WriteLine("%f,%f,%f,%f,%f,%f,"
+                                    ... "%f,%f,%f,%f,%f,%f,"
+                                    ... "%f,%f,%f,%f,%f,%f,"
+                                    ... "%f,%f,%f,%f,%f,%f,",
+                                    poseParams[0], poseParams[1], poseParams[2], poseParams[3], poseParams[4], poseParams[5],
+                                    poseParams[6], poseParams[7], poseParams[8], poseParams[9], poseParams[10], poseParams[11],
+                                    poseParams[12], poseParams[13], poseParams[14], poseParams[15], poseParams[16], poseParams[17],
+                                    poseParams[18], poseParams[19], poseParams[20], poseParams[21], poseParams[22], poseParams[23]);
+            */
+
+
         }
     }
     tmpStateFile.Close();
