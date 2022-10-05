@@ -388,7 +388,7 @@ stock void WriteState() {
         ... "Pistol Id,Pistol Clip Ammo,Pistol Reserve Ammo,"
         ... "Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,Has C4,"
         ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
-        ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,"
+        ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,Viewpunch Angle Pitch,Viewpunch Angle Yaw,"
         ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount");
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
@@ -457,6 +457,7 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%f,%f,"
                                     ... "%f,%f,"
+                                    ... "%f,%f,"
                                     ... "%i,%i,%i,%i,%f",
                 currentFrame, client, clientName, clientTeam, activeWeaponId,
                 rifleWeaponId, rifleClipAmmo, rifleReserveAmmo,
@@ -471,6 +472,7 @@ stock void WriteState() {
                 clientVelocity[client][0], clientVelocity[client][1], clientVelocity[client][2],
                 clientEyeAngle[client][0], clientEyeAngle[client][1],
                 mAimPunchAngle[client][0], mAimPunchAngle[client][1],
+                mViewPunchAngle[client][0], mViewPunchAngle[client][1],
                 clientEyeAngleWithRecoil[client][0], clientEyeAngleWithRecoil[client][1],
                 clientOtherState[client], clientFake, isAirborne, isScoped, duckAmount);
 
