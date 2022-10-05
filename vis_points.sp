@@ -1,10 +1,18 @@
-#define MAX_VIS_POINTS 2000
+#include <profiler>
+#define MAX_VIS_POINTS 72000
+#define MAX_ROWS 20
 float visPoints[MAX_VIS_POINTS][3];
-bool visValid[MAX_VIS_POINTS][MAX_VIS_POINTS];
-char visValidBuf[MAX_VIS_POINTS + 1];
+bool visValid[MAX_ROWS][MAX_VIS_POINTS];
 
+int visRangeStart, visRangeNum;
+char visRangeBuffer[MAX_INPUT_LENGTH], visRangeExplodedBuffer[MAX_INPUT_FIELDS][MAX_INPUT_LENGTH];
 int numVisPoints;
 char visPointsBuffer[MAX_INPUT_LENGTH], visPointsExplodedBuffer[MAX_INPUT_FIELDS][MAX_INPUT_LENGTH];
+
+static char visRangeFilePath[] = "addons/sourcemod/bot-link-data/vis_range.csv";
+static char tmpVisRangeFilePath[] = "addons/sourcemod/bot-link-data/vis_range.csv.tmp.read";
+File tmpVisRangeFile;
+bool tmpVisRangeOpen = false;
 
 static char visPointsFilePath[] = "addons/sourcemod/bot-link-data/vis_points.csv";
 static char tmpVisPointsFilePath[] = "addons/sourcemod/bot-link-data/vis_points.csv.tmp.read";
@@ -16,6 +24,28 @@ static char tmpVisValidFilePath[] = "addons/sourcemod/bot-link-data/vis_valid.cs
 File tmpVisValidFile;
 bool tmpVisValidOpen = false;
 
+stock void ReadVisRange() {
+    if (tmpVisRangeOpen) {
+        tmpVisRangeFile.Close();
+        tmpVisRangeOpen = false;
+    }
+    // move file to tmp location so not overwritten, then read it and run each line in console
+    if (FileExists(visRangeFilePath)) {
+        RenameFile(tmpVisRangeFilePath, visRangeFilePath);
+
+        tmpVisRangeFile = OpenFile(tmpVisRangeFilePath, "r", false, "");
+        tmpVisRangeOpen = true;
+
+        tmpVisRangeFile.ReadLine(visRangeBuffer, MAX_INPUT_LENGTH); 
+        ExplodeString(visRangeBuffer, ",", visRangeExplodedBuffer, MAX_INPUT_FIELDS, MAX_INPUT_LENGTH);
+        visRangeStart = StringToFloat(visRangeExplodedBuffer[0]);
+        visRangeNum = StringToFloat(visRangeExplodedBuffer[1]);
+        PrintToServer("Range start %i num %i", visRangeStart, visRangeNum);
+
+        tmpVisRangeFile.Close();
+        tmpVisRangeOpen = false;
+    }
+}
 
 stock void ReadVisPoints() {
     if (tmpVisPointsOpen) {
@@ -58,10 +88,10 @@ stock void WriteVisValid() {
 
     for(int i = 0; i < numVisPoints; i++) {
         for (int j = 0; j < numVisPoints; j++) {
-            visValidBuf[j] = visValid[i][j] ? 't' : 'f';
+            if (visValid[i][j]) {
+                tmpVisValidFile.WriteLine("%i,%i", i, j);
+            }
         }
-        visValidBuf[numVisPoints] = '\0';
-        tmpVisValidFile.WriteLine(visValidBuf);
     }
 
     tmpVisValidFile.Close();
@@ -100,12 +130,15 @@ stock bool VisibilityTestWithPoint(const float sourcePosition[3], const float ta
     return true;
 }
 
-public Action smQueryAllVisPointPairs(int client, int args)
+public Action smQueryRangeVisPointPairs(int client, int args)
 {
-    ReadVisPoints();
+    ReadVisRange();
+    if (visRangeStart == 0) {
+        ReadVisPoints();
+    }
 
     int numValid = 0, numChecked = 0;
-    for (int i = 0; i < numVisPoints; i++) {
+    for (int i = visRangeStart; i < visRangeStart + visRangeNum; i++) {
         for (int j = i + 1; j < numVisPoints; j++) {
             visValid[i][j] = VisibilityTest(visPoints[i], visPoints[j]);
             if (visValid[i][j]) {
