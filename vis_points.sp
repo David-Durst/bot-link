@@ -1,8 +1,9 @@
 #include <profiler>
-#define MAX_VIS_POINTS 72000
-#define MAX_ROWS 20
+#define MAX_VIS_POINTS 22000
+#define MAX_VALID 1000000
 float visPoints[MAX_VIS_POINTS][3];
-bool visValid[MAX_ROWS][MAX_VIS_POINTS];
+int startValid[MAX_VIS_POINTS], numValid[MAX_VIS_POINTS];
+int visValid[MAX_VALID];
 
 int visRangeStart, visRangeNum;
 float overallPctValid, overallRaysPerSecond;
@@ -87,11 +88,9 @@ stock void WriteVisValid() {
         return;
     }
 
-    for(int i = 0; i < visRangeNum; i++) {
-        for (int j = 0; j < numVisPoints; j++) {
-            if (visValid[i][j]) {
-                tmpVisValidFile.WriteLine("%i,%i", visRangeStart + i, j);
-            }
+    for(int i = visRangeStart; i < visRangeStart + visRangeNum; i++) {
+        for (int j = startValid[i]; j < startValid[i] + numValid[i]; j++) {
+            tmpVisValidFile.WriteLine("%i,%i", i, visValid[j]);
         }
     }
 
@@ -141,13 +140,24 @@ public Action smQueryRangeVisPointPairs(int client, int args)
     }
 
     Profiler prof = CreateProfiler();
-    int numValid = 0, numChecked = 0;
+    int numValidIter = 0, numChecked = 0;
     StartProfiling(prof);
     for (int i = 0; i < visRangeNum; i++) {
+        int iStart = visRangeStart + i;
+        if (iStart == 0) {
+            startValid[iStart] = 0;
+        }
+        else {
+            startValid[iStart] = startValid[iStart - 1] + numValid[iStart - 1];
+        }
+        numValid[iStart] = 0;
+        int curValidIndex = startValid[iStart];
         for (int j = visRangeStart + i + 1; j < numVisPoints; j++) {
-            visValid[i][j] = VisibilityTest(visPoints[visRangeStart + i], visPoints[j]);
-            if (visValid[i][j]) {
-                numValid++;
+            if (VisibilityTest(visPoints[iStart], visPoints[j])) {
+                visValid[curValidIndex] = j;
+                curValidIndex++;
+                numValidIter++;
+                numValid[iStart]++;
             }
             numChecked++;
         }
@@ -156,7 +166,7 @@ public Action smQueryRangeVisPointPairs(int client, int args)
     WriteVisValid();
     StopProfiling(prof);
     float profTime = GetProfilerTime(prof);
-    float curIterPctValid = (numValid * 1.0) / numChecked;
+    float curIterPctValid = (numValidIter * 1.0) / numChecked;
     float curIterRaysPerSecond = (numChecked * 1.0) / profTime;
     PrintToServer("cur iter: %i / %i (%f pct) vis pairs valid at %f rays / sec in %f seconds", 
         numValid, numChecked, curIterPctValid, curIterRaysPerSecond, profTime);
