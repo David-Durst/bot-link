@@ -115,7 +115,7 @@ public void OnPluginStart()
     RegConsoleCmd("sm_skipFirstRound", smSkipFirstRound, "- force team to win a round (in way that server recognizes)");
     RegConsoleCmd("sm_printLink", smPrintLink, "- print debugging values from bot-link");
     RegConsoleCmd("sm_recordMaxs", smRecordMaxs, "- record max angular values for debugging");
-    RegConsoleCmd("sm_queryAllVisPointPairs", smQueryAllVisPointPairs, "- query all vis point pairs to determine basic PVS");
+    RegConsoleCmd("sm_queryRangeVisPointPairs", smQueryRangeVisPointPairs, "- query all vis point pairs to determine basic PVS");
     RegisterDebugFunctions();
     HookEvent("round_start", OnRoundStart, EventHookMode_PostNoCopy);
     HookEvent("bomb_defused", OnBombDefused, EventHookMode_PostNoCopy);

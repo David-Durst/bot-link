@@ -5,6 +5,7 @@ float visPoints[MAX_VIS_POINTS][3];
 bool visValid[MAX_ROWS][MAX_VIS_POINTS];
 
 int visRangeStart, visRangeNum;
+float overallPctValid, overallRaysPerSecond;
 char visRangeBuffer[MAX_INPUT_LENGTH], visRangeExplodedBuffer[MAX_INPUT_FIELDS][MAX_INPUT_LENGTH];
 int numVisPoints;
 char visPointsBuffer[MAX_INPUT_LENGTH], visPointsExplodedBuffer[MAX_INPUT_FIELDS][MAX_INPUT_LENGTH];
@@ -38,8 +39,8 @@ stock void ReadVisRange() {
 
         tmpVisRangeFile.ReadLine(visRangeBuffer, MAX_INPUT_LENGTH); 
         ExplodeString(visRangeBuffer, ",", visRangeExplodedBuffer, MAX_INPUT_FIELDS, MAX_INPUT_LENGTH);
-        visRangeStart = StringToFloat(visRangeExplodedBuffer[0]);
-        visRangeNum = StringToFloat(visRangeExplodedBuffer[1]);
+        visRangeStart = StringToInt(visRangeExplodedBuffer[0]);
+        visRangeNum = StringToInt(visRangeExplodedBuffer[1]);
         PrintToServer("Range start %i num %i", visRangeStart, visRangeNum);
 
         tmpVisRangeFile.Close();
@@ -86,10 +87,10 @@ stock void WriteVisValid() {
         return;
     }
 
-    for(int i = 0; i < numVisPoints; i++) {
+    for(int i = 0; i < visRangeNum; i++) {
         for (int j = 0; j < numVisPoints; j++) {
             if (visValid[i][j]) {
-                tmpVisValidFile.WriteLine("%i,%i", i, j);
+                tmpVisValidFile.WriteLine("%i,%i", visRangeStart + i, j);
             }
         }
     }
@@ -135,12 +136,16 @@ public Action smQueryRangeVisPointPairs(int client, int args)
     ReadVisRange();
     if (visRangeStart == 0) {
         ReadVisPoints();
+        overallPctValid = 1.0;
+        overallRaysPerSecond = 1.0;
     }
 
+    Profiler prof = CreateProfiler();
     int numValid = 0, numChecked = 0;
-    for (int i = visRangeStart; i < visRangeStart + visRangeNum; i++) {
-        for (int j = i + 1; j < numVisPoints; j++) {
-            visValid[i][j] = VisibilityTest(visPoints[i], visPoints[j]);
+    StartProfiling(prof);
+    for (int i = 0; i < visRangeNum; i++) {
+        for (int j = visRangeStart + i + 1; j < numVisPoints; j++) {
+            visValid[i][j] = VisibilityTest(visPoints[visRangeStart + i], visPoints[j]);
             if (visValid[i][j]) {
                 numValid++;
             }
@@ -149,6 +154,18 @@ public Action smQueryRangeVisPointPairs(int client, int args)
     }
 
     WriteVisValid();
-    PrintToServer("%i / %i (%f pct) vis pairs valid", numValid, numChecked, (numValid * 1.0) / numChecked);
+    StopProfiling(prof);
+    float profTime = GetProfilerTime(prof);
+    float curIterPctValid = (numValid * 1.0) / numChecked;
+    float curIterRaysPerSecond = (numChecked * 1.0) / profTime;
+    PrintToServer("cur iter: %i / %i (%f pct) vis pairs valid at %f rays / sec in %f seconds", 
+        numValid, numChecked, curIterPctValid, curIterRaysPerSecond, profTime);
+    overallPctValid = (overallPctValid * visRangeStart + curIterPctValid * visRangeNum) / 
+        (visRangeStart + visRangeNum);
+    overallRaysPerSecond = (overallRaysPerSecond * visRangeStart + curIterRaysPerSecond * visRangeNum) / 
+        (visRangeStart + visRangeNum);
+    PrintToServer("overall: %f pct vis pairs valid at %f rays / sec", 
+        overallPctValid, overallRaysPerSecond);
+    delete prof;
     return Plugin_Handled;
 }
