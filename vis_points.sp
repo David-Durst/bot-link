@@ -144,7 +144,8 @@ public Action smQueryRangeVisPointPairs(int client, int args)
     StartProfiling(prof);
     for (int i = 0; i < visRangeNum; i++) {
         int iStart = visRangeStart + i;
-        if (iStart == 0) {
+        // restart using visValid array every iteration
+        if (i == 0) {
             startValid[iStart] = 0;
         }
         else {
