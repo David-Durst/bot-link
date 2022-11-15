@@ -355,7 +355,7 @@ stock void WriteGeneral() {
         PrintToServer("opening tmpGeneralFile returned null");
         return;
     }
-    tmpGeneralFile.WriteLine("Map Name,Round Number,T Score,CT Score,Map Number,Tick Rate");
+    tmpGeneralFile.WriteLine("Map Name,Round Number,T Score,CT Score,Map Number,Tick Rate,Game Time");
 
     char mapName[MAX_INPUT_LENGTH];
     GetCurrentMap(mapName, MAX_INPUT_LENGTH);
@@ -363,7 +363,7 @@ stock void WriteGeneral() {
     int tScore = CS_GetTeamScore(CS_TEAM_T),
         ctScore = CS_GetTeamScore(CS_TEAM_CT);
 
-    tmpGeneralFile.WriteLine("%s,%i,%i,%i,%i,%f", mapName, roundNumber, tScore, ctScore, mapNumber, GetTickInterval());
+    tmpGeneralFile.WriteLine("%s,%i,%i,%i,%i,%f,%f", mapName, roundNumber, tScore, ctScore, mapNumber, GetTickInterval(), GetGameTime());
 
     tmpGeneralFile.Close();
     tmpGeneralOpen = false;
@@ -384,12 +384,13 @@ stock void WriteState() {
         return;
     }
     tmpStateFile.WriteLine("State Frame,Client Id,Name,Team,Active Weapon Id,"
+        ... "Next Primary Attack,Next Secondary Attack,Time Weapon Idle,Reload Visually Complete,"
         ... "Rifle Id,Rifle Clip Ammo,Rifle Reserve Ammo,"
         ... "Pistol Id,Pistol Clip Ammo,Pistol Reserve Ammo,"
         ... "Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,Has C4,"
         ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
         ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,Viewpunch Angle Pitch,Viewpunch Angle Yaw,"
-        ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount");
+        ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount,Next Primary Attack");
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
     for (int client = 1; client <= MaxClients; client++) {
@@ -419,8 +420,19 @@ stock void WriteState() {
 
             int activeWeaponEntityId = GetActiveWeaponEntityId(client);
             int activeWeaponId = -1;
+            float nextPrimaryAttack = -1.0;
+            float nextSecondaryAttack = -1.0;
+            float timeWeaponIdle = -1.0;
+            int reloadVisuallyComplete = -1;
+            // this should be something, but its always 0
+            // int nextThinkTick = -1;
             if (activeWeaponEntityId != -1) {
                 activeWeaponId = GetWeaponIdFromEntityId(activeWeaponEntityId);
+                nextPrimaryAttack = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flNextPrimaryAttack");
+                nextSecondaryAttack = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flNextSecondaryAttack");
+                timeWeaponIdle = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flNextSecondaryAttack");
+                reloadVisuallyComplete = GetEntProp(activeWeaponEntityId, Prop_Send, "m_bReloadVisuallyComplete");
+                //nextThinkTick = GetEntProp(activeWeaponEntityId, Prop_Send, "m_nNextThinkTick");
             }
 
             int rifleId = GetRifleEntityId(client), rifleWeaponId = -1;
@@ -444,8 +456,11 @@ stock void WriteState() {
             int isAirborne = !(GetEntityFlags(client) & FL_ONGROUND) ? 1 : 0;
             int isScoped = GetEntProp(client, Prop_Send, "m_bIsScoped") ? 1 : 0;
             float duckAmount = GetEntPropFloat(client, Prop_Send, "m_flDuckAmount");
+            // this doesnt tell me anything beyond m_flNextPrimaryAttack, so ignoring it
+            //float nextAttack = GetEntPropFloat(client, Prop_Send, "m_flNextAttack");
 
             tmpStateFile.WriteLine("%i,%i,%s,%i,%i,"
+                                    ... "%f,%f,%f,%i,"
                                     ... "%i,%i,%i,"
                                     ... "%i,%i,%i,%i,"
                                     ... "%i,%i,"
@@ -460,6 +475,7 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%i,%i,%i,%i,%f",
                 currentFrame, client, clientName, clientTeam, activeWeaponId,
+                nextPrimaryAttack, nextSecondaryAttack, timeWeaponIdle, reloadVisuallyComplete,
                 rifleWeaponId, rifleClipAmmo, rifleReserveAmmo,
                 pistolWeaponId, pistolClipAmmo, pistolReserveAmmo, hasC4,
                 GetGrenade(client, Flash), GetGrenade(client, Molotov), 
