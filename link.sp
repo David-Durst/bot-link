@@ -384,13 +384,13 @@ stock void WriteState() {
         return;
     }
     tmpStateFile.WriteLine("State Frame,Client Id,Name,Team,Active Weapon Id,"
-        ... "Next Primary Attack,Next Secondary Attack,Time Weapon Idle,Reload Visually Complete,"
+        ... "Next Primary Attack,Next Secondary Attack,Time Weapon Idle,Recoil Index,Reload Visually Complete,"
         ... "Rifle Id,Rifle Clip Ammo,Rifle Reserve Ammo,"
         ... "Pistol Id,Pistol Clip Ammo,Pistol Reserve Ammo,"
         ... "Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,Has C4,"
         ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
         ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,Viewpunch Angle Pitch,Viewpunch Angle Yaw,"
-        ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount,Next Primary Attack");
+        ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount");
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
     for (int client = 1; client <= MaxClients; client++) {
@@ -423,6 +423,7 @@ stock void WriteState() {
             float nextPrimaryAttack = -1.0;
             float nextSecondaryAttack = -1.0;
             float timeWeaponIdle = -1.0;
+            float recoilIndex = -1.0;
             int reloadVisuallyComplete = -1;
             // this should be something, but its always 0
             // int nextThinkTick = -1;
@@ -431,6 +432,7 @@ stock void WriteState() {
                 nextPrimaryAttack = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flNextPrimaryAttack");
                 nextSecondaryAttack = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flNextSecondaryAttack");
                 timeWeaponIdle = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flNextSecondaryAttack");
+                recoilIndex = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flRecoilIndex");
                 reloadVisuallyComplete = GetEntProp(activeWeaponEntityId, Prop_Send, "m_bReloadVisuallyComplete");
                 //nextThinkTick = GetEntProp(activeWeaponEntityId, Prop_Send, "m_nNextThinkTick");
             }
@@ -460,7 +462,7 @@ stock void WriteState() {
             //float nextAttack = GetEntPropFloat(client, Prop_Send, "m_flNextAttack");
 
             tmpStateFile.WriteLine("%i,%i,%s,%i,%i,"
-                                    ... "%f,%f,%f,%i,"
+                                    ... "%f,%f,%f,%f,%i,"
                                     ... "%i,%i,%i,"
                                     ... "%i,%i,%i,%i,"
                                     ... "%i,%i,"
@@ -475,7 +477,7 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%i,%i,%i,%i,%f",
                 currentFrame, client, clientName, clientTeam, activeWeaponId,
-                nextPrimaryAttack, nextSecondaryAttack, timeWeaponIdle, reloadVisuallyComplete,
+                nextPrimaryAttack, nextSecondaryAttack, timeWeaponIdle, recoilIndex, reloadVisuallyComplete,
                 rifleWeaponId, rifleClipAmmo, rifleReserveAmmo,
                 pistolWeaponId, pistolClipAmmo, pistolReserveAmmo, hasC4,
                 GetGrenade(client, Flash), GetGrenade(client, Molotov), 
