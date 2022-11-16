@@ -431,7 +431,7 @@ stock void WriteState() {
                 activeWeaponId = GetWeaponIdFromEntityId(activeWeaponEntityId);
                 nextPrimaryAttack = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flNextPrimaryAttack");
                 nextSecondaryAttack = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flNextSecondaryAttack");
-                timeWeaponIdle = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flNextSecondaryAttack");
+                timeWeaponIdle = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flTimeWeaponIdle");
                 recoilIndex = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flRecoilIndex");
                 reloadVisuallyComplete = GetEntProp(activeWeaponEntityId, Prop_Send, "m_bReloadVisuallyComplete");
                 //nextThinkTick = GetEntProp(activeWeaponEntityId, Prop_Send, "m_nNextThinkTick");
