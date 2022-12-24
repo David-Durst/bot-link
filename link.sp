@@ -386,8 +386,8 @@ stock void WriteState() {
     tmpStateFile.WriteLine("State Frame,Client Id,Name,Team,Active Weapon Id,"
         ... "Next Primary Attack,Next Secondary Attack,Time Weapon Idle,Recoil Index,Reload Visually Complete,"
         ... "Rifle Id,Rifle Clip Ammo,Rifle Reserve Ammo,"
-        ... "Pistol Id,Pistol Clip Ammo,Pistol Reserve Ammo,"
-        ... "Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,Has C4,"
+        ... "Pistol Id,Pistol Clip Ammo,Pistol Reserve Ammo,Has C4,"
+        ... "Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,Zeus,"
         ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
         ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,Viewpunch Angle Pitch,Viewpunch Angle Yaw,"
         ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount");
@@ -467,7 +467,7 @@ stock void WriteState() {
                                     ... "%i,%i,%i,%i,"
                                     ... "%i,%i,"
                                     ... "%i,%i,"
-                                    ... "%i,%i,"
+                                    ... "%i,%i,%i,"
                                     ... "%f,%f,"
                                     ... "%f,%f,"
                                     ... "%f,%f,%f,"
@@ -482,7 +482,7 @@ stock void WriteState() {
                 pistolWeaponId, pistolClipAmmo, pistolReserveAmmo, hasC4,
                 GetGrenade(client, Flash), GetGrenade(client, Molotov), 
                 GetGrenade(client, Smoke), GetGrenade(client, HE), 
-                GetGrenade(client, Decoy), GetGrenade(client, Incendiary), 
+                GetGrenade(client, Decoy), GetGrenade(client, Incendiary), HaveZeus(client),
                 clientEyePos[client][0], clientEyePos[client][1], 
                 // 8-21-22 - investigated using separate eye and foot poses for all three dimensions
                 // didnt make a different as eye pos is camera pos and thats directly above origin

@@ -5,7 +5,8 @@ char g_saGrenadeWeaponNames[][] = {
     "weapon_smokegrenade",
     "weapon_hegrenade",
     "weapon_decoy",
-    "weapon_incgrenade"
+    "weapon_incgrenade",
+    "weapon_taser"
 };
 
 enum grenades: {
@@ -15,6 +16,7 @@ enum grenades: {
     HE,
     Decoy,
     Incendiary,
+    Zeus,
     NUM_GRENADES
 };
 
@@ -26,6 +28,7 @@ stock void InitGrenadeOffsets() {
             int entindex = CreateEntityByName(g_saGrenadeWeaponNames[i]);
             DispatchSpawn(entindex);
             g_iaGrenadeOffsets[i] = GetEntProp(entindex, Prop_Send, "m_iPrimaryAmmoType");
+            PrintToServer("%s offset %i", g_saGrenadeWeaponNames[i], g_iaGrenadeOffsets[i]);
             AcceptEntityInput(entindex, "Kill");
         }
     }

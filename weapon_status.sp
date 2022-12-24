@@ -1,3 +1,4 @@
+// https://sm.alliedmods.net/api/index.php?fastload=file&id=40
 enum weaponSlots: {
     SLOT_RIFLE,
     SLOT_PISTOL,
@@ -6,6 +7,8 @@ enum weaponSlots: {
     SLOT_C4,
     NUM_WEAPON_SLOTS
 };
+
+#define ZEUS_WEAPON_ID 31
 
 stock int GetActiveWeaponEntityId(int client) {
     return GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
@@ -33,4 +36,17 @@ stock int GetWeaponClipAmmo(int entity) {
 
 stock int GetWeaponReserveAmmo(int entity) {
     return GetEntProp(entity, Prop_Send, "m_iPrimaryReserveAmmoCount");
+}
+
+stock bool HaveZeus(int client) {
+    int m_hMyWeapons_size = GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons");
+
+    for (int i = 0; i < m_hMyWeapons_size; i++) {
+        int entityId = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", i);
+        if (entityId != -1 && GetWeaponIdFromEntityId(entityId) == ZEUS_WEAPON_ID) {
+            return true;
+        }
+    }
+
+    return false;
 }
