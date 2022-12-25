@@ -67,6 +67,11 @@ float lastRecoilAngleAdjustment[MAXPLAYERS+1][3];
 // C4 values
 float c4Position[3];
 
+// player flag values
+#define PF_ONGROUND 1
+#define PF_DUCKING 2
+#define PF_ANIMDUCKING 4
+
 // files 
 static char rootFolder[] = "addons/sourcemod/bot-link-data/";
 static char generalFilePath[] = "addons/sourcemod/bot-link-data/general.csv";
@@ -383,14 +388,16 @@ stock void WriteState() {
         PrintToServer("opening tmpStateFile returned null");
         return;
     }
-    tmpStateFile.WriteLine("State Frame,Client Id,Name,Team,Active Weapon Id,"
-        ... "Next Primary Attack,Next Secondary Attack,Time Weapon Idle,Recoil Index,Reload Visually Complete,"
+    tmpStateFile.WriteLine("State Frame,Client Id,Name,Team,"
+        ... "Health,Armor,Has Helmet,"
+        ... "Active Weapon Id,Next Primary Attack,Next Secondary Attack,Time Weapon Idle,Recoil Index,Reload Visually Complete,"
         ... "Rifle Id,Rifle Clip Ammo,Rifle Reserve Ammo,"
         ... "Pistol Id,Pistol Clip Ammo,Pistol Reserve Ammo,Has C4,"
         ... "Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,Zeus,"
         ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
         ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,Viewpunch Angle Pitch,Viewpunch Angle Yaw,"
-        ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount");
+        ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount,"
+        ... "Duck Key Pressed,Is Reloading,Is Walking,Flash Duration");
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
     for (int client = 1; client <= MaxClients; client++) {
@@ -427,12 +434,14 @@ stock void WriteState() {
             int reloadVisuallyComplete = -1;
             // this should be something, but its always 0
             // int nextThinkTick = -1;
+            bool isReloading = false;
             if (activeWeaponEntityId != -1) {
                 activeWeaponId = GetWeaponIdFromEntityId(activeWeaponEntityId);
                 nextPrimaryAttack = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flNextPrimaryAttack");
                 nextSecondaryAttack = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flNextSecondaryAttack");
                 timeWeaponIdle = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flTimeWeaponIdle");
                 recoilIndex = GetEntPropFloat(activeWeaponEntityId, Prop_Send, "m_flRecoilIndex");
+                isReloading = IsWeaponReloading(activeWeaponEntityId);
                 reloadVisuallyComplete = GetEntProp(activeWeaponEntityId, Prop_Send, "m_bReloadVisuallyComplete");
                 //nextThinkTick = GetEntProp(activeWeaponEntityId, Prop_Send, "m_nNextThinkTick");
             }
@@ -461,8 +470,20 @@ stock void WriteState() {
             // this doesnt tell me anything beyond m_flNextPrimaryAttack, so ignoring it
             //float nextAttack = GetEntPropFloat(client, Prop_Send, "m_flNextAttack");
 
-            tmpStateFile.WriteLine("%i,%i,%s,%i,%i,"
-                                    ... "%f,%f,%f,%f,%i,"
+            int health = GetClientHealth(client);
+            int armor = GetClientArmor(client);
+            bool hasHelmet = GetEntProp(client, Prop_Send, "m_bHasHelmet") != 0;
+            bool duckKeyPressed = (GetEntProp(client, Prop_Send, "m_fFlags") & PF_ANIMDUCKING) != 0;
+            bool isWalking = GetEntProp(client, Prop_Send, "m_bIsWalking") != 0;
+            float flashDuration = GetEntPropFloat(client, Prop_Send, "m_flFlashDuration");
+            bool hasDefuser = GetEntProp(client, Prop_Send, "m_bHasDefuser") != 0;
+            int money = GetEntProp(client, Prop_Send, "m_iAccount");
+            int ping = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iPing", _, client);
+
+
+            tmpStateFile.WriteLine("%i,%i,%s,%i,"
+                                    ... "%i,%i,%i,"
+                                    ... "%i,%f,%f,%f,%f,%i,"
                                     ... "%i,%i,%i,"
                                     ... "%i,%i,%i,%i,"
                                     ... "%i,%i,"
@@ -475,9 +496,11 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%f,%f,"
                                     ... "%f,%f,"
-                                    ... "%i,%i,%i,%i,%f",
-                currentFrame, client, clientName, clientTeam, activeWeaponId,
-                nextPrimaryAttack, nextSecondaryAttack, timeWeaponIdle, recoilIndex, reloadVisuallyComplete,
+                                    ... "%i,%i,%i,%i,%f,"
+                                    ... "%i,%i,%i,%f,%i,%i,%i",
+                currentFrame, client, clientName, clientTeam, 
+                health, armor, hasHelmet, 
+                activeWeaponId, nextPrimaryAttack, nextSecondaryAttack, timeWeaponIdle, recoilIndex, reloadVisuallyComplete,
                 rifleWeaponId, rifleClipAmmo, rifleReserveAmmo,
                 pistolWeaponId, pistolClipAmmo, pistolReserveAmmo, hasC4,
                 GetGrenade(client, Flash), GetGrenade(client, Molotov), 
@@ -492,7 +515,8 @@ stock void WriteState() {
                 mAimPunchAngle[client][0], mAimPunchAngle[client][1],
                 mViewPunchAngle[client][0], mViewPunchAngle[client][1],
                 clientEyeAngleWithRecoil[client][0], clientEyeAngleWithRecoil[client][1],
-                clientOtherState[client], clientFake, isAirborne, isScoped, duckAmount);
+                clientOtherState[client], clientFake, isAirborne, isScoped, duckAmount,
+                duckKeyPressed, isReloading, isWalking, flashDuration, hasDefuser,money,ping);
 
             /*
             int sz = GetEntPropArraySize(client, Prop_Send, "m_flPoseParameter");

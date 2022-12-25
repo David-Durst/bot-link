@@ -38,6 +38,10 @@ stock int GetWeaponReserveAmmo(int entity) {
     return GetEntProp(entity, Prop_Send, "m_iPrimaryReserveAmmoCount");
 }
 
+stock bool IsWeaponReloading(int entity) {
+    return GetEntProp(entity, Prop_Data, "m_bInReload") != 0;
+}
+
 stock bool HaveZeus(int client) {
     int m_hMyWeapons_size = GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons");
 
