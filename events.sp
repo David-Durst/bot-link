@@ -83,7 +83,6 @@ stock void WriteWeaponFire() {
 
     for (int i = 0; i < curWeaponFireIndex; i++) {
         tmpWeaponFireFile.WriteLine("%i,%s", weaponFireShooterId[i], weaponFireWeapon[i]);
-        PrintToServer("firing");
     }
 
     tmpWeaponFireFile.Close();
