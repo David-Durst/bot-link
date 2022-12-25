@@ -17,8 +17,8 @@ File tmpHurtFile;
 bool tmpHurtOpen = false;
 
 public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast) {
-    hurtVictimId[curHurtIndex] = event.GetInt("userid");
-    hurtAttackerId[curHurtIndex] = event.GetInt("attacker");
+    hurtVictimId[curHurtIndex] = GetClientOfUserId(event.GetInt("userid"));
+    hurtAttackerId[curHurtIndex] = GetClientOfUserId(event.GetInt("attacker"));
     hurtHealth[curHurtIndex] = event.GetInt("health");
     hurtArmor[curHurtIndex] = event.GetInt("armor");
     hurtHealthDamage[curHurtIndex] = event.GetInt("dmg_health");
@@ -63,7 +63,7 @@ File tmpWeaponFireFile;
 bool tmpWeaponFireOpen = false;
 
 public void Event_WeaponFire(Event event, const char[] name, bool dontBroadcast) {
-    weaponFireShooterId[curWeaponFireIndex] = event.GetInt("userid");
+    weaponFireShooterId[curWeaponFireIndex] = GetClientOfUserId(event.GetInt("userid"));
     event.GetString("weapon", weaponFireWeapon[curWeaponFireIndex], MAX_WEAPON_LENGTH);
     curWeaponFireIndex++;
 }
