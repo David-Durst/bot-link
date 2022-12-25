@@ -7,6 +7,7 @@
 #include "bot-link/weapon_status.sp"
 #include "bot-link/grenade_status.sp"
 #include "bot-link/visibility.sp"
+#include "bot-link/events.sp"
 #define MAX_INPUT_LENGTH 1000
 #define MAX_INPUT_FIELDS 20
 #define MAX_PATH_LENGTH 256
@@ -124,6 +125,8 @@ public void OnPluginStart()
     RegisterDebugFunctions();
     HookEvent("round_start", OnRoundStart, EventHookMode_PostNoCopy);
     HookEvent("bomb_defused", OnBombDefused, EventHookMode_PostNoCopy);
+    HookEvent("player_hurt", Event_PlayerHurt);
+    HookEvent("weapon_fire", Event_WeaponFire);
 
     cvarBotStop = FindConVar("bot_stop");
     cvarBotChatter = FindConVar("bot_chatter");
@@ -308,6 +311,8 @@ public OnGameFrame() {
     WriteState();
     WriteC4();
     WriteVisibility();
+    WriteWeaponFire();
+    WritePlayerHurt();
     ReadInput();
     ReadExecuteScript();
     currentFrame++;
