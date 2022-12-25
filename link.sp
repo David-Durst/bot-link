@@ -397,7 +397,7 @@ stock void WriteState() {
         ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
         ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,Viewpunch Angle Pitch,Viewpunch Angle Yaw,"
         ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount,"
-        ... "Duck Key Pressed,Is Reloading,Is Walking,Flash Duration");
+        ... "Duck Key Pressed,Is Reloading,Is Walking,Flash Duration,Has Defuser,Money,Ping");
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
     for (int client = 1; client <= MaxClients; client++) {
@@ -516,7 +516,7 @@ stock void WriteState() {
                 mViewPunchAngle[client][0], mViewPunchAngle[client][1],
                 clientEyeAngleWithRecoil[client][0], clientEyeAngleWithRecoil[client][1],
                 clientOtherState[client], clientFake, isAirborne, isScoped, duckAmount,
-                duckKeyPressed, isReloading, isWalking, flashDuration, hasDefuser,money,ping);
+                duckKeyPressed, isReloading, isWalking, flashDuration, hasDefuser, money, ping);
 
             /*
             int sz = GetEntPropArraySize(client, Prop_Send, "m_flPoseParameter");
