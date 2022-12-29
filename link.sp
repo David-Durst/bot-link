@@ -400,6 +400,7 @@ stock void WriteState() {
         ... "Pistol Id,Pistol Clip Ammo,Pistol Reserve Ammo,Has C4,"
         ... "Flashes,Molotovs,Smokes,HEs,Decoys,Incendiaries,Zeus,"
         ... "Eye Pos X,Eye Pos Y,Eye Pos Z,Foot Pos Z,"
+        ... "Vel X, Vel Y, Vel Z,"
         ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,Viewpunch Angle Pitch,Viewpunch Angle Yaw,"
         ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount,"
         ... "Duck Key Pressed,Is Reloading,Is Walking,Flash Duration,Has Defuser,Money,Ping");
