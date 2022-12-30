@@ -381,6 +381,7 @@ stock void WriteGeneral() {
 }
 
 
+int prevFrame = 0;
 stock void WriteState() {
     // write state - update temp file, then atomically overwrite last state
     if (tmpStateOpen) {
@@ -404,6 +405,12 @@ stock void WriteState() {
         ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,Viewpunch Angle Pitch,Viewpunch Angle Yaw,"
         ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount,"
         ... "Duck Key Pressed,Is Reloading,Is Walking,Flash Duration,Has Defuser,Money,Ping");
+
+    //PrintToServer("Skipped frame: previous frame %i, current frame %i", prevFrame, currentFrame);
+    if (prevFrame != 0 && prevFrame != currentFrame - 1) {
+        PrintToServer("Skipped frame: previous frame %i, current frame %i", prevFrame, currentFrame);
+    }
+    prevFrame = currentFrame;
 
     // https://wiki.alliedmods.net/Clients_(SourceMod_Scripting) - first client is 1, server is 0
     for (int client = 1; client <= MaxClients; client++) {
