@@ -406,7 +406,7 @@ stock void WriteState() {
         ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount,"
         ... "Duck Key Pressed,Is Reloading,Is Walking,Flash Duration,Has Defuser,Money,Ping");
 
-    //PrintToServer("Skipped frame: previous frame %i, current frame %i", prevFrame, currentFrame);
+    //PrintToServer("game time: %f, game frame time: %f, previous frame %i, current frame %i", GetGameTime(), GetGameFrameTime(), prevFrame, currentFrame);
     if (prevFrame != 0 && prevFrame != currentFrame - 1) {
         PrintToServer("Skipped frame: previous frame %i, current frame %i", prevFrame, currentFrame);
     }
