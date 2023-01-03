@@ -27,6 +27,8 @@ public Plugin myinfo =
 };
 
 // input commands to read
+int frameForLastInput;
+bool newInput;
 bool inputSet[MAXPLAYERS+1];
 bool inputSetLastFrame[MAXPLAYERS+1];
 char inputBuffer[MAX_INPUT_LENGTH];
@@ -307,15 +309,16 @@ public OnGameFrame() {
     }
 
     EnsureAllAK();
+    ReadInput();
+    ReadExecuteScript();
     WriteGeneral();
     WriteState();
     WriteC4();
     WriteVisibility();
     WriteWeaponFire();
     WritePlayerHurt();
-    ReadInput();
-    ReadExecuteScript();
     currentFrame++;
+    //PrintToServer("onGameFrame %i", currentFrame);
 }
 
 stock void EnsureAllAK() {
@@ -406,6 +409,12 @@ stock void WriteState() {
         ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount,"
         ... "Duck Key Pressed,Is Reloading,Is Walking,Flash Duration,Has Defuser,Money,Ping");
 
+    if (newInput) {
+        if (frameForLastInput + 1 != currentFrame) {
+            PrintToServer("frame for last input %i, current frame: %i", frameForLastInput, currentFrame);
+        }
+        newInput = false;
+    }
     //PrintToServer("game time: %f, game frame time: %f, previous frame %i, current frame %i", GetGameTime(), GetGameFrameTime(), prevFrame, currentFrame);
     if (prevFrame != 0 && prevFrame != currentFrame - 1) {
         PrintToServer("Skipped frame: previous frame %i, current frame %i", prevFrame, currentFrame);
@@ -644,16 +653,18 @@ stock void ReadInput() {
             tmpInputFile.ReadLine(inputBuffer, MAX_INPUT_LENGTH);
             ExplodeString(inputBuffer, ",", inputExplodedBuffer, MAX_INPUT_FIELDS, MAX_INPUT_LENGTH);
             int client = StringToInt(inputExplodedBuffer[0]);
+            frameForLastInput = StringToInt(inputExplodedBuffer[1]);
+            newInput = true;
 
             inputSet[client] = true;
-            inputButtons[client] = StringToInt(inputExplodedBuffer[1]);
+            inputButtons[client] = StringToInt(inputExplodedBuffer[2]);
             inputMovement[client][Forward] = inputButtons[client] & IN_FORWARD > 0;
             inputMovement[client][Backward] = inputButtons[client] & IN_BACK > 0;
             inputMovement[client][Left] = inputButtons[client] & IN_MOVELEFT > 0;
             inputMovement[client][Right] = inputButtons[client] & IN_MOVERIGHT > 0;
-            inputAngleDeltaPct[client][0] = StringToFloat(inputExplodedBuffer[2]);
+            inputAngleDeltaPct[client][0] = StringToFloat(inputExplodedBuffer[3]);
             inputAngleDeltaPct[client][0] = fmax(-1.0, fmin(1.0, inputAngleDeltaPct[client][0]));
-            inputAngleDeltaPct[client][1] = StringToFloat(inputExplodedBuffer[3]);
+            inputAngleDeltaPct[client][1] = StringToFloat(inputExplodedBuffer[4]);
             inputAngleDeltaPct[client][1] = fmax(-1.0, fmin(1.0, inputAngleDeltaPct[client][1]));
         }
 
@@ -666,6 +677,7 @@ stock void ReadInput() {
 // https://sm.alliedmods.net/api/index.php?fastload=file&id=47&
 public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float fVel[3], float fAngles[3], int & iWeapon, int & iSubtype, int & iCmdNum, int & iTickcount, int & iSeed, int iMouse[2])
 {
+    //PrintToServer("run cmd player %i game frame %i", client, currentFrame);
     if (recordMaxs && client == clientToRecord) {
         printHumanAngleStats(fAngles, iButtons);
     }
