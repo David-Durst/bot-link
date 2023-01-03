@@ -109,7 +109,9 @@ bool printStatus;
 bool recordMaxs;
 int clientToRecord;
 float lastAngles[2], lastAngleVel[2], maxAngleVel[2], maxAngleAccel[2];
-bool clientTeleportedSinceLastInput[MAXPLAYERS+1];
+// hold client until we receive a matching confirmation
+int clientLastTeleportId[MAXPLAYERS+1];
+int clientLastTeleportConfirmationId[MAXPLAYERS+1];
 
 // placed down here so it has access to all variables defined above
 #include "bot-link/bot_debug.sp"
@@ -170,6 +172,8 @@ public void OnPluginStart()
         lastRecoilAngleAdjustment[i][1] = 0.0;
         lastRecoilAngleAdjustment[i][2] = 0.0;
         inputSetLastFrame[i] = false;
+        clientLastTeleportId[i] = 0;
+        clientLastTeleportConfirmationId[i] = 0;
     }
 
     if (!DirExists(rootFolder)) {
@@ -397,7 +401,7 @@ stock void WriteState() {
         PrintToServer("opening tmpStateFile returned null");
         return;
     }
-    tmpStateFile.WriteLine("State Frame,Client Id,Name,Team,"
+    tmpStateFile.WriteLine("State Frame,Client Id,Teleported Id,Name,Team,"
         ... "Health,Armor,Has Helmet,"
         ... "Active Weapon Id,Next Primary Attack,Next Secondary Attack,Time Weapon Idle,Recoil Index,Reload Visually Complete,"
         ... "Rifle Id,Rifle Clip Ammo,Rifle Reserve Ammo,"
@@ -503,7 +507,7 @@ stock void WriteState() {
             int ping = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iPing", _, client);
 
 
-            tmpStateFile.WriteLine("%i,%i,%s,%i,"
+            tmpStateFile.WriteLine("%i,%i,%i,%s,%i,"
                                     ... "%i,%i,%i,"
                                     ... "%i,%f,%f,%f,%f,%i,"
                                     ... "%i,%i,%i,"
@@ -520,7 +524,7 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%i,%i,%i,%i,%f,"
                                     ... "%i,%i,%i,%f,%i,%i,%i",
-                currentFrame, client, clientName, clientTeam, 
+                currentFrame, client, clientLastTeleportId[client], clientName, clientTeam, 
                 health, armor, hasHelmet, 
                 activeWeaponId, nextPrimaryAttack, nextSecondaryAttack, timeWeaponIdle, recoilIndex, reloadVisuallyComplete,
                 rifleWeaponId, rifleClipAmmo, rifleReserveAmmo,
@@ -575,7 +579,7 @@ stock void GetViewAngleWithRecoil(int client) {
     // confirmed that both GetClientAbsAngles and GetClientEyeAngles dont adjust for recoil
 
     // since bots drift, if under my control, dont actually update EyeAngles
-    if (!inputSet[client] && !clientTeleportedSinceLastInput[client]) {
+    if (!inputSet[client] && !clientLastTeleportId[client]) {
         GetClientEyeAngles(client, clientEyeAngle[client]);
     }
 
@@ -654,16 +658,17 @@ stock void ReadInput() {
             ExplodeString(inputBuffer, ",", inputExplodedBuffer, MAX_INPUT_FIELDS, MAX_INPUT_LENGTH);
             int client = StringToInt(inputExplodedBuffer[0]);
             frameForLastInput = StringToInt(inputExplodedBuffer[1]);
+            clientLastTeleportConfirmationId[client] = StringToInt(inputExplodedBuffer[2]);
             newInput = true;
 
             inputSet[client] = true;
-            inputButtons[client] = StringToInt(inputExplodedBuffer[2]);
+            inputButtons[client] = StringToInt(inputExplodedBuffer[3]);
             inputMovement[client][Forward] = inputButtons[client] & IN_FORWARD > 0;
             inputMovement[client][Backward] = inputButtons[client] & IN_BACK > 0;
             inputMovement[client][Left] = inputButtons[client] & IN_MOVELEFT > 0;
             inputMovement[client][Right] = inputButtons[client] & IN_MOVERIGHT > 0;
-            inputAngle[client][0] = StringToFloat(inputExplodedBuffer[3]);
-            inputAngle[client][1] = StringToFloat(inputExplodedBuffer[4]);
+            inputAngle[client][0] = StringToFloat(inputExplodedBuffer[4]);
+            inputAngle[client][1] = StringToFloat(inputExplodedBuffer[5]);
         }
 
         tmpInputFile.Close();
@@ -713,7 +718,7 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     /*
     float newAngles[3];
     float oldAngles[3];
-    if (inputSetLastFrame[client] || clientTeleportedSinceLastInput[client]) {
+    if (inputSetLastFrame[client] || clientLastTeleportId[client]) {
         newAngles = clientEyeAngle[client];
     }
     else {
@@ -727,7 +732,9 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     newAngles[1] = makeNeg180To180(newAngles[1]);
     */
 
-    TeleportEntity(client, NULL_VECTOR, inputAngle[client], NULL_VECTOR);
+    if (clientLastTeleportId[client] == clientLastTeleportConfirmationId[client]) {
+        TeleportEntity(client, NULL_VECTOR, inputAngle[client], NULL_VECTOR);
+    }
 
     //fAngles = newAngles;
     //SetEntPropVector(client, Prop_Data, "m_angEyeAngles", newAngles);
@@ -757,14 +764,13 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     //inputAngleDeltaPct[client][0] = 0.0;
     //inputAngleDeltaPct[client][1] = 0.0;
 
-    if (clientTeleportedSinceLastInput[client]) {
+    if (clientLastTeleportId[client]) {
         fVel[0] = 0.0;
         fVel[1] = 0.0;
         fVel[2] = 0.0;
     }
 
     inputSetLastFrame[client] = true;
-    clientTeleportedSinceLastInput[client] = false;
 
     return Plugin_Changed;
 }
