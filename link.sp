@@ -42,7 +42,7 @@ enum MovementInputs: {
     NUM_MOVEMENT_INPUTS
 };
 bool inputMovement[MAXPLAYERS+1][NUM_MOVEMENT_INPUTS];
-float inputAngleDeltaPct[MAXPLAYERS+1][3];
+float inputAngle[MAXPLAYERS+1][3];
 
 // GetClientEyePosition - this will store where looking
 
@@ -662,10 +662,8 @@ stock void ReadInput() {
             inputMovement[client][Backward] = inputButtons[client] & IN_BACK > 0;
             inputMovement[client][Left] = inputButtons[client] & IN_MOVELEFT > 0;
             inputMovement[client][Right] = inputButtons[client] & IN_MOVERIGHT > 0;
-            inputAngleDeltaPct[client][0] = StringToFloat(inputExplodedBuffer[3]);
-            inputAngleDeltaPct[client][0] = fmax(-1.0, fmin(1.0, inputAngleDeltaPct[client][0]));
-            inputAngleDeltaPct[client][1] = StringToFloat(inputExplodedBuffer[4]);
-            inputAngleDeltaPct[client][1] = fmax(-1.0, fmin(1.0, inputAngleDeltaPct[client][1]));
+            inputAngle[client][0] = StringToFloat(inputExplodedBuffer[3]);
+            inputAngle[client][1] = StringToFloat(inputExplodedBuffer[4]);
         }
 
         tmpInputFile.Close();
@@ -712,6 +710,7 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
         fVel[1] -= MAX_ONE_DIRECTION_SPEED;
     }
 
+    /*
     float newAngles[3];
     float oldAngles[3];
     if (inputSetLastFrame[client] || clientTeleportedSinceLastInput[client]) {
@@ -722,18 +721,19 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     }
     oldAngles = newAngles;
 
-    newAngles[0] += inputAngleDeltaPct[client][0] * MAX_ONE_DIRECTION_ANGLE_VEL;
-    newAngles[0] = fmax(-89.0, fmin(89.0, newAngles[0]));
+    newAngles[0] = inputAngle[client][0];
 
     newAngles[1] += inputAngleDeltaPct[client][1] * MAX_ONE_DIRECTION_ANGLE_VEL;
     newAngles[1] = makeNeg180To180(newAngles[1]);
+    */
 
-    TeleportEntity(client, NULL_VECTOR, newAngles, NULL_VECTOR);
+    TeleportEntity(client, NULL_VECTOR, inputAngle[client], NULL_VECTOR);
 
     //fAngles = newAngles;
     //SetEntPropVector(client, Prop_Data, "m_angEyeAngles", newAngles);
-    clientEyeAngle[client] = newAngles;
+    clientEyeAngle[client] = inputAngle[client];
 
+    /*
     if (printStatus && IsPlayerAlive(client)) {
         char clientName[128];
         GetClientName(client, clientName, 128);
@@ -751,6 +751,7 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
             makeNeg180To180(newAngles[1] - oldAngles[1]),
             makeNeg180To180(newAngles[2] - oldAngles[2]));
     }
+    */
 
     // disable changing angles until next movement
     //inputAngleDeltaPct[client][0] = 0.0;
