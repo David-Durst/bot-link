@@ -579,7 +579,7 @@ stock void GetViewAngleWithRecoil(int client) {
     // confirmed that both GetClientAbsAngles and GetClientEyeAngles dont adjust for recoil
 
     // since bots drift, if under my control, dont actually update EyeAngles
-    if (!inputSet[client] && !clientLastTeleportId[client]) {
+    if (!inputSet[client] && clientLastTeleportId[client] == clientLastTeleportConfirmationId[client]) {
         GetClientEyeAngles(client, clientEyeAngle[client]);
     }
 
@@ -764,7 +764,7 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     //inputAngleDeltaPct[client][0] = 0.0;
     //inputAngleDeltaPct[client][1] = 0.0;
 
-    if (clientLastTeleportId[client]) {
+    if (clientLastTeleportId[client] != clientLastTeleportConfirmationId[client]) {
         fVel[0] = 0.0;
         fVel[1] = 0.0;
         fVel[2] = 0.0;

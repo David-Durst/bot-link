@@ -3,10 +3,6 @@ float savePos[3], saveAngle[3];
 bool drawLine;
 public void RegisterDebugFunctions() 
 {
-    for (int i = 0; i <= MAXPLAYERS; i++) {
-        clientTeleportedSinceLastInput[i] = false;
-    }
-
     RegConsoleCmd("sm_savePos", smSavePos, "<player name> - save the position of the named player to place a player in");
     RegConsoleCmd("sm_setPos", smSetPos, "<x> <y> <z> <pitch> <yaw> - set a position to place a bot in (pitch/yaw optional)");
     RegConsoleCmd("sm_getPos", smGetPos, "- get the current a position to place a bot in");
