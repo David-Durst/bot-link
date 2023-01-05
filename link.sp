@@ -508,6 +508,13 @@ stock void WriteState() {
             int money = GetEntProp(client, Prop_Send, "m_iAccount");
             int ping = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iPing", _, client);
 
+            /*
+            if (clientEyeAngle[client][1] > -179 && clientEyeAngle[client][1] < -177) {
+                PrintToServer("%i in range, input was %f, clientLastTeleportId %i, clientLastTeleportConfirmationId %i", 
+                    client, inputAngle[client][1], clientLastTeleportId[client], clientLastTeleportConfirmationId[client]);
+            }
+            */
+
 
             tmpStateFile.WriteLine("%i,%i,%i,%s,%i,"
                                     ... "%i,%i,%i,"
@@ -526,7 +533,7 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%i,%i,%i,%i,%f,"
                                     ... "%i,%i,%i,%f,%i,%i,%i,%i",
-                currentFrame, client, 0/*clientLastTeleportId[client]*/, clientName, clientTeam, 
+                currentFrame, client, clientLastTeleportId[client], clientName, clientTeam, 
                 health, armor, hasHelmet, 
                 activeWeaponId, nextPrimaryAttack, nextSecondaryAttack, timeWeaponIdle, recoilIndex, reloadVisuallyComplete,
                 rifleWeaponId, rifleClipAmmo, rifleReserveAmmo,
