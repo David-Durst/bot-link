@@ -313,6 +313,7 @@ public OnGameFrame() {
         return;
     }
 
+    //PrintToServer("start onGameFrame %i", currentFrame);
     EnsureAllAK();
     ReadInput();
     ReadExecuteScript();
@@ -323,7 +324,7 @@ public OnGameFrame() {
     WriteWeaponFire();
     WritePlayerHurt();
     currentFrame++;
-    //PrintToServer("onGameFrame %i", currentFrame);
+    //PrintToServer("end onGameFrame %i", currentFrame);
 }
 
 stock void EnsureAllAK() {
@@ -412,7 +413,7 @@ stock void WriteState() {
         ... "Vel X, Vel Y, Vel Z,"
         ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,Viewpunch Angle Pitch,Viewpunch Angle Yaw,"
         ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount,"
-        ... "Duck Key Pressed,Is Reloading,Is Walking,Flash Duration,Has Defuser,Money,Ping");
+        ... "Duck Key Pressed,Is Reloading,Is Walking,Flash Duration,Has Defuser,Money,Ping,Input Set");
 
     if (false && newInput) {
         if (frameForLastInput + 1 != currentFrame) {
@@ -524,7 +525,7 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%f,%f,"
                                     ... "%i,%i,%i,%i,%f,"
-                                    ... "%i,%i,%i,%f,%i,%i,%i",
+                                    ... "%i,%i,%i,%f,%i,%i,%i,%i",
                 currentFrame, client, 0/*clientLastTeleportId[client]*/, clientName, clientTeam, 
                 health, armor, hasHelmet, 
                 activeWeaponId, nextPrimaryAttack, nextSecondaryAttack, timeWeaponIdle, recoilIndex, reloadVisuallyComplete,
@@ -543,7 +544,7 @@ stock void WriteState() {
                 mViewPunchAngle[client][0], mViewPunchAngle[client][1],
                 clientEyeAngleWithRecoil[client][0], clientEyeAngleWithRecoil[client][1],
                 clientOtherState[client], clientFake, isAirborne, isScoped, duckAmount,
-                duckKeyPressed, isReloading, isWalking, flashDuration, hasDefuser, money, ping);
+                duckKeyPressed, isReloading, isWalking, flashDuration, hasDefuser, money, ping, inputSet[client]);
 
             /*
             int sz = GetEntPropArraySize(client, Prop_Send, "m_flPoseParameter");
@@ -581,6 +582,7 @@ stock void GetViewAngleWithRecoil(int client) {
 
     // since bots drift, if under my control, dont actually update EyeAngles
     if (!inputSet[client]) {
+        //PrintToServer("read for client %i", client);
         GetClientEyeAngles(client, clientEyeAngle[client]);
     }
 
