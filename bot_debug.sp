@@ -151,6 +151,7 @@ public Action smTeleportPlantedC4(int client, int args)
 void teleportInternal(int targetId)
 {
     if (targetId <= MAXPLAYERS) {
+        PrintToServer("teleport");
         clientLastTeleportId[targetId]++;
         clientEyeAngle[targetId] = saveAngle;
     }

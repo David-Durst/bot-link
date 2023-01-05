@@ -167,6 +167,7 @@ public void OnPluginStart()
     weaponRecoilScale = FindConVar("weapon_recoil_scale");
     viewRecoilTracking = FindConVar("view_recoil_tracking");
 
+    PrintToServer("reset teleport");
     for (int i = 0; i < MAXPLAYERS+1; i++) {
         lastRecoilAngleAdjustment[i][0] = 0.0;
         lastRecoilAngleAdjustment[i][1] = 0.0;
@@ -413,14 +414,14 @@ stock void WriteState() {
         ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount,"
         ... "Duck Key Pressed,Is Reloading,Is Walking,Flash Duration,Has Defuser,Money,Ping");
 
-    if (newInput) {
+    if (false && newInput) {
         if (frameForLastInput + 1 != currentFrame) {
             PrintToServer("frame for last input %i, current frame: %i", frameForLastInput, currentFrame);
         }
         newInput = false;
     }
     //PrintToServer("game time: %f, game frame time: %f, previous frame %i, current frame %i", GetGameTime(), GetGameFrameTime(), prevFrame, currentFrame);
-    if (prevFrame != 0 && prevFrame != currentFrame - 1) {
+    if (false && prevFrame != 0 && prevFrame != currentFrame - 1) {
         PrintToServer("Skipped frame: previous frame %i, current frame %i", prevFrame, currentFrame);
     }
     prevFrame = currentFrame;
@@ -524,7 +525,7 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%i,%i,%i,%i,%f,"
                                     ... "%i,%i,%i,%f,%i,%i,%i",
-                currentFrame, client, clientLastTeleportId[client], clientName, clientTeam, 
+                currentFrame, client, 0/*clientLastTeleportId[client]*/, clientName, clientTeam, 
                 health, armor, hasHelmet, 
                 activeWeaponId, nextPrimaryAttack, nextSecondaryAttack, timeWeaponIdle, recoilIndex, reloadVisuallyComplete,
                 rifleWeaponId, rifleClipAmmo, rifleReserveAmmo,
@@ -579,7 +580,7 @@ stock void GetViewAngleWithRecoil(int client) {
     // confirmed that both GetClientAbsAngles and GetClientEyeAngles dont adjust for recoil
 
     // since bots drift, if under my control, dont actually update EyeAngles
-    if (!inputSet[client] && clientLastTeleportId[client] == clientLastTeleportConfirmationId[client]) {
+    if (!inputSet[client]) {
         GetClientEyeAngles(client, clientEyeAngle[client]);
     }
 
@@ -688,6 +689,7 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
         // DO NOT SET TELEPORT HERE
         // game will continue to reset to pre-teleport angles
         // so just dont change bot angles if not driving them every frame
+        // this wont trigger if if bot sending wrong input due to not catching up to teleport
         inputSetLastFrame[client] = false;
         return Plugin_Continue;
     }
@@ -734,11 +736,14 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
 
     if (clientLastTeleportId[client] == clientLastTeleportConfirmationId[client]) {
         TeleportEntity(client, NULL_VECTOR, inputAngle[client], NULL_VECTOR);
+        clientEyeAngle[client] = inputAngle[client];
+    }
+    else {
+        TeleportEntity(client, NULL_VECTOR, clientEyeAngle[client], NULL_VECTOR);
     }
 
     //fAngles = newAngles;
     //SetEntPropVector(client, Prop_Data, "m_angEyeAngles", newAngles);
-    clientEyeAngle[client] = inputAngle[client];
 
     /*
     if (printStatus && IsPlayerAlive(client)) {
