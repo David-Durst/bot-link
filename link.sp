@@ -43,6 +43,7 @@ enum MovementInputs: {
 };
 bool inputMovement[MAXPLAYERS+1][NUM_MOVEMENT_INPUTS];
 float inputAngle[MAXPLAYERS+1][3];
+bool inputAngleAbsolute[MAXPLAYERS+1];
 
 // GetClientEyePosition - this will store where looking
 
@@ -679,6 +680,7 @@ stock void ReadInput() {
             inputMovement[client][Right] = inputButtons[client] & IN_MOVERIGHT > 0;
             inputAngle[client][0] = StringToFloat(inputExplodedBuffer[4]);
             inputAngle[client][1] = StringToFloat(inputExplodedBuffer[5]);
+            inputAngleAbsolute[client] = StringToInt(inputExplodedBuffer[6]) != 0;
         }
 
         tmpInputFile.Close();
@@ -726,26 +728,30 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
         fVel[1] -= MAX_ONE_DIRECTION_SPEED;
     }
 
-    /*
     float newAngles[3];
-    float oldAngles[3];
-    if (inputSetLastFrame[client] || clientLastTeleportId[client]) {
+    //float oldAngles[3];
+    if (inputSetLastFrame[client]) {
         newAngles = clientEyeAngle[client];
     }
     else {
         newAngles = fAngles;
     }
-    oldAngles = newAngles;
-
-    newAngles[0] = inputAngle[client][0];
-
-    newAngles[1] += inputAngleDeltaPct[client][1] * MAX_ONE_DIRECTION_ANGLE_VEL;
-    newAngles[1] = makeNeg180To180(newAngles[1]);
-    */
-
+    //oldAngles = newAngles;
+    
     if (clientLastTeleportId[client] == clientLastTeleportConfirmationId[client]) {
-        TeleportEntity(client, NULL_VECTOR, inputAngle[client], NULL_VECTOR);
-        clientEyeAngle[client] = inputAngle[client];
+        if (inputAngleAbsolute[client]) {
+            TeleportEntity(client, NULL_VECTOR, inputAngle[client], NULL_VECTOR);
+            clientEyeAngle[client] = inputAngle[client];
+        }
+        else {
+            newAngles[0] += inputAngle[client][0] * MAX_ONE_DIRECTION_ANGLE_VEL;
+            newAngles[0] = fmax(-89.0, fmin(89.0, newAngles[0]));
+
+            newAngles[1] += inputAngle[client][1] * MAX_ONE_DIRECTION_ANGLE_VEL;
+            newAngles[1] = makeNeg180To180(newAngles[1]);
+            TeleportEntity(client, NULL_VECTOR, newAngles, NULL_VECTOR);
+            clientEyeAngle[client] = newAngles;
+        }
     }
     else {
         TeleportEntity(client, NULL_VECTOR, clientEyeAngle[client], NULL_VECTOR);
