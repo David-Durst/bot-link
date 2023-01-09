@@ -44,6 +44,7 @@ enum MovementInputs: {
 bool inputMovement[MAXPLAYERS+1][NUM_MOVEMENT_INPUTS];
 float inputAngle[MAXPLAYERS+1][3];
 bool inputAngleAbsolute[MAXPLAYERS+1];
+bool forceInput[MAXPLAYERS+1];
 
 // GetClientEyePosition - this will store where looking
 
@@ -176,6 +177,7 @@ public void OnPluginStart()
         inputSetLastFrame[i] = false;
         clientLastTeleportId[i] = 0;
         clientLastTeleportConfirmationId[i] = 0;
+        forceInput[i] = false;
     }
 
     if (!DirExists(rootFolder)) {
@@ -648,15 +650,15 @@ stock void ReadInput() {
         tmpInputFile.Close();
         tmpInputOpen = false;
     }
+
+    for (int client = 1; client <= MaxClients; client++) {
+        inputSet[client] = false;
+    }
+
     // move file to tmp location so not overwritten, then read it
     // update to latest input if it exists
     // only use new inputs, give controller a chance to resopnd
     if (FileExists(inputFilePath)) {
-        // on each new input file, recheck which inputs are valid
-        // this prevents flipping back to bot control on in between frames where no input
-        for (int client = 1; client <= MaxClients; client++) {
-            inputSet[client] = false;
-        }
 
         RenameFile(tmpInputFilePath, inputFilePath);
 
@@ -681,6 +683,7 @@ stock void ReadInput() {
             inputAngle[client][0] = StringToFloat(inputExplodedBuffer[4]);
             inputAngle[client][1] = StringToFloat(inputExplodedBuffer[5]);
             inputAngleAbsolute[client] = StringToInt(inputExplodedBuffer[6]) != 0;
+            forceInput[client] = StringToInt(inputExplodedBuffer[7]) != 0;
         }
 
         tmpInputFile.Close();
@@ -704,8 +707,11 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
         inputSetLastFrame[client] = false;
         return Plugin_Continue;
     }
-    if (!IsFakeClient(client)) {
+    if (!IsFakeClient(client) && !forceInput[client]) {
         return Plugin_Continue;
+    }
+    else if (!IsFakeClient(client)) {
+        PrintToServer("Forcing %i", client);
     }
 
     iButtons = inputButtons[client];
