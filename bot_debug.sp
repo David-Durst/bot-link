@@ -17,7 +17,7 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_setCurrentItem", smSetCurrentItem, "<player name> <item name> - give the item to the player");
     RegConsoleCmd("sm_specPlayerToTarget", smSpecPlayerToTarget, "<player name> <target name> <thirdPerson=f> - make player spectate a target (thirdPerson default false, any value is true)");
     RegConsoleCmd("sm_specGoto", smSpecGoto, "<player name> <orig x> <orig y> <orig z> <pitch> <yaw> - spectate camera in absolute position");
-    RegConsoleCmd("sm_allHumansSpec", smAllHumansSpec, " - force all humans to spectator team");
+    RegConsoleCmd("sm_allHumansSpec", smAllHumansSpec, "<num non-spectators=0> - force all humans after first n to spectator team");
     RegConsoleCmd("sm_fakeCmd", smFakeCmd, "<player name> <fake cmd> - do fake client cmd for player");
     RegConsoleCmd("sm_line", smLine, "- draw line in direction player is trying to move");
     RegConsoleCmd("sm_drawAABBRadius", smDrawAABBRadius, "<duration_seconds> <x> <y> <z> <radius> <z radius>  - draw AABB with fixed radius");
@@ -395,15 +395,31 @@ public Action smSpecGoto(int client, int args)
 
 public Action smAllHumansSpec(int client, int args)
 {
-    if (args != 0) {
-        PrintToConsole(client, "smSpecGoto requires 0 args");
+    if (args != 0 && args != 1) {
+        PrintToConsole(client, "smAllHumansSpec requires 0 or 1 args");
         return Plugin_Handled;
     }
 
+    int numNonSpectators = 0;
+    if (args == 1) {
+        char arg[128];
+        // arg 0 is the command
+        GetCmdArg(1, arg, sizeof(arg));
+        numNonSpectators = StringToInt(arg);
+    }
+
+    int numHumans = 0;
     for (int clientInner = 1; clientInner <= MaxClients; clientInner++) {
         if (IsValidClient(clientInner) && !IsFakeClient(clientInner)) {
-            ChangeClientTeam(clientInner, CS_TEAM_SPECTATOR);
-            ForcePlayerSuicide(clientInner);
+            if (numHumans >= numNonSpectators) {
+                ChangeClientTeam(clientInner, CS_TEAM_SPECTATOR);
+                ForcePlayerSuicide(clientInner);
+            }
+            else {
+                ChangeClientTeam(clientInner, CS_TEAM_T);
+                ForcePlayerSuicide(clientInner);
+            }
+            numHumans++;
         }
     }
         
