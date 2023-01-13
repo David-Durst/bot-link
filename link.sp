@@ -29,6 +29,8 @@ public Plugin myinfo =
 // input commands to read
 int frameForLastInput;
 bool newInput;
+static int missedInputFramesThreshold = 5;
+int missedInputFrames[MAXPLAYERS+1];
 bool inputSet[MAXPLAYERS+1];
 bool inputSetLastFrame[MAXPLAYERS+1];
 char inputBuffer[MAX_INPUT_LENGTH];
@@ -174,6 +176,7 @@ public void OnPluginStart()
         lastRecoilAngleAdjustment[i][0] = 0.0;
         lastRecoilAngleAdjustment[i][1] = 0.0;
         lastRecoilAngleAdjustment[i][2] = 0.0;
+        missedInputFrames[i] = 0;
         inputSetLastFrame[i] = false;
         clientLastTeleportId[i] = 0;
         clientLastTeleportConfirmationId[i] = 0;
@@ -591,7 +594,8 @@ stock void GetViewAngleWithRecoil(int client) {
     // confirmed that both GetClientAbsAngles and GetClientEyeAngles dont adjust for recoil
 
     // since bots drift, if under my control, dont actually update EyeAngles
-    if (!inputSet[client]) {
+    // if miss frame on a teleport, this would allow game to move eye. need to hold on teleport
+    if (!inputSet[client] && clientLastTeleportId[client] == clientLastTeleportConfirmationId[client]) {
         //PrintToServer("read for client %i", client);
         GetClientEyeAngles(client, clientEyeAngle[client]);
     }
@@ -645,6 +649,7 @@ stock void WriteC4() {
 }
 
 
+
 stock void ReadInput() {
     if (tmpInputOpen) {
         tmpInputFile.Close();
@@ -652,7 +657,12 @@ stock void ReadInput() {
     }
 
     for (int client = 1; client <= MaxClients; client++) {
-        inputSet[client] = false;
+        if (missedInputFrames[client] > missedInputFramesThreshold) {
+            inputSet[client] = false;
+        }
+        else {
+            missedInputFrames[client]++;
+        }
     }
 
     // move file to tmp location so not overwritten, then read it
@@ -675,6 +685,7 @@ stock void ReadInput() {
             newInput = true;
 
             inputSet[client] = true;
+            missedInputFrames[client] = 0;
             inputButtons[client] = StringToInt(inputExplodedBuffer[3]);
             inputMovement[client][Forward] = inputButtons[client] & IN_FORWARD > 0;
             inputMovement[client][Backward] = inputButtons[client] & IN_BACK > 0;
@@ -711,7 +722,7 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
         return Plugin_Continue;
     }
     else if (!IsFakeClient(client)) {
-        PrintToServer("Forcing %i", client);
+        //PrintToServer("Forcing %i", client);
     }
 
     iButtons = inputButtons[client];
