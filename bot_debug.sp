@@ -11,6 +11,7 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_slayAllBut", smSlayAllBut, "<player name 0> ... - slay all but the listed players");
     RegConsoleCmd("sm_setArmor", smSetArmor, "<player name> <armor> - set a players armor value");
     RegConsoleCmd("sm_setHealth", smSetHealth, "<player name> <armor> - set a players health value");
+    RegConsoleCmd("sm_damageActive", smDamageActive, "<attacker player name> <victim player name> - damage victim with attacker using their current weapon");
     RegConsoleCmd("sm_rotate", smRotate, "<player name> <pitch> <yaw> - rotate the named player to pitch yaw values");
     RegConsoleCmd("sm_giveItem", smGiveItem, "<player name> <item name> - give the item to the player");
     RegConsoleCmd("sm_removeGuns", smRemoveGuns, "<player name> - remove a players guns");
@@ -230,6 +231,34 @@ public Action smSetHealth(int client, int args)
     }
         
     PrintToConsole(client, "smSetHealth received player name that didnt match any valid clients");
+    return Plugin_Handled;
+}
+
+public Action smDamageActive(int client, int args) 
+{
+    if (args != 2) {
+        PrintToConsole(client, "smDamage requires 2 args");
+        return Plugin_Handled;
+    }
+
+    char attackerNameArg[128], victimNameArg[128];
+    // arg 0 is the command
+    GetCmdArg(1, attackerNameArg, sizeof(attackerNameArg));
+    GetCmdArg(2, victimNameArg, sizeof(victimNameArg));
+
+    int attackerId = GetClientIdByName(attackerNameArg);
+    int victimId = GetClientIdByName(victimNameArg);
+    if (attackerId != -1 && victimId != -1) {
+        int activeWeaponEntityId = GetActiveWeaponEntityId(attackerId);
+        int activeWeaponId = -1;
+        if (activeWeaponEntityId != -1) {
+            activeWeaponId = GetWeaponIdFromEntityId(activeWeaponEntityId);
+        }
+        SDKHooks_TakeDamage(victimId, activeWeaponEntityId, attackerId, 1.0, DMG_BULLET, activeWeaponId);
+        return Plugin_Handled;
+    }
+        
+    PrintToConsole(client, "smDamageActive received attacker or victim player name that didnt match any valid clients");
     return Plugin_Handled;
 }
 
