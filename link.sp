@@ -419,7 +419,7 @@ stock void WriteState() {
         ... "Vel X, Vel Y, Vel Z,"
         ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,Viewpunch Angle Pitch,Viewpunch Angle Yaw,"
         ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount,"
-        ... "Duck Key Pressed,Is Reloading,Is Walking,Flash Duration,Has Defuser,Money,Ping,Input Set");
+        ... "Duck Key Pressed,Is Reloading,Is Walking,Flash Duration,Has Defuser,Money,Ping,Game Time,Input Set");
 
     if (false && newInput) {
         if (frameForLastInput + 1 != currentFrame) {
@@ -512,6 +512,7 @@ stock void WriteState() {
             float flashDuration = GetEntPropFloat(client, Prop_Send, "m_flFlashDuration");
             bool hasDefuser = GetEntProp(client, Prop_Send, "m_bHasDefuser") != 0;
             int money = GetEntProp(client, Prop_Send, "m_iAccount");
+            float gameTime = GetTickInterval() * GetEntProp(client, Prop_Send, "m_nTickBase");
             int ping = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iPing", _, client);
 
             /*
@@ -538,7 +539,7 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%f,%f,"
                                     ... "%i,%i,%i,%i,%f,"
-                                    ... "%i,%i,%i,%f,%i,%i,%i,%i",
+                                    ... "%i,%i,%i,%f,%i,%i,%i,%f,%i",
                 currentFrame, client, clientLastTeleportId[client], clientName, clientTeam, 
                 health, armor, hasHelmet, 
                 activeWeaponId, nextPrimaryAttack, nextSecondaryAttack, timeWeaponIdle, recoilIndex, reloadVisuallyComplete,
@@ -557,7 +558,7 @@ stock void WriteState() {
                 mViewPunchAngle[client][0], mViewPunchAngle[client][1],
                 clientEyeAngleWithRecoil[client][0], clientEyeAngleWithRecoil[client][1],
                 clientOtherState[client], clientFake, isAirborne, isScoped, duckAmount,
-                duckKeyPressed, isReloading, isWalking, flashDuration, hasDefuser, money, ping, inputSet[client]);
+                duckKeyPressed, isReloading, isWalking, flashDuration, hasDefuser, money, ping, gameTime, inputSet[client]);
 
             /*
             int sz = GetEntPropArraySize(client, Prop_Send, "m_flPoseParameter");
