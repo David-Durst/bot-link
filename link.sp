@@ -510,6 +510,8 @@ stock void WriteState() {
             bool duckKeyPressed = (GetEntProp(client, Prop_Send, "m_fFlags") & PF_ANIMDUCKING) != 0;
             bool isWalking = GetEntProp(client, Prop_Send, "m_bIsWalking") != 0;
             float flashDuration = GetEntPropFloat(client, Prop_Send, "m_flFlashDuration");
+            // this doesnt matter, its always 255 once flashed
+            //float flashMaxAlpha = GetEntPropFloat(client, Prop_Send, "m_flFlashMaxAlpha");
             bool hasDefuser = GetEntProp(client, Prop_Send, "m_bHasDefuser") != 0;
             int money = GetEntProp(client, Prop_Send, "m_iAccount");
             float gameTime = GetTickInterval() * GetEntProp(client, Prop_Send, "m_nTickBase");
@@ -662,6 +664,11 @@ stock void ReadInput() {
             inputSet[client] = false;
         }
         else {
+            /*
+            if (missedInputFrames[client] > 0) {
+                PrintToServer("decay for frame %i", currentFrame);
+            }
+            */
             missedInputFrames[client]++;
         }
     }
@@ -727,6 +734,13 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     }
 
     iButtons = inputButtons[client];
+    /*
+    if (iButtons & IN_ATTACK > 0) {
+        char shooterName[128];
+        GetClientName(client, shooterName, 128);
+        PrintToServer("%s shot on frame %i", shooterName, currentFrame);        
+    }
+    */
 
     fVel[0] = 0.0;
     fVel[1] = 0.0;
