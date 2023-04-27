@@ -90,3 +90,37 @@ stock void WriteWeaponFire() {
     RenameFile(weaponFireFilePath, tmpWeaponFireFilePath);
     curWeaponFireIndex = 0;
 }
+
+bool unwrittenRoundStart = false;
+
+static char roundStartFilePath[] = "addons/sourcemod/bot-link-data/roundStart.csv";
+static char tmpRoundStartFilePath[] = "addons/sourcemod/bot-link-data/roundStart.csv.tmp.write";
+File tmpRoundStartFile;
+bool tmpRoundStartOpen = false;
+
+public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast) {
+    unwrittenRoundStart = true;
+}
+
+stock void WriteRoundStart(int currentFrame) {
+    if (tmpRoundStartOpen) {
+        tmpRoundStartFile.Close();
+        tmpRoundStartOpen = false;
+    }
+
+    if (unwrittenRoundStart) {
+        tmpRoundStartFile = OpenFile(tmpRoundStartFilePath, "w", false, "");
+        tmpRoundStartOpen = true;
+        if (tmpRoundStartFile == null) {
+            PrintToServer("opening tmpRoundStartFile returned null");
+            return;
+        }
+        tmpRoundStartFile.WriteLine("State Frame");
+
+        tmpRoundStartFile.WriteLine("%i", currentFrame);
+
+        tmpRoundStartFile.Close();
+        tmpRoundStartOpen = false;
+        RenameFile(roundStartFilePath, tmpRoundStartFilePath);
+    }
+}

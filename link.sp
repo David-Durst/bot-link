@@ -329,6 +329,7 @@ public OnGameFrame() {
     WriteVisibility();
     WriteWeaponFire();
     WritePlayerHurt();
+    WriteRoundStart(currentFrame);
     currentFrame++;
     //PrintToServer("end onGameFrame %i", currentFrame);
 }
