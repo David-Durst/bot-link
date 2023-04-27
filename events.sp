@@ -91,36 +91,33 @@ stock void WriteWeaponFire() {
     curWeaponFireIndex = 0;
 }
 
-bool unwrittenRoundStart = false;
+int lastRoundStartFrame = -1;
+stock void SetLastRoundStartFrame(int startFrame) {
+    lastRoundStartFrame = startFrame;
+}
 
 static char roundStartFilePath[] = "addons/sourcemod/bot-link-data/roundStart.csv";
 static char tmpRoundStartFilePath[] = "addons/sourcemod/bot-link-data/roundStart.csv.tmp.write";
 File tmpRoundStartFile;
 bool tmpRoundStartOpen = false;
 
-public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast) {
-    unwrittenRoundStart = true;
-}
-
-stock void WriteRoundStart(int currentFrame) {
+stock void WriteRoundStart() {
     if (tmpRoundStartOpen) {
         tmpRoundStartFile.Close();
         tmpRoundStartOpen = false;
     }
 
-    if (unwrittenRoundStart) {
-        tmpRoundStartFile = OpenFile(tmpRoundStartFilePath, "w", false, "");
-        tmpRoundStartOpen = true;
-        if (tmpRoundStartFile == null) {
-            PrintToServer("opening tmpRoundStartFile returned null");
-            return;
-        }
-        tmpRoundStartFile.WriteLine("State Frame");
-
-        tmpRoundStartFile.WriteLine("%i", currentFrame);
-
-        tmpRoundStartFile.Close();
-        tmpRoundStartOpen = false;
-        RenameFile(roundStartFilePath, tmpRoundStartFilePath);
+    tmpRoundStartFile = OpenFile(tmpRoundStartFilePath, "w", false, "");
+    tmpRoundStartOpen = true;
+    if (tmpRoundStartFile == null) {
+        PrintToServer("opening tmpRoundStartFile returned null");
+        return;
     }
+    tmpRoundStartFile.WriteLine("Last Round Start State Frame");
+
+    tmpRoundStartFile.WriteLine("%i", lastRoundStartFrame);
+
+    tmpRoundStartFile.Close();
+    tmpRoundStartOpen = false;
+    RenameFile(roundStartFilePath, tmpRoundStartFilePath);
 }

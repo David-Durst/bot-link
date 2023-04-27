@@ -273,6 +273,7 @@ public Action OnRoundStart(Event event, const char[] sName, bool bDontBroadcast)
     roundNumber++;
     lastBombDefusalRoundNumber = -1;
     SetConVarString(cvarSMNextMap, "de_dust2", true, true);
+    SetLastRoundStartFrame(currentFrame);
     return Plugin_Continue;
 }
 
@@ -329,7 +330,7 @@ public OnGameFrame() {
     WriteVisibility();
     WriteWeaponFire();
     WritePlayerHurt();
-    WriteRoundStart(currentFrame);
+    WriteRoundStart();
     currentFrame++;
     //PrintToServer("end onGameFrame %i", currentFrame);
 }
