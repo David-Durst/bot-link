@@ -942,6 +942,7 @@ public Action smSetMaxRounds(int client, int args)
     GetCmdArg(1, arg, sizeof(arg));
     internalMaxRounds = StringToInt(arg);
     WriteMaxRounds();
+    SetConVarInt(cvarMaxRounds, internalMaxRounds, true, true);
 
     return Plugin_Handled;
 }
@@ -978,6 +979,7 @@ stock void ReadBotStop() {
         botStopFile = OpenFile(botStopFilePath, "r", false, "");
         botStopOpen = true;
         botStopFile.ReadLine(internalBotStop, MAX_BOT_STOP_LENGTH);
+        TrimString(internalBotStop);
         if (StrEqual(internalBotStop, "1")) {
            stopT = true; 
            stopCT = true;
@@ -995,7 +997,7 @@ stock void ReadBotStop() {
            stopCT = false;
         }
         else {
-            PrintToServer("no match on bot stop");
+            PrintToServer("no match on bot stop %s", internalBotStop);
         }
         botStopFile.Close();
         botStopOpen = false;
@@ -1013,6 +1015,7 @@ public Action smSetBotStop(int client, int args)
     GetCmdArg(1, internalBotStop, sizeof(internalBotStop));
     WriteBotStop();
     ReadBotStop();
+    SetConVarString(cvarBotStop, internalBotStop, true, true);
 
     return Plugin_Handled;
 }

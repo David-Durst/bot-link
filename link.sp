@@ -103,7 +103,7 @@ static char debugIndicatorDirPath[] = "addons/sourcemod/bot-link-data/debug_indi
 
 // general variables
 ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers, cvarWarmupTime, cvarMaxRounds, cvarMatchCanClinch, cvarRoundRestartDelay, cvarFreezeTime, cvarMatchRestartDelay,
-    cvarCompetitiveOfficial5v5, cvarMatchEndChangeLevel, cvarSMNextMap;
+    cvarCompetitiveOfficial5v5, cvarMatchEndChangeLevel, cvarSMNextMap, cvarBotDifficulty;
 int internalMaxRounds = 100;
 char internalBotStop[MAX_BOT_STOP_LENGTH] = "1";
 bool stopCT = true, stopT = true;
@@ -153,6 +153,7 @@ public void OnPluginStart()
     cvarCompetitiveOfficial5v5 = FindConVar("sv_competitive_official_5v5");
     cvarMatchEndChangeLevel = FindConVar("mp_match_end_changelevel");
     cvarSMNextMap = FindConVar("sm_nextmap");
+    cvarBotDifficulty = FindConVar("bot_difficulty");
     cvarInfAmmo = FindConVar("sv_infinite_ammo");
     cvarBombTime = FindConVar("mp_c4timer");
     cvarAutoKick = FindConVar("mp_autokick");
@@ -301,6 +302,7 @@ stock void applyConVars() {
     SetConVarFloat(cvarFreezeTime, 0.1, true, true);
     SetConVarInt(cvarMatchRestartDelay, 10, true, true);
     SetConVarInt(cvarMatchEndChangeLevel, 1, true, true);
+    SetConVarInt(cvarBotDifficulty, 3, true, true);
     if (debugStatus) {
         SetConVarInt(cvarInfAmmo, 1, true, true);
         SetConVarInt(cvarBombTime, 600, true, true);
