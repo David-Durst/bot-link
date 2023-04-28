@@ -25,6 +25,8 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_drawAABB", smDrawAABB, "<duration_seconds> <x0> <y0> <z0> <x1> <y1> <z1> - draw AABB");
     RegConsoleCmd("sm_drawCollisionAABBs", smDrawCollisionAABBs, "<player name> - draw AABBs for player collision areas");
     RegConsoleCmd("sm_refresh", smRefresh, "- reload the plugin");
+    RegConsoleCmd("sm_setMaxRounds", smSetMaxRounds, "<max_rounds> - set max rounds");
+    RegConsoleCmd("sm_setBotStop", smSetBotStop, "<bot_stop> - set bot stop");
     g_iLaserMaterial = PrecacheModel("materials/sprites/laserbeam.vmt");
     g_iWhiteMaterial = PrecacheModel("materials/sprites/white.vmt");
     g_iHaloMaterial = PrecacheModel("materials/sprites/halo01.vmt");
@@ -888,3 +890,130 @@ public Action smRefresh(int client, int args) {
     ServerCommand("sm plugins unload link; sm plugins load link");
     return Plugin_Handled;
 }
+
+File maxRoundsFile;
+static char maxRoundsFilePath[] = "addons/sourcemod/bot-link-data/max_rounds_config_file.txt";
+bool maxRoundsOpen = false;
+stock void WriteMaxRounds() {
+    if (maxRoundsOpen) {
+        maxRoundsFile.Close();
+        maxRoundsOpen = false;
+    }
+    maxRoundsFile = OpenFile(maxRoundsFilePath, "w", false, "");
+    maxRoundsOpen = true;
+    if (maxRoundsFile == null) {
+        PrintToServer("opening maxRoundsFile returned null");
+        return;
+    }
+
+    maxRoundsFile.WriteLine("%i", internalMaxRounds);
+
+    maxRoundsFile.Close();
+    maxRoundsOpen = false;
+}
+
+char debugInputBuffer[MAX_INPUT_LENGTH];
+
+stock void ReadMaxRounds() {
+    if (maxRoundsOpen) {
+        maxRoundsFile.Close();
+        maxRoundsOpen = false;
+    }
+
+    if (FileExists(maxRoundsFilePath)) {
+        maxRoundsFile = OpenFile(maxRoundsFilePath, "r", false, "");
+        maxRoundsOpen = true;
+        maxRoundsFile.ReadLine(debugInputBuffer, MAX_INPUT_LENGTH);
+        internalMaxRounds = StringToInt(inputBuffer);
+        maxRoundsFile.Close();
+        maxRoundsOpen = false;
+    }
+}
+
+public Action smSetMaxRounds(int client, int args)
+{
+    if (args != 1) {
+        PrintToConsole(client, "smSetMaxRounds requires 1 args");
+        return Plugin_Handled;
+    }
+
+    char arg[128];
+    // arg 0 is the command
+    GetCmdArg(1, arg, sizeof(arg));
+    internalMaxRounds = StringToInt(arg);
+    WriteMaxRounds();
+
+    return Plugin_Handled;
+}
+
+
+File botStopFile;
+static char botStopFilePath[] = "addons/sourcemod/bot-link-data/bot_stop_config_file.txt";
+bool botStopOpen = false;
+stock void WriteBotStop() {
+    if (botStopOpen) {
+        botStopFile.Close();
+        botStopOpen = false;
+    }
+    botStopFile = OpenFile(botStopFilePath, "w", false, "");
+    botStopOpen = true;
+    if (botStopFile == null) {
+        PrintToServer("opening botStopFile returned null");
+        return;
+    }
+
+    botStopFile.WriteLine("%s", internalBotStop);
+
+    botStopFile.Close();
+    botStopOpen = false;
+}
+
+stock void ReadBotStop() {
+    if (botStopOpen) {
+        botStopFile.Close();
+        botStopOpen = false;
+    }
+
+    if (FileExists(botStopFilePath)) {
+        botStopFile = OpenFile(botStopFilePath, "r", false, "");
+        botStopOpen = true;
+        botStopFile.ReadLine(internalBotStop, MAX_BOT_STOP_LENGTH);
+        if (StrEqual(internalBotStop, "1")) {
+           stopT = true; 
+           stopCT = true;
+        }
+        else if (StrEqual(internalBotStop, "t")) {
+           stopT = true; 
+           stopCT = false;
+        }
+        else if (StrEqual(internalBotStop, "ct")) {
+           stopT = false; 
+           stopCT = true;
+        }
+        else if (StrEqual(internalBotStop, "0")) {
+           stopT = false; 
+           stopCT = false;
+        }
+        else {
+            PrintToServer("no match on bot stop");
+        }
+        botStopFile.Close();
+        botStopOpen = false;
+    }
+}
+
+public Action smSetBotStop(int client, int args)
+{
+    if (args != 1) {
+        PrintToConsole(client, "smSetBotStop requires 1 args");
+        return Plugin_Handled;
+    }
+
+    // arg 0 is the command
+    GetCmdArg(1, internalBotStop, sizeof(internalBotStop));
+    WriteBotStop();
+    ReadBotStop();
+
+    return Plugin_Handled;
+}
+

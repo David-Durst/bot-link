@@ -14,6 +14,7 @@
 #define MAX_ONE_DIRECTION_SPEED 450.0
 #define MAX_ONE_DIRECTION_ANGLE_VEL 15.0
 #define DEBUG_INVALID_DIFF -20000.0
+#define MAX_BOT_STOP_LENGTH 5
 #include "bot-link/script_interface.sp"
 #include "bot-link/vis_points.sp"
 
@@ -103,6 +104,9 @@ static char debugIndicatorDirPath[] = "addons/sourcemod/bot-link-data/debug_indi
 // general variables
 ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers, cvarWarmupTime, cvarMaxRounds, cvarMatchCanClinch, cvarRoundRestartDelay, cvarFreezeTime, cvarMatchRestartDelay,
     cvarCompetitiveOfficial5v5, cvarMatchEndChangeLevel, cvarSMNextMap;
+int internalMaxRounds = 100;
+char internalBotStop[MAX_BOT_STOP_LENGTH] = "1";
+bool stopCT = true, stopT = true;
 
 int roundNumber, mapNumber, lastBombDefusalRoundNumber;
 
@@ -124,6 +128,7 @@ int clientLastTeleportConfirmationId[MAXPLAYERS+1];
 public void OnPluginStart()
 {
     RegConsoleCmd("sm_botDebug", smBotDebug, "(t/f) - make bomb time 10 minutes and give infinite ammo (toggle option)");
+    RegConsoleCmd("sm_applyConVars", smBotDebug, "- reapply convars");
     RegConsoleCmd("sm_drawX", smDrawX, "<minX> <minY> <minZ> <maxX> <maxY> <maxZ> <colors sum of 1,2,4,8> <duration> - draw x");
     RegConsoleCmd("sm_draw", smDraw, "- immediately end the current round in a draw");
     RegConsoleCmd("sm_skipFirstRound", smSkipFirstRound, "- force team to win a round (in way that server recognizes)");
@@ -164,6 +169,8 @@ public void OnPluginStart()
     else {
         debugStatus = false;
     }
+    ReadMaxRounds();
+    ReadBotStop();
     printStatus = false;
     recordMaxs = false;
     applyConVars();
@@ -283,12 +290,12 @@ public Action OnBombDefused(Event event, const char[] sName, bool bDontBroadcast
 }
 
 stock void applyConVars() {
-    SetConVarInt(cvarBotStop, 1, true, true);
+    SetConVarString(cvarBotStop, internalBotStop, true, true);
     SetConVarString(cvarBotChatter, "off", true, true);
     SetConVarInt(cvarAutoKick, 0, true, true);
     SetConVarInt(cvarBotSnipers, 0, true, true);
     SetConVarInt(cvarWarmupTime, 0, true, true);
-    SetConVarInt(cvarMaxRounds, 100, true, true);
+    SetConVarInt(cvarMaxRounds, internalMaxRounds, true, true);
     SetConVarInt(cvarMatchCanClinch, 0, true, true);
     SetConVarFloat(cvarRoundRestartDelay, 0.1, true, true);
     SetConVarFloat(cvarFreezeTime, 0.1, true, true);
@@ -733,6 +740,13 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     }
     else if (!IsFakeClient(client)) {
         //PrintToServer("Forcing %i", client);
+    }
+    int clientTeam = GetClientTeam(client);
+    if (!stopT && clientTeam == CS_TEAM_T) {
+        return Plugin_Continue;
+    }
+    if (!stopCT && clientTeam == CS_TEAM_CT) {
+        return Plugin_Continue;
     }
 
     iButtons = inputButtons[client];
