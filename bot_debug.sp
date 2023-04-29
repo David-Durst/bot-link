@@ -924,7 +924,8 @@ stock void ReadMaxRounds() {
         maxRoundsFile = OpenFile(maxRoundsFilePath, "r", false, "");
         maxRoundsOpen = true;
         maxRoundsFile.ReadLine(debugInputBuffer, MAX_INPUT_LENGTH);
-        internalMaxRounds = StringToInt(inputBuffer);
+        TrimString(debugInputBuffer);
+        internalMaxRounds = StringToInt(debugInputBuffer);
         maxRoundsFile.Close();
         maxRoundsOpen = false;
     }
@@ -940,7 +941,6 @@ public Action smSetMaxRounds(int client, int args)
     char arg[128];
     // arg 0 is the command
     GetCmdArg(1, arg, sizeof(arg));
-    TrimString(arg);
     internalMaxRounds = StringToInt(arg);
     WriteMaxRounds();
     SetConVarInt(cvarMaxRounds, internalMaxRounds, true, true);
@@ -976,7 +976,6 @@ stock void ReadBotStop() {
         botStopOpen = false;
     }
 
-    PrintToServer("trying to read internalBotStop");
     if (FileExists(botStopFilePath)) {
         botStopFile = OpenFile(botStopFilePath, "r", false, "");
         botStopOpen = true;
@@ -1001,7 +1000,6 @@ stock void ReadBotStop() {
         else {
             PrintToServer("no match on bot stop %s", internalBotStop);
         }
-        PrintToServer("loaded stopT %i stopCT %i internalBotStop %s", stopT, stopCT, internalBotStop);
         botStopFile.Close();
         botStopOpen = false;
     }
