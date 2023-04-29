@@ -170,8 +170,10 @@ public void OnPluginStart()
     else {
         debugStatus = false;
     }
+    /*
     ReadMaxRounds();
     ReadBotStop();
+    */
     printStatus = false;
     recordMaxs = false;
     applyConVars();
@@ -291,12 +293,14 @@ public Action OnBombDefused(Event event, const char[] sName, bool bDontBroadcast
 }
 
 stock void applyConVars() {
-    SetConVarString(cvarBotStop, internalBotStop, true, true);
+    //SetConVarString(cvarBotStop, internalBotStop, true, true);
+    SetConVarString(cvarBotStop, "1", true, true);
     SetConVarString(cvarBotChatter, "off", true, true);
     SetConVarInt(cvarAutoKick, 0, true, true);
     SetConVarInt(cvarBotSnipers, 0, true, true);
     SetConVarInt(cvarWarmupTime, 0, true, true);
-    SetConVarInt(cvarMaxRounds, internalMaxRounds, true, true);
+    //SetConVarInt(cvarMaxRounds, internalMaxRounds, true, true);
+    SetConVarInt(cvarMaxRounds, 100, true, true);
     SetConVarInt(cvarMatchCanClinch, 0, true, true);
     SetConVarFloat(cvarRoundRestartDelay, 0.1, true, true);
     SetConVarFloat(cvarFreezeTime, 0.1, true, true);
@@ -743,6 +747,7 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     else if (!IsFakeClient(client)) {
         //PrintToServer("Forcing %i", client);
     }
+    /*
     int clientTeam = GetClientTeam(client);
     if (!stopT && clientTeam == CS_TEAM_T) {
         return Plugin_Continue;
@@ -750,6 +755,7 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     if (!stopCT && clientTeam == CS_TEAM_CT) {
         return Plugin_Continue;
     }
+    */
 
     iButtons = inputButtons[client];
     /*
