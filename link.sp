@@ -172,8 +172,8 @@ public void OnPluginStart()
     }
     /*
     ReadMaxRounds();
-    ReadBotStop();
     */
+    ReadBotStop();
     printStatus = false;
     recordMaxs = false;
     applyConVars();
@@ -293,8 +293,7 @@ public Action OnBombDefused(Event event, const char[] sName, bool bDontBroadcast
 }
 
 stock void applyConVars() {
-    //SetConVarString(cvarBotStop, internalBotStop, true, true);
-    SetConVarString(cvarBotStop, "1", true, true);
+    SetConVarString(cvarBotStop, internalBotStop, true, true);
     SetConVarString(cvarBotChatter, "off", true, true);
     SetConVarInt(cvarAutoKick, 0, true, true);
     SetConVarInt(cvarBotSnipers, 0, true, true);
@@ -351,6 +350,10 @@ public OnGameFrame() {
 stock void EnsureAllAK() {
     for (int client = 1; client <= MaxClients; client++) {
         if (IsValidClient(client) && IsPlayerAlive(client)) {
+            int clientTeam = GetClientTeam(client);
+            bool uncontrolledBot = (!stopT && clientTeam == CS_TEAM_T) || 
+                (!stopCT && clientTeam == CS_TEAM_CT);
+
             int activeWeaponEntityId = GetActiveWeaponEntityId(client);
             int activeWeaponId = -1;
             if (activeWeaponEntityId != -1) {
@@ -376,7 +379,7 @@ stock void EnsureAllAK() {
             else if (rifleWeaponId == -1) {
                 GivePlayerItem(client, "weapon_ak47");
             }
-            else if (IsFakeClient(client) && activeWeaponId != rifleWeaponId) {
+            else if (!uncontrolledBot && IsFakeClient(client) && activeWeaponId != rifleWeaponId) {
                 FakeClientCommand(client, "use weapon_ak47");
             }
         }
@@ -747,7 +750,6 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     else if (!IsFakeClient(client)) {
         //PrintToServer("Forcing %i", client);
     }
-    /*
     int clientTeam = GetClientTeam(client);
     if (!stopT && clientTeam == CS_TEAM_T) {
         return Plugin_Continue;
@@ -755,7 +757,6 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     if (!stopCT && clientTeam == CS_TEAM_CT) {
         return Plugin_Continue;
     }
-    */
 
     iButtons = inputButtons[client];
     /*
