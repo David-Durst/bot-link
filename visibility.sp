@@ -19,9 +19,12 @@ stock void WriteVisibility() {
 
     for (int source = 1; source < MaxClients; source++) {
         for (int target = source + 1; target < MaxClients; target++) {
-            if (source != target && IsValidClient(source) && IsValidClient(target) && 
-                    SourceCanSeeTarget(source, target)) {
-                tmpVisibilityFile.WriteLine("%i,%i", source,target);
+            if (source != target && IsValidClient(source) && IsValidClient(target)) {
+                int sourceTeam = GetClientTeam(source);
+                int targetTeam = GetClientTeam(target);
+                if (sourceTeam != targetTeam && SourceCanSeeTarget(source, target)) {
+                    tmpVisibilityFile.WriteLine("%i,%i", source,target);
+                }
             }
         }
     }
