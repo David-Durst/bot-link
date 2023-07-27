@@ -2,12 +2,14 @@ bool clientPush5s[MAXPLAYERS+1];
 bool clientPush10s[MAXPLAYERS+1];
 bool clientPush20s[MAXPLAYERS+1];
 bool pushRound, enableAggressionControl;
+float temperature;
 
 public void RegisterAggressionFunctions() 
 {
     RegConsoleCmd("sm_setBotPush", smSetBotPush, "<player name> <1/0 push 5s> <1/0 push 10s> <1/0 push 20s> - set aggression for one player (or * for all players)");
     RegConsoleCmd("sm_setBotPushRound", smSetBotPushRound, "<1/0 push round> - set push round for all bots")
     RegConsoleCmd("sm_setAggressionControl", smSetAggressionControl, "<1/0 enable aggression control> - enable/disable entire aggression control");
+    RegConsoleCmd("sm_setTemperature", smSetTemperature, "<0. to 1.> - set softmax temperature");
     RegConsoleCmd("sm_printAggressionControl", smPrintAggressionControl, " - print aggression status");
 
     for (int i = 0; i < MAXPLAYERS+1; i++) {
@@ -17,6 +19,7 @@ public void RegisterAggressionFunctions()
     }
     pushRound = true;
     enableAggressionControl = true;
+    temperature = 0.7;
 }
 
 stock void internalSetBotPush(int targetId, bool push5s, bool push10s, bool push20s) 
@@ -90,6 +93,19 @@ public Action smSetAggressionControl(int client, int args)
     return Plugin_Handled;
 }
 
+public Action smSetTemperature(int client, int args)
+{
+    if (args != 1) {
+        PrintToConsole(client, "smSetTemperature requires 1 arg");
+        return Plugin_Handled;
+    }
+
+    char arg[128];
+    GetCmdArg(1, arg, sizeof(arg));
+    temperature = StringToFloat(arg);
+    return Plugin_Handled;
+}
+
 public Action smPrintAggressionControl(int client, int args)
 {
     if (args != 0) {
@@ -97,7 +113,7 @@ public Action smPrintAggressionControl(int client, int args)
         return Plugin_Handled;
     }
 
-    PrintToConsole(client, "PushRound: %d, EnableAggressionControl %d", pushRound, enableAggressionControl);
+    PrintToConsole(client, "PushRound: %d, EnableAggressionControl %d, Temperature %f", pushRound, enableAggressionControl, temperature);
     for (int targetId = 1; targetId <= MaxClients; targetId++) {
         if (IsValidClient(targetId) && IsPlayerAlive(targetId)) {
             char targetName[128];

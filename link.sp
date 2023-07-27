@@ -397,7 +397,7 @@ stock void WriteGeneral() {
         PrintToServer("opening tmpGeneralFile returned null");
         return;
     }
-    tmpGeneralFile.WriteLine("Map Name,Round Number,T Score,CT Score,Map Number,Tick Rate,Game Time,Push Round,Enable Aggression Control");
+    tmpGeneralFile.WriteLine("Map Name,Round Number,T Score,CT Score,Map Number,Tick Rate,Game Time,Push Round,Enable Aggression Control,Temperature");
 
     char mapName[MAX_INPUT_LENGTH];
     GetCurrentMap(mapName, MAX_INPUT_LENGTH);
@@ -405,8 +405,8 @@ stock void WriteGeneral() {
     int tScore = CS_GetTeamScore(CS_TEAM_T),
         ctScore = CS_GetTeamScore(CS_TEAM_CT);
 
-    tmpGeneralFile.WriteLine("%s,%i,%i,%i,%i,%f,%f,%i,%i", 
-        mapName, roundNumber, tScore, ctScore, mapNumber, GetTickInterval(), GetGameTime(), pushRound, enableAggressionControl);
+    tmpGeneralFile.WriteLine("%s,%i,%i,%i,%i,%f,%f,%i,%i,%f", 
+        mapName, roundNumber, tScore, ctScore, mapNumber, GetTickInterval(), GetGameTime(), pushRound, enableAggressionControl, temperature);
 
     tmpGeneralFile.Close();
     tmpGeneralOpen = false;
