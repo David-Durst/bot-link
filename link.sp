@@ -123,6 +123,7 @@ int clientLastTeleportConfirmationId[MAXPLAYERS+1];
 
 // placed down here so it has access to all variables defined above
 #include "bot-link/bot_debug.sp"
+#include "bot-link/bot_aggression.sp"
 #include "bot-link/overlay.sp"
  
 public void OnPluginStart()
@@ -136,6 +137,7 @@ public void OnPluginStart()
     RegConsoleCmd("sm_recordMaxs", smRecordMaxs, "- record max angular values for debugging");
     RegConsoleCmd("sm_queryRangeVisPointPairs", smQueryRangeVisPointPairs, "- query all vis point pairs to determine basic PVS");
     RegisterDebugFunctions();
+    RegisterAggressionFunctions();
     HookEvent("round_start", OnRoundStart, EventHookMode_PostNoCopy);
     HookEvent("bomb_defused", OnBombDefused, EventHookMode_PostNoCopy);
     HookEvent("player_hurt", Event_PlayerHurt);
