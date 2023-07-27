@@ -22,6 +22,63 @@ public void RegisterAggressionFunctions()
     temperature = 0.7;
 }
 
+File botAggressionFile;
+static char botAggressionFilePath[] = "addons/sourcemod/bot-link-data/bot_aggression_config_file.txt";
+bool botAggressionOpen = false;
+stock void WriteBotAggression() {
+    if (botAggressionOpen) {
+        botAggressionFile.Close();
+        botAggressionOpen = false;
+    }
+    botAggressionFile = OpenFile(botAggressionFilePath, "w", false, "");
+    botAggressionOpen = true;
+    if (botAggressionFile == null) {
+        PrintToServer("opening botAggressionFile returned null");
+        return;
+    }
+
+    botAggressionFile.WriteLine("%i,%i,%f", pushRound, enableAggressionControl, temperature);
+    for (int i = 0; i < MAXPLAYERS+1; i++) {
+        botAggressionFile.WriteLine("%i,%i,%i,%i", i, clientPush5s[i], clientPush10s[i], clientPush20s[i]);
+    }
+
+
+    botAggressionFile.Close();
+    botAggressionOpen = false;
+}
+
+stock void ReadBotAggression() {
+    if (botAggressionOpen) {
+        botAggressionFile.Close();
+        botAggressionOpen = false;
+    }
+
+    if (FileExists(botAggressionFilePath)) {
+        botAggressionFile = OpenFile(botAggressionFilePath, "r", false, "");
+        botAggressionOpen = true;
+        botAggressionFile.ReadLine(internalBotAggression, MAX_BOT_AGGRESSION_LENGTH);
+        TrimString(internalBotAggression);
+        ExplodeString(internalBotAggression, ",", botAggressionExploded, MAX_INPUT_FIELDS, MAX_INPUT_LENGTH);
+        pushRound = StringToInt(botAggressionExploded[0]) == 1;
+        enableAggressionControl = StringToInt(botAggressionExploded[1]) == 1;
+        temperature = StringToFloat(botAggressionExploded[2]);
+
+
+        for (int client = 0; client < MAXPLAYERS+1; client++) {
+            botAggressionFile.ReadLine(internalBotAggression, MAX_BOT_AGGRESSION_LENGTH);
+            //PrintToServer("line %i / %i: %s", client, MAXPLAYERS+1, internalBotAggression);
+            TrimString(internalBotAggression);
+            ExplodeString(internalBotAggression, ",", botAggressionExploded, MAX_INPUT_FIELDS, MAX_INPUT_LENGTH);
+            clientPush5s[client] = StringToInt(botAggressionExploded[1]) == 1;
+            clientPush10s[client] = StringToInt(botAggressionExploded[2]) == 1;
+            clientPush20s[client] = StringToInt(botAggressionExploded[3]) == 1;
+        }
+
+        botAggressionFile.Close();
+        botAggressionOpen = false;
+    }
+}
+
 stock void internalSetBotPush(int targetId, bool push5s, bool push10s, bool push20s) 
 {
     clientPush5s[targetId] = push5s;
@@ -53,12 +110,14 @@ public Action smSetBotPush(int client, int args)
                 internalSetBotPush(targetId, push5s, push10s, push20s);
             }
         }
+        WriteBotAggression();
         return Plugin_Handled;
     }
     else {
         int targetId = GetClientIdByName(playerArg);
         if (targetId != -1) {
             internalSetBotPush(targetId, push5s, push10s, push20s);
+            WriteBotAggression();
             return Plugin_Handled;
         }
             
@@ -77,6 +136,7 @@ public Action smSetBotPushRound(int client, int args)
     char arg[128];
     GetCmdArg(1, arg, sizeof(arg));
     pushRound = StringToInt(arg) == 1;
+    WriteBotAggression();
     return Plugin_Handled;
 }
 
@@ -90,6 +150,7 @@ public Action smSetAggressionControl(int client, int args)
     char arg[128];
     GetCmdArg(1, arg, sizeof(arg));
     enableAggressionControl = StringToInt(arg) == 1;
+    WriteBotAggression();
     return Plugin_Handled;
 }
 
@@ -103,6 +164,7 @@ public Action smSetTemperature(int client, int args)
     char arg[128];
     GetCmdArg(1, arg, sizeof(arg));
     temperature = StringToFloat(arg);
+    WriteBotAggression();
     return Plugin_Handled;
 }
 

@@ -15,6 +15,7 @@
 #define MAX_ONE_DIRECTION_ANGLE_VEL 15.0
 #define DEBUG_INVALID_DIFF -20000.0
 #define MAX_BOT_STOP_LENGTH 5
+#define MAX_BOT_AGGRESSION_LENGTH 100
 #include "bot-link/script_interface.sp"
 #include "bot-link/vis_points.sp"
 
@@ -106,6 +107,8 @@ ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers, cvarWarmupTime, cvarMaxRound
     cvarCompetitiveOfficial5v5, cvarMatchEndChangeLevel, cvarSMNextMap, cvarBotDifficulty;
 int internalMaxRounds = 100;
 char internalBotStop[MAX_BOT_STOP_LENGTH] = "1";
+char internalBotAggression[MAX_BOT_AGGRESSION_LENGTH] = "1";
+char botAggressionExploded[MAX_INPUT_FIELDS][MAX_BOT_AGGRESSION_LENGTH];
 bool stopCT = true, stopT = true;
 
 int roundNumber, mapNumber, lastBombDefusalRoundNumber;
@@ -174,6 +177,7 @@ public void OnPluginStart()
     }
     ReadMaxRounds();
     ReadBotStop();
+    ReadBotAggression();
     printStatus = false;
     recordMaxs = false;
     applyConVars();
