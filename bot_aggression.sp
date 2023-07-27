@@ -106,9 +106,7 @@ public Action smSetBotPush(int client, int args)
 
     if (StrEqual(playerArg, "*")) {
         for (int targetId = 1; targetId <= MaxClients; targetId++) {
-            if (IsValidClient(targetId) && IsPlayerAlive(targetId)) {
-                internalSetBotPush(targetId, push5s, push10s, push20s);
-            }
+            internalSetBotPush(targetId, push5s, push10s, push20s);
         }
         WriteBotAggression();
         return Plugin_Handled;
