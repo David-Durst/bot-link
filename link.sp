@@ -397,7 +397,7 @@ stock void WriteGeneral() {
         PrintToServer("opening tmpGeneralFile returned null");
         return;
     }
-    tmpGeneralFile.WriteLine("Map Name,Round Number,T Score,CT Score,Map Number,Tick Rate,Game Time");
+    tmpGeneralFile.WriteLine("Map Name,Round Number,T Score,CT Score,Map Number,Tick Rate,Game Time,Push Round,Enable Aggression Control");
 
     char mapName[MAX_INPUT_LENGTH];
     GetCurrentMap(mapName, MAX_INPUT_LENGTH);
@@ -405,7 +405,8 @@ stock void WriteGeneral() {
     int tScore = CS_GetTeamScore(CS_TEAM_T),
         ctScore = CS_GetTeamScore(CS_TEAM_CT);
 
-    tmpGeneralFile.WriteLine("%s,%i,%i,%i,%i,%f,%f", mapName, roundNumber, tScore, ctScore, mapNumber, GetTickInterval(), GetGameTime());
+    tmpGeneralFile.WriteLine("%s,%i,%i,%i,%i,%f,%f,%i,%i", 
+        mapName, roundNumber, tScore, ctScore, mapNumber, GetTickInterval(), GetGameTime(), pushRound, enableAggressionControl);
 
     tmpGeneralFile.Close();
     tmpGeneralOpen = false;
@@ -436,7 +437,8 @@ stock void WriteState() {
         ... "Vel X, Vel Y, Vel Z,"
         ... "Eye Angle Pitch,Eye Angle Yaw,Aimpunch Angle Pitch,Aimpunch Angle Yaw,Viewpunch Angle Pitch,Viewpunch Angle Yaw,"
         ... "Eye With Recoil Angle Pitch,Eye With Recoil Angle Yaw,Is Alive,Is Bot,Is Airborne,Is Scoped,Duck Amount,"
-        ... "Duck Key Pressed,Is Reloading,Is Walking,Flash Duration,Has Defuser,Money,Ping,Game Time,Input Set");
+        ... "Duck Key Pressed,Is Reloading,Is Walking,Flash Duration,Has Defuser,Money,Ping,Game Time,Input Set,"
+        ... "Push 5s, Push 10s, Push 20s");
 
     if (false && newInput) {
         if (frameForLastInput + 1 != currentFrame) {
@@ -558,7 +560,8 @@ stock void WriteState() {
                                     ... "%f,%f,"
                                     ... "%f,%f,"
                                     ... "%i,%i,%i,%i,%f,"
-                                    ... "%i,%i,%i,%f,%i,%i,%i,%f,%i",
+                                    ... "%i,%i,%i,%f,%i,%i,%i,%f,%i,"
+                                    ... "%i,%i,%i",
                 currentFrame, client, clientLastTeleportId[client], clientName, clientTeam, 
                 health, armor, hasHelmet, 
                 activeWeaponId, nextPrimaryAttack, nextSecondaryAttack, timeWeaponIdle, recoilIndex, reloadVisuallyComplete,
@@ -577,7 +580,8 @@ stock void WriteState() {
                 mViewPunchAngle[client][0], mViewPunchAngle[client][1],
                 clientEyeAngleWithRecoil[client][0], clientEyeAngleWithRecoil[client][1],
                 clientOtherState[client], clientFake, isAirborne, isScoped, duckAmount,
-                duckKeyPressed, isReloading, isWalking, flashDuration, hasDefuser, money, ping, gameTime, inputSet[client]);
+                duckKeyPressed, isReloading, isWalking, flashDuration, hasDefuser, money, ping, gameTime, inputSet[client],
+                clientPush5s[client], clientPush10s[client], clientPush20s[client]);
 
             /*
             int sz = GetEntPropArraySize(client, Prop_Send, "m_flPoseParameter");
