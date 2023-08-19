@@ -49,6 +49,9 @@ bool inputMovement[MAXPLAYERS+1][NUM_MOVEMENT_INPUTS];
 float inputAngle[MAXPLAYERS+1][3];
 bool inputAngleAbsolute[MAXPLAYERS+1];
 bool forceInput[MAXPLAYERS+1];
+bool enableAbsPos[MAXPLAYERS+1];
+float absPos[MAXPLAYERS+1][3];
+float absView[MAXPLAYERS+1][3];
 
 // GetClientEyePosition - this will store where looking
 
@@ -195,6 +198,7 @@ public void OnPluginStart()
         clientLastTeleportId[i] = 0;
         clientLastTeleportConfirmationId[i] = 0;
         forceInput[i] = false;
+        enableAbsPos[i] = false;
     }
 
     if (!DirExists(rootFolder)) {
@@ -728,6 +732,13 @@ stock void ReadInput() {
             inputAngle[client][1] = StringToFloat(inputExplodedBuffer[5]);
             inputAngleAbsolute[client] = StringToInt(inputExplodedBuffer[6]) != 0;
             forceInput[client] = StringToInt(inputExplodedBuffer[7]) != 0;
+            enableAbsPos[client] = StringToInt(inputExplodedBuffer[8]) != 0;
+            absPos[client][0] = StringToFloat(inputExplodedBuffer[9]);
+            absPos[client][1] = StringToFloat(inputExplodedBuffer[10]);
+            absPos[client][2] = StringToFloat(inputExplodedBuffer[11]);
+            absView[client][0] = StringToFloat(inputExplodedBuffer[12]);
+            absView[client][1] = StringToFloat(inputExplodedBuffer[13]);
+            absView[client][2] = 0.0;
         }
 
         tmpInputFile.Close();
@@ -774,84 +785,90 @@ public Action OnPlayerRunCmd(int client, int & iButtons, int & iImpulse, float f
     }
     */
 
-    fVel[0] = 0.0;
-    fVel[1] = 0.0;
-    fVel[2] = 0.0;
-    // crouching/walking/jump doesnt change fVel
-    // dont know what changes fVel[2]
-    if (inputMovement[client][Forward]) {
-        fVel[0] += MAX_ONE_DIRECTION_SPEED;
-    }
-    if (inputMovement[client][Backward]) {
-        fVel[0] -= MAX_ONE_DIRECTION_SPEED;
-    }
-    if (inputMovement[client][Right]) {
-        fVel[1] += MAX_ONE_DIRECTION_SPEED;
-    }
-    if (inputMovement[client][Left]) {
-        fVel[1] -= MAX_ONE_DIRECTION_SPEED;
-    }
-
-    float newAngles[3];
-    //float oldAngles[3];
-    if (inputSetLastFrame[client]) {
-        newAngles = clientEyeAngle[client];
+    if (enableAbsPos[client]) {
+        float zeroVector[3] = {0.0, 0.0, 0.0};
+        TeleportEntity(client, absPos[client], absView[client], zeroVector);
     }
     else {
-        newAngles = fAngles;
-    }
-    //oldAngles = newAngles;
-    
-    if (clientLastTeleportId[client] == clientLastTeleportConfirmationId[client]) {
-        if (inputAngleAbsolute[client]) {
-            TeleportEntity(client, NULL_VECTOR, inputAngle[client], NULL_VECTOR);
-            clientEyeAngle[client] = inputAngle[client];
-        }
-        else {
-            newAngles[0] += inputAngle[client][0] * MAX_ONE_DIRECTION_ANGLE_VEL;
-            newAngles[0] = fmax(-89.0, fmin(89.0, newAngles[0]));
-
-            newAngles[1] += inputAngle[client][1] * MAX_ONE_DIRECTION_ANGLE_VEL;
-            newAngles[1] = makeNeg180To180(newAngles[1]);
-            TeleportEntity(client, NULL_VECTOR, newAngles, NULL_VECTOR);
-            clientEyeAngle[client] = newAngles;
-        }
-    }
-    else {
-        TeleportEntity(client, NULL_VECTOR, clientEyeAngle[client], NULL_VECTOR);
-    }
-
-    //fAngles = newAngles;
-    //SetEntPropVector(client, Prop_Data, "m_angEyeAngles", newAngles);
-
-    /*
-    if (printStatus && IsPlayerAlive(client)) {
-        char clientName[128];
-        GetClientName(client, clientName, 128);
-        PrintToServer("new inputs for %i: %s", client, clientName);
-        PrintToServer("new fVel: (%f, %f, %f)",
-            fVel[0], fVel[1], fVel[2]);
-        PrintToServer("old Angles: (%f, %f, %f), new fAngles: (%f, %f, %f)",
-            oldAngles[0], oldAngles[1], oldAngles[2],
-            newAngles[0], newAngles[1], newAngles[2]);
-        PrintToServer("delta pct Angles: (%f, %f)",
-            inputAngleDeltaPct[client][0],
-            inputAngleDeltaPct[client][1]);
-        PrintToServer("delta Angles: (%f, %f, %f)",
-            makeNeg180To180(newAngles[0] - oldAngles[0]),
-            makeNeg180To180(newAngles[1] - oldAngles[1]),
-            makeNeg180To180(newAngles[2] - oldAngles[2]));
-    }
-    */
-
-    // disable changing angles until next movement
-    //inputAngleDeltaPct[client][0] = 0.0;
-    //inputAngleDeltaPct[client][1] = 0.0;
-
-    if (clientLastTeleportId[client] != clientLastTeleportConfirmationId[client]) {
         fVel[0] = 0.0;
         fVel[1] = 0.0;
         fVel[2] = 0.0;
+        // crouching/walking/jump doesnt change fVel
+        // dont know what changes fVel[2]
+        if (inputMovement[client][Forward]) {
+            fVel[0] += MAX_ONE_DIRECTION_SPEED;
+        }
+        if (inputMovement[client][Backward]) {
+            fVel[0] -= MAX_ONE_DIRECTION_SPEED;
+        }
+        if (inputMovement[client][Right]) {
+            fVel[1] += MAX_ONE_DIRECTION_SPEED;
+        }
+        if (inputMovement[client][Left]) {
+            fVel[1] -= MAX_ONE_DIRECTION_SPEED;
+        }
+
+        float newAngles[3];
+        //float oldAngles[3];
+        if (inputSetLastFrame[client]) {
+            newAngles = clientEyeAngle[client];
+        }
+        else {
+            newAngles = fAngles;
+        }
+        //oldAngles = newAngles;
+        
+        if (clientLastTeleportId[client] == clientLastTeleportConfirmationId[client]) {
+            if (inputAngleAbsolute[client]) {
+                TeleportEntity(client, NULL_VECTOR, inputAngle[client], NULL_VECTOR);
+                clientEyeAngle[client] = inputAngle[client];
+            }
+            else {
+                newAngles[0] += inputAngle[client][0] * MAX_ONE_DIRECTION_ANGLE_VEL;
+                newAngles[0] = fmax(-89.0, fmin(89.0, newAngles[0]));
+
+                newAngles[1] += inputAngle[client][1] * MAX_ONE_DIRECTION_ANGLE_VEL;
+                newAngles[1] = makeNeg180To180(newAngles[1]);
+                TeleportEntity(client, NULL_VECTOR, newAngles, NULL_VECTOR);
+                clientEyeAngle[client] = newAngles;
+            }
+        }
+        else {
+            TeleportEntity(client, NULL_VECTOR, clientEyeAngle[client], NULL_VECTOR);
+        }
+
+        //fAngles = newAngles;
+        //SetEntPropVector(client, Prop_Data, "m_angEyeAngles", newAngles);
+
+        /*
+        if (printStatus && IsPlayerAlive(client)) {
+            char clientName[128];
+            GetClientName(client, clientName, 128);
+            PrintToServer("new inputs for %i: %s", client, clientName);
+            PrintToServer("new fVel: (%f, %f, %f)",
+                fVel[0], fVel[1], fVel[2]);
+            PrintToServer("old Angles: (%f, %f, %f), new fAngles: (%f, %f, %f)",
+                oldAngles[0], oldAngles[1], oldAngles[2],
+                newAngles[0], newAngles[1], newAngles[2]);
+            PrintToServer("delta pct Angles: (%f, %f)",
+                inputAngleDeltaPct[client][0],
+                inputAngleDeltaPct[client][1]);
+            PrintToServer("delta Angles: (%f, %f, %f)",
+                makeNeg180To180(newAngles[0] - oldAngles[0]),
+                makeNeg180To180(newAngles[1] - oldAngles[1]),
+                makeNeg180To180(newAngles[2] - oldAngles[2]));
+        }
+        */
+
+        // disable changing angles until next movement
+        //inputAngleDeltaPct[client][0] = 0.0;
+        //inputAngleDeltaPct[client][1] = 0.0;
+
+        if (clientLastTeleportId[client] != clientLastTeleportConfirmationId[client]) {
+            fVel[0] = 0.0;
+            fVel[1] = 0.0;
+            fVel[2] = 0.0;
+        }
     }
 
     inputSetLastFrame[client] = true;
