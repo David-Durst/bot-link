@@ -351,6 +351,9 @@ public OnGameFrame() {
     WritePlayerHurt();
     WriteRoundStart();
     currentFrame++;
+    if (currentFrame < 0) {
+        currentFrame = 0;
+    }
     //PrintToServer("end onGameFrame %i", currentFrame);
 }
 
