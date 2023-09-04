@@ -350,6 +350,7 @@ public OnGameFrame() {
     WriteWeaponFire();
     WritePlayerHurt();
     WriteRoundStart();
+    WriteSay();
     currentFrame++;
     if (currentFrame < 0) {
         currentFrame = 0;

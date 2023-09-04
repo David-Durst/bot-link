@@ -121,3 +121,43 @@ stock void WriteRoundStart() {
     tmpRoundStartOpen = false;
     RenameFile(roundStartFilePath, tmpRoundStartFilePath);
 }
+
+
+#define MAX_SAY_PER_FRAME 100
+#define MAX_SAY_LENGTH 200
+
+static char sayFilePath[] = "addons/sourcemod/bot-link-data/say.csv";
+static char tmpSayFilePath[] = "addons/sourcemod/bot-link-data/say.csv.tmp.write";
+File tmpSayFile;
+bool tmpSayOpen = false;
+char sayCommands[MAX_SAY_PER_FRAME][MAX_SAY_LENGTH];
+int curSayIndex = 0;
+
+public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs) {
+    strcopy(sayCommands[curSayIndex], MAX_SAY_LENGTH, sArgs);
+    curSayIndex++;
+    return Plugin_Continue;
+}
+
+stock void WriteSay() {
+    if (tmpSayOpen) {
+        tmpSayFile.Close();
+        tmpSayOpen = false;
+    }
+    tmpSayFile = OpenFile(tmpSayFilePath, "w", false, "");
+    tmpSayOpen = true;
+    if (tmpSayFile == null) {
+        PrintToServer("opening tmpSayFile returned null");
+        return;
+    }
+    tmpSayFile.WriteLine("Say Message");
+
+    for (int i = 0; i < curSayIndex; i++) {
+        tmpSayFile.WriteLine("%s", sayCommands[i]);
+    }
+
+    tmpSayFile.Close();
+    tmpSayOpen = false;
+    RenameFile(sayFilePath, tmpSayFilePath);
+    curSayIndex = 0;
+}
