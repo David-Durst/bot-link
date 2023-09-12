@@ -27,6 +27,7 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_refresh", smRefresh, "- reload the plugin");
     RegConsoleCmd("sm_setMaxRounds", smSetMaxRounds, "<max_rounds> - set max rounds");
     RegConsoleCmd("sm_setBotStop", smSetBotStop, "<bot_stop> - set bot stop");
+    RegConsoleCmd("sm_endGame", smEndGame, "- end the game immediately");
     g_iLaserMaterial = PrecacheModel("materials/sprites/laserbeam.vmt");
     g_iWhiteMaterial = PrecacheModel("materials/sprites/white.vmt");
     g_iHaloMaterial = PrecacheModel("materials/sprites/halo01.vmt");
@@ -1021,3 +1022,18 @@ public Action smSetBotStop(int client, int args)
     return Plugin_Handled;
 }
 
+// https://forums.alliedmods.net/showthread.php?t=82726
+public Action smEndGame(int client, int args)
+{
+    //Routine by Tsunami to end the map
+    new iGameEnd  = FindEntityByClassname(-1, "game_end");
+    if (iGameEnd == -1 && (iGameEnd = CreateEntityByName("game_end")) == -1) 
+    {     
+        LogError("Unable to create entity \"game_end\"!");
+    } 
+    else 
+    {     
+        AcceptEntityInput(iGameEnd, "EndGame");
+    }
+    return Plugin_Handled;
+}
