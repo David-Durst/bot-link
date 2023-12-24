@@ -162,6 +162,7 @@ public void OnPluginStart()
     cvarMatchEndChangeLevel = FindConVar("mp_match_end_changelevel");
     cvarSMNextMap = FindConVar("sm_nextmap");
     cvarBotDifficulty = FindConVar("bot_difficulty");
+    cvarBotGrenades = FindConVar("bot_allow_grenades");
     cvarInfAmmo = FindConVar("sv_infinite_ammo");
     cvarBombTime = FindConVar("mp_c4timer");
     cvarAutoKick = FindConVar("mp_autokick");
@@ -313,6 +314,7 @@ stock void applyConVars() {
     SetConVarInt(cvarMatchRestartDelay, 10, true, true);
     SetConVarInt(cvarMatchEndChangeLevel, 1, true, true);
     SetConVarInt(cvarBotDifficulty, 3, true, true);
+    SetConVarInt(cvarBotGrenades, 0, true, true);
     SetConVarInt(cvarCompetitiveOfficial5v5, 1, true, true);
     if (debugStatus) {
         SetConVarInt(cvarInfAmmo, 1, true, true);
@@ -391,6 +393,10 @@ stock void EnsureAllAK() {
             }
             else if (!uncontrolledBot && IsFakeClient(client) && activeWeaponId != rifleWeaponId) {
                 FakeClientCommand(client, "use weapon_ak47");
+            }
+
+            if (clientTeam == CS_TEAM_CT && !GetEntProp(client, Prop_Send, "m_bHasDefuser")) {
+                SetEntProp(client, Prop_Send, "m_bHasDefuser", true);  
             }
         }
     }
