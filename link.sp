@@ -378,7 +378,7 @@ stock void EnsureAllAK() {
             }
 
             int pistolId = GetPistolEntityId(client), pistolWeaponId = -1;
-            if (pistolWeaponId != -1) {
+            if (pistolId != -1) {
                 pistolWeaponId = GetWeaponIdFromEntityId(pistolId);
             }
 
