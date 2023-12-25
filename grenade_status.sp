@@ -37,3 +37,8 @@ stock int GetGrenade(int client, grenades grenadeIndex) {
     return GetEntProp(client, Prop_Send, "m_iAmmo", _, g_iaGrenadeOffsets[grenadeIndex]);
 }
 
+stock void RemoveNades(int client) {
+    for (int i=0; i<sizeof(g_saGrenadeWeaponNames); i++) {
+        SetEntProp(client, Prop_Send, "m_iAmmo", 0, _, g_iaGrenadeOffsets[i]);
+    }
+}

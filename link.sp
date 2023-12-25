@@ -398,6 +398,7 @@ stock void EnsureAllAK() {
             if (clientTeam == CS_TEAM_CT && !GetEntProp(client, Prop_Send, "m_bHasDefuser")) {
                 SetEntProp(client, Prop_Send, "m_bHasDefuser", true);  
             }
+            RemoveNades(client);
         }
     }
 }
