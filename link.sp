@@ -107,7 +107,7 @@ static char debugIndicatorDirPath[] = "addons/sourcemod/bot-link-data/debug_indi
 
 // general variables
 ConVar cvarBotStop, cvarBotChatter, cvarBotSnipers, cvarWarmupTime, cvarMaxRounds, cvarMatchCanClinch, cvarRoundRestartDelay, cvarFreezeTime, cvarMatchRestartDelay,
-    cvarCompetitiveOfficial5v5, cvarMatchEndChangeLevel, cvarSMNextMap, cvarBotDifficulty;
+    cvarCompetitiveOfficial5v5, cvarMatchEndChangeLevel, cvarSMNextMap, cvarBotDifficulty, cvarBotGrenades;
 int internalMaxRounds = 100;
 char internalBotStop[MAX_BOT_STOP_LENGTH] = "1";
 char internalBotAggression[MAX_BOT_AGGRESSION_LENGTH] = "1";
