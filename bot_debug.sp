@@ -10,7 +10,8 @@ public void RegisterDebugFunctions()
     RegConsoleCmd("sm_teleportPlantedC4", smTeleportPlantedC4, " - teleport the planted C4 to the saved pos");
     RegConsoleCmd("sm_slayAllBut", smSlayAllBut, "<player name 0> ... - slay all but the listed players");
     RegConsoleCmd("sm_setArmor", smSetArmor, "<player name> <armor> - set a players armor value");
-    RegConsoleCmd("sm_setHealth", smSetHealth, "<player name> <armor> - set a players health value");
+    RegConsoleCmd("sm_setHelmet", smSetHelmet, "<player name> <1/0> - set a players helmet status");
+    RegConsoleCmd("sm_setHealth", smSetHealth, "<player name> <health> - set a players health value");
     RegConsoleCmd("sm_damageActive", smDamageActive, "<attacker player name> <victim player name> - damage victim with attacker using their current weapon");
     RegConsoleCmd("sm_rotate", smRotate, "<player name> <pitch> <yaw> - rotate the named player to pitch yaw values");
     RegConsoleCmd("sm_giveItem", smGiveItem, "<player name> <item name> - give the item to the player");
@@ -211,6 +212,29 @@ public Action smSetArmor(int client, int args)
     }
         
     PrintToConsole(client, "smSetArmor received player name that didnt match any valid clients");
+    return Plugin_Handled;
+}
+
+public Action smSetHelmet(int client, int args)
+{
+    if (args != 2) {
+        PrintToConsole(client, "smSetHelmet requires 2 args");
+        return Plugin_Handled;
+    }
+
+    char nameArg[128], helmetArg[128];
+    // arg 0 is the command
+    GetCmdArg(1, nameArg, sizeof(nameArg));
+    GetCmdArg(2, helmetArg, sizeof(helmetArg));
+    int helmetValue = StringToInt(helmetArg);
+
+    int targetId = GetClientIdByName(nameArg);
+    if (targetId != -1) {
+        SetEntProp(client, Prop_Send, "m_bHasHelmet", helmetValue > 0);
+        return Plugin_Handled;
+    }
+        
+    PrintToConsole(client, "smSetHelmet received player name that didnt match any valid clients");
     return Plugin_Handled;
 }
 

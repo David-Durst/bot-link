@@ -391,7 +391,7 @@ stock void EnsureAllAK() {
             else if (rifleWeaponId == -1) {
                 GivePlayerItem(client, "weapon_ak47");
             }
-            else if (!uncontrolledBot && IsFakeClient(client) && activeWeaponId != rifleWeaponId) {
+            else if (/*!uncontrolledBot &&*/ IsFakeClient(client) && activeWeaponId != rifleWeaponId) {
                 FakeClientCommand(client, "use weapon_ak47");
             }
 
