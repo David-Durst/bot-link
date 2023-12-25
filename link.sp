@@ -363,8 +363,8 @@ stock void EnsureAllAK() {
     for (int client = 1; client <= MaxClients; client++) {
         if (IsValidClient(client) && IsPlayerAlive(client)) {
             int clientTeam = GetClientTeam(client);
-            bool uncontrolledBot = (!stopT && clientTeam == CS_TEAM_T) || 
-                (!stopCT && clientTeam == CS_TEAM_CT);
+            //bool uncontrolledBot = (!stopT && clientTeam == CS_TEAM_T) || 
+            //    (!stopCT && clientTeam == CS_TEAM_CT);
 
             int activeWeaponEntityId = GetActiveWeaponEntityId(client);
             int activeWeaponId = -1;
