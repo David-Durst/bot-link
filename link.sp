@@ -127,6 +127,9 @@ float lastAngles[2], lastAngleVel[2], maxAngleVel[2], maxAngleAccel[2];
 int clientLastTeleportId[MAXPLAYERS+1];
 int clientLastTeleportConfirmationId[MAXPLAYERS+1];
 
+// dont spam commands for a client
+int clientConsecutiveUseAKCommands[MAXPLAYERS+1];
+
 // placed down here so it has access to all variables defined above
 #include "bot-link/bot_debug.sp"
 #include "bot-link/bot_aggression.sp"
@@ -200,6 +203,7 @@ public void OnPluginStart()
         clientLastTeleportConfirmationId[i] = 0;
         forceInput[i] = false;
         enableAbsPos[i] = false;
+        clientConsecutiveUseAKCommands[i] = 0;
     }
 
     if (!DirExists(rootFolder)) {
@@ -363,8 +367,8 @@ stock void EnsureAllAK() {
     for (int client = 1; client <= MaxClients; client++) {
         if (IsValidClient(client) && IsPlayerAlive(client)) {
             int clientTeam = GetClientTeam(client);
-            //bool uncontrolledBot = (!stopT && clientTeam == CS_TEAM_T) || 
-            //    (!stopCT && clientTeam == CS_TEAM_CT);
+            bool uncontrolledBot = (!stopT && clientTeam == CS_TEAM_T) || 
+                (!stopCT && clientTeam == CS_TEAM_CT);
 
             int activeWeaponEntityId = GetActiveWeaponEntityId(client);
             int activeWeaponId = -1;
@@ -391,8 +395,24 @@ stock void EnsureAllAK() {
             else if (rifleWeaponId == -1) {
                 GivePlayerItem(client, "weapon_ak47");
             }
-            else if (/*!uncontrolledBot &&*/ IsFakeClient(client) && activeWeaponId != rifleWeaponId) {
-                FakeClientCommand(client, "use weapon_ak47");
+            else if (!uncontrolledBot && IsFakeClient(client) && activeWeaponId != rifleWeaponId) {
+                if (clientConsecutiveUseAKCommands[client] == 0) {
+                    FakeClientCommand(client, "use weapon_ak47");
+                }
+                clientConsecutiveUseAKCommands[client]++;
+            }
+            else if (uncontrolledBot && IsFakeClient(client) && IsWeaponGrenade(activeWeaponId)) {
+                if (clientConsecutiveUseAKCommands[client] == 0) {
+                    FakeClientCommand(client, "use weapon_ak47");
+                }
+                clientConsecutiveUseAKCommands[client]++;
+            }
+            else {
+                clientConsecutiveUseAKCommands[client] = 0;
+            }
+
+            if (clientConsecutiveUseAKCommands[client] > 10) {
+                clientConsecutiveUseAKCommands[client] = 0;
             }
 
             if (clientTeam == CS_TEAM_CT && !GetEntProp(client, Prop_Send, "m_bHasDefuser")) {

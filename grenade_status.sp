@@ -20,6 +20,13 @@ enum grenades: {
     NUM_GRENADES
 };
 
+#define FLASHBANG_WEAPON_ID 43
+#define HE_WEAPON_ID 44
+#define SMOKE_WEAPON_ID 45
+#define MOLOTOV_WEAPON_ID 46
+#define DECOY_WEAPON_ID 47
+#define INCENDIARY_WEAPON_ID 48
+
 int g_iaGrenadeOffsets[sizeof(g_saGrenadeWeaponNames)];
 
 stock void InitGrenadeOffsets() {
@@ -41,4 +48,13 @@ stock void RemoveNades(int client) {
     for (int i=0; i<sizeof(g_saGrenadeWeaponNames); i++) {
         SetEntProp(client, Prop_Send, "m_iAmmo", 0, _, g_iaGrenadeOffsets[i]);
     }
+}
+
+stock bool IsWeaponGrenade(int weaponId) {
+    return weaponId == FLASHBANG_WEAPON_ID ||
+        weaponId == HE_WEAPON_ID ||
+        weaponId == SMOKE_WEAPON_ID ||
+        weaponId == MOLOTOV_WEAPON_ID ||
+        weaponId == DECOY_WEAPON_ID ||
+        weaponId == INCENDIARY_WEAPON_ID;
 }

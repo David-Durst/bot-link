@@ -22,6 +22,10 @@ stock int GetPistolEntityId(int client) {
     return GetPlayerWeaponSlot(client, SLOT_PISTOL);
 }
 
+stock int GetKnifeEntityId(int client) {
+    return GetPlayerWeaponSlot(client, SLOT_KNIFE);
+}
+
 stock int GetC4EntityId(int client) {
     return GetPlayerWeaponSlot(client, SLOT_C4);
 }
