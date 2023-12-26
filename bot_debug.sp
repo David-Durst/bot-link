@@ -230,7 +230,7 @@ public Action smSetHelmet(int client, int args)
 
     int targetId = GetClientIdByName(nameArg);
     if (targetId != -1) {
-        SetEntProp(client, Prop_Send, "m_bHasHelmet", helmetValue > 0);
+        SetEntProp(targetId, Prop_Send, "m_bHasHelmet", helmetValue);
         return Plugin_Handled;
     }
         
