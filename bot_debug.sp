@@ -471,10 +471,6 @@ public Action smAllHumansSpec(int client, int args)
                 ChangeClientTeam(clientInner, CS_TEAM_SPECTATOR);
                 ForcePlayerSuicide(clientInner);
             }
-            else {
-                ChangeClientTeam(clientInner, CS_TEAM_T);
-                ForcePlayerSuicide(clientInner);
-            }
             numHumans++;
         }
     }

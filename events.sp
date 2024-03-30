@@ -131,9 +131,11 @@ static char tmpSayFilePath[] = "addons/sourcemod/bot-link-data/say.csv.tmp.write
 File tmpSayFile;
 bool tmpSayOpen = false;
 char sayCommands[MAX_SAY_PER_FRAME][MAX_SAY_LENGTH];
+int sayClientId[MAX_SAY_PER_FRAME];
 int curSayIndex = 0;
 
 public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs) {
+    sayClientId[curSayIndex] = client;
     strcopy(sayCommands[curSayIndex], MAX_SAY_LENGTH, sArgs);
     curSayIndex++;
     return Plugin_Continue;
@@ -150,10 +152,10 @@ stock void WriteSay() {
         PrintToServer("opening tmpSayFile returned null");
         return;
     }
-    tmpSayFile.WriteLine("Say Message");
+    tmpSayFile.WriteLine("Client Id,Say Message");
 
     for (int i = 0; i < curSayIndex; i++) {
-        tmpSayFile.WriteLine("%s", sayCommands[i]);
+        tmpSayFile.WriteLine("%i,%s", sayClientId, sayCommands[i]);
     }
 
     tmpSayFile.Close();
