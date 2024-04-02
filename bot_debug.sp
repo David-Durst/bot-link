@@ -456,24 +456,45 @@ public Action smAllHumansSpec(int client, int args)
         return Plugin_Handled;
     }
 
-    int numNonSpectators = 0;
+    int requiredNumNonSpectators = 0;
     if (args == 1) {
         char arg[128];
         // arg 0 is the command
         GetCmdArg(1, arg, sizeof(arg));
-        numNonSpectators = StringToInt(arg);
+        requiredNumNonSpectators = StringToInt(arg);
     }
 
     int numHumans = 0;
+    int numHumanNonSpectators = 0;
+
     for (int clientInner = 1; clientInner <= MaxClients; clientInner++) {
         if (IsValidClient(clientInner) && !IsFakeClient(clientInner)) {
-            if (numHumans >= numNonSpectators) {
-                ChangeClientTeam(clientInner, CS_TEAM_SPECTATOR);
-                ForcePlayerSuicide(clientInner);
-            }
             numHumans++;
+            if (GetClientTeam(clientInner) == CS_TEAM_T || 
+                GetClientTeam(clientInner) == CS_TEAM_CT) {
+                numHumanNonSpectators++;
+            }
         }
     }
+
+    if (numHumanNonSpectators > requiredNumNonSpectators) {
+        int numToMove = numHumanNonSpectators - requiredNumNonSpectators;
+        for (int clientInner = 1; clientInner <= MaxClients; clientInner++) {
+            if (IsValidClient(clientInner) && !IsFakeClient(clientInner)) {
+                if (GetClientTeam(clientInner) == CS_TEAM_T || 
+                    GetClientTeam(clientInner) == CS_TEAM_CT) {
+                    ChangeClientTeam(clientInner, CS_TEAM_SPECTATOR);
+                    ForcePlayerSuicide(clientInner);
+                    numToMove--;
+                }
+            }
+
+            if (numToMove <= 0) {
+                break;
+            }
+        }
+    }
+
         
     return Plugin_Handled;
 }
