@@ -124,7 +124,7 @@ stock void WriteRoundStart() {
 
 
 #define MAX_SAY_PER_FRAME 100
-#define MAX_SAY_LENGTH 200
+#define MAX_SAY_LENGTH 400
 
 static char sayFilePath[] = "addons/sourcemod/bot-link-data/say.csv";
 static char tmpSayFilePath[] = "addons/sourcemod/bot-link-data/say.csv.tmp.write";
@@ -155,7 +155,8 @@ stock void WriteSay() {
     tmpSayFile.WriteLine("Client Id,Say Message");
 
     for (int i = 0; i < curSayIndex; i++) {
-        tmpSayFile.WriteLine("%i,%s", sayClientId, sayCommands[i]);
+        PrintToServer("say %i, %i, %s", i, sayClientId[i], sayCommands[i]);
+        tmpSayFile.WriteLine("%i,%s", sayClientId[i], sayCommands[i]);
     }
 
     tmpSayFile.Close();
