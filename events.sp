@@ -142,6 +142,11 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 }
 
 stock void WriteSay() {
+    // dont overwrite a yet to be read say file, these can be delayed a frame or two
+    if (FileExists(sayFilePath)) {
+        return;        
+    }
+
     if (tmpSayOpen) {
         tmpSayFile.Close();
         tmpSayOpen = false;
